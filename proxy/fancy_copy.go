@@ -78,7 +78,6 @@ func (s *transit) write(ctx context.Context) error {
 // from is downstream connection while to is the upstream connection.
 func Copy(ctx context.Context, from, to net.Conn) error {
 	bctx, cancel := context.WithCancel(ctx)
-	// request => upstream
 	a := transit{
 		src:  from,
 		dest: to,
