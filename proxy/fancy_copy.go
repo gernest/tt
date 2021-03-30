@@ -89,7 +89,6 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 			// do something
 		}
 	}()
-	// upstream => request
 	b := transit{
 		src:  to,
 		dest: from,
