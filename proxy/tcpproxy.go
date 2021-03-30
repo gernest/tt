@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
-	"github.com/gernest/tt/data"
 	"github.com/gernest/tt/zlg"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
@@ -259,7 +258,7 @@ type fixedTarget struct {
 }
 
 func (m fixedTarget) match(ctx context.Context, r *bufio.Reader) (Target, string) {
-	data.Update(ctx, func(m *data.Meta) {
+	Update(ctx, func(m *ContextMeta) {
 		m.Fixed = true
 	})
 	return m.t, ""
@@ -408,7 +407,7 @@ func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort str
 		}
 		zlg.Info(fmt.Sprintf("%s --> %s", c.RemoteAddr().String(), c.LocalAddr().String()))
 		base := p.base(ctx, ln)
-		base = data.UpdateContext(base, func(m *data.Meta) {
+		base = UpdateContext(base, func(m *ContextMeta) {
 			m.R.A.L.Address = c.LocalAddr().String()
 			m.R.A.R.Address = c.RemoteAddr().Network()
 		})
@@ -453,7 +452,7 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
 			return true
 		}
 	}
-	data.Update(ctx, func(m *data.Meta) {
+	Update(ctx, func(m *ContextMeta) {
 		m.NoMatch = true
 	})
 	zlg.Info("no routes matched conn",

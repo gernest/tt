@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"net"
 
-	"github.com/gernest/tt/data"
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/protocol"
 	"github.com/pion/dtls/v2/pkg/protocol/extension"
@@ -46,7 +45,7 @@ func (m serveDTLS) HandleConn(ctx context.Context, conn net.Conn) {
 		return
 	}
 	var sni string
-	data.Read(ctx, func(m *data.Meta) {
+	Read(ctx, func(m *ContextMeta) {
 		sni = m.ServerName
 	})
 	conf, err := m.config(sni)

@@ -1,4 +1,4 @@
-package data
+package proxy
 
 import (
 	"context"
@@ -16,7 +16,7 @@ const (
 )
 
 // Meta a lot of details that is passed around with the  connection.
-type Meta struct {
+type ContextMeta struct {
 	// Request
 	R TCP
 	// Upstream
@@ -63,34 +63,34 @@ type Addr struct {
 
 // UpdateContext applies fn to the Meta that is in ctx and returns a new context if ctx
 // doesn't have Meta yet.
-func UpdateContext(ctx context.Context, fn func(*Meta)) context.Context {
+func UpdateContext(ctx context.Context, fn func(*ContextMeta)) context.Context {
 	if x := ctx.Value(metakey{}); x != nil {
-		v := x.(*Meta)
+		v := x.(*ContextMeta)
 		fn(v)
 		return ctx
 	}
-	var m Meta
+	var m ContextMeta
 	m.Start = time.Now()
 	fn(&m)
 	return context.WithValue(ctx, metakey{}, &m)
 }
 
-func Update(ctx context.Context, fn func(*Meta)) {
+func Update(ctx context.Context, fn func(*ContextMeta)) {
 	Write(ctx, fn)
 }
 
-func Read(ctx context.Context, fn func(*Meta)) {
+func Read(ctx context.Context, fn func(*ContextMeta)) {
 	if x := ctx.Value(metakey{}); x != nil {
-		v := x.(*Meta)
+		v := x.(*ContextMeta)
 		v.mu.RLock()
 		fn(v)
 		v.mu.RUnlock()
 	}
 }
 
-func Write(ctx context.Context, fn func(*Meta)) {
+func Write(ctx context.Context, fn func(*ContextMeta)) {
 	if x := ctx.Value(metakey{}); x != nil {
-		v := x.(*Meta)
+		v := x.(*ContextMeta)
 		v.mu.Lock()
 		fn(v)
 		v.mu.Unlock()

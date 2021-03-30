@@ -19,8 +19,6 @@ import (
 	"bytes"
 	"context"
 	"net/http"
-
-	"github.com/gernest/tt/data"
 )
 
 type httpHostMatch struct {
@@ -31,8 +29,8 @@ type httpHostMatch struct {
 func (m httpHostMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	hh := httpHostHeader(br)
 	if m.matcher(ctx, hh) {
-		data.Update(ctx, func(m *data.Meta) {
-			m.Protocol = data.HTTP
+		Update(ctx, func(m *ContextMeta) {
+			m.Protocol = HTTP
 			m.ServerName = hh
 		})
 		return m.target, hh

@@ -22,8 +22,6 @@ import (
 	"io"
 	"net"
 	"strings"
-
-	"github.com/gernest/tt/data"
 )
 
 type sniMatch struct {
@@ -34,7 +32,7 @@ type sniMatch struct {
 func (m sniMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
 	if m.matcher(ctx, sni) {
-		data.Update(ctx, func(m *data.Meta) {
+		Update(ctx, func(m *ContextMeta) {
 			m.ServerName = sni
 		})
 		return m.target, sni
@@ -54,7 +52,7 @@ func (m *acmeMatch) match(ctx context.Context, br *bufio.Reader) (Target, string
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""
 	}
-	data.Update(ctx, func(x *data.Meta) {
+	Update(ctx, func(x *ContextMeta) {
 		x.ACME = true
 	})
 
