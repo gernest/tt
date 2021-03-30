@@ -33,7 +33,7 @@ func (m sniMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) 
 	sni := clientHelloServerName(br)
 	if m.matcher(ctx, sni) {
 		Update(ctx, func(m *ContextMeta) {
-			m.ServerName = sni
+			m.ServerName.Store(sni)
 		})
 		return m.target, sni
 	}
@@ -53,7 +53,7 @@ func (m *acmeMatch) match(ctx context.Context, br *bufio.Reader) (Target, string
 		return nil, ""
 	}
 	Update(ctx, func(x *ContextMeta) {
-		x.ACME = true
+		x.ACME.Store(true)
 	})
 
 	// TODO: cache. ACME issuers will hit multiple times in a short

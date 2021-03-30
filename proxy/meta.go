@@ -2,8 +2,9 @@ package proxy
 
 import (
 	"context"
-	"sync"
 	"time"
+
+	"go.uber.org/atomic"
 )
 
 type Protocol uint
@@ -22,18 +23,16 @@ type ContextMeta struct {
 	// Upstream
 	U TCP
 	// ACME true if we are serving acme challenge
-	ACME bool
+	ACME atomic.Bool
 	// Fixed is true if we are serving a fixed target
-	Fixed bool
+	Fixed atomic.Bool
 	// NoMatch true if we have no matching route
-	NoMatch bool
+	NoMatch atomic.Bool
 	// ServerName SNI or Host of the server serving the request
-	ServerName string
+	ServerName atomic.String
 	// Protocol The protocol which we are serving
-	Protocol Protocol
-	// Start starting time of processing the request
-	Start time.Time
-	mu    sync.RWMutex
+	Protocol atomic.Uint32
+	Start    time.Time
 }
 
 // TCP stats about a tcp socket connection
@@ -41,9 +40,9 @@ type TCP struct {
 	// A socket address
 	A Address
 	// R bytes read from this socket.
-	R int64
+	R atomic.Int64
 	// W bytes written to this socket
-	W int64
+	W atomic.Int64
 }
 
 type metakey struct{}
@@ -76,23 +75,8 @@ func UpdateContext(ctx context.Context, fn func(*ContextMeta)) context.Context {
 }
 
 func Update(ctx context.Context, fn func(*ContextMeta)) {
-	Write(ctx, fn)
-}
-
-func Read(ctx context.Context, fn func(*ContextMeta)) {
 	if x := ctx.Value(metakey{}); x != nil {
 		v := x.(*ContextMeta)
-		v.mu.RLock()
 		fn(v)
-		v.mu.RUnlock()
-	}
-}
-
-func Write(ctx context.Context, fn func(*ContextMeta)) {
-	if x := ctx.Value(metakey{}); x != nil {
-		v := x.(*ContextMeta)
-		v.mu.Lock()
-		fn(v)
-		v.mu.Unlock()
 	}
 }

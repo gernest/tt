@@ -259,7 +259,7 @@ type fixedTarget struct {
 
 func (m fixedTarget) match(ctx context.Context, r *bufio.Reader) (Target, string) {
 	Update(ctx, func(m *ContextMeta) {
-		m.Fixed = true
+		m.Fixed.Store(true)
 	})
 	return m.t, ""
 }
@@ -453,7 +453,7 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
 		}
 	}
 	Update(ctx, func(m *ContextMeta) {
-		m.NoMatch = true
+		m.NoMatch.Store(true)
 	})
 	zlg.Info("no routes matched conn",
 		zap.String("remote_addr", c.RemoteAddr().String()),

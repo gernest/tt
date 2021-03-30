@@ -30,8 +30,8 @@ func (m httpHostMatch) match(ctx context.Context, br *bufio.Reader) (Target, str
 	hh := httpHostHeader(br)
 	if m.matcher(ctx, hh) {
 		Update(ctx, func(m *ContextMeta) {
-			m.Protocol = HTTP
-			m.ServerName = hh
+			m.Protocol.Store(uint32(HTTP))
+			m.ServerName.Store(hh)
 		})
 		return m.target, hh
 	}
