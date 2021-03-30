@@ -2,35 +2,18 @@ package proxy
 
 import (
 	"context"
-	"sync"
 
 	"golang.org/x/time/rate"
 )
 
 type Throttle struct {
 	rate    *rate.Limiter
-	limit   rate.Limit
-	burst   int
-	start   int
-	current int
 	enabled bool
-	once    sync.Once
 }
 
-func (t *Throttle) init() {}
-
-func (t *Throttle) Take() bool {
+func (t *Throttle) Wait(ctx context.Context, size int) error {
 	if !t.enabled {
-		return true
+		return nil
 	}
-	if t.current < t.start {
-		t.current++
-		return true
-	}
-	t.once.Do(t.init)
-	return t.rate.Allow()
-}
-
-func (t *Throttle) Wait(ctx context.Context) error {
-	return t.rate.Wait(ctx)
+	return t.rate.WaitN(ctx, size)
 }
