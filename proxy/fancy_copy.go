@@ -75,6 +75,7 @@ func (s *transit) write(ctx context.Context) error {
 
 // Copy starts two goroutines. On that copy from=>to and another that copies
 // to>from
+// from is downstream connection while to is the upstream connection.
 func Copy(ctx context.Context, from, to net.Conn) error {
 	bctx, cancel := context.WithCancel(ctx)
 	// request => upstream
