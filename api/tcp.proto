@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package api;
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+message IPAddress {
+  oneof ip {
+    fixed32 ipv4 = 1;
+    IPv6 ipv6 = 2;
+  }
+}
+
+message IPv6 {
+  fixed64 first = 1; // hextets 1-4
+  fixed64 last = 2;  // hextets 5-8
+}
+
+message TcpAddress {
+  IPAddress ip = 1;
+  uint32 port = 2;
+}
+
+service Proxy {
+  rpc Init(InitRequest) returns (Response);
+  rpc Updates(stream Update) returns (Response);
+  rpc GetConfig(GetConfigRequest) returns (Config);
+}
+
+message InitRequest {
+  map<string, string> labels = 1;
+  repeated int32 available_ports = 2;
+}
+
+message Response {
+  oneof result {
+    bool ok = 1;
+    string error = 2;
+  }
+}
+
+message GetConfigRequest {}
+
+message Config { repeated Route routes = 1; }
+
+message Update {
+  oneof update {
+    RouteSet add = 1;
+    RouteSet remove = 2;
+  }
+}
+
+message RouteSet { repeated Route routes = 1; }
+
+message WeightedAddr {
+  Address addr = 1;
+  uint32 weight = 3;
+  map<string, string> metric_labels = 4;
+}
+
+message Address {
+  string network = 1;
+  string address = 2;
+}
+
+message Route {
+  enum LoadBalanceAlgo {
+    RoundRobinWeighted = 0;
+    RandomWeighted = 1;
+    SmoothWeighted = 2;
+  }
+  Address src = 1;
+  RequestMatch condition = 2;
+  map<string, string> metrics_labels = 3;
+  Retries retries = 4;
+  google.protobuf.Duration timeout = 5;
+  google.protobuf.Duration keepAlive = 6;
+  WeightedAddr endpoint = 7;
+  repeated WeightedAddr load_balance = 8;
+  LoadBalanceAlgo load_balance_algo = 9;
+  bool allow_acme = 10;
+  bool enable_optimized_copy = 11;
+}
+
+message Retries {
+  bool enabled = 1;
+  RetryBudget budget = 2;
+}
+
+message RetryBudget {
+  // The ratio of additional traffic that may be added by retries.  A
+  // retry_ratio of 0.1 means that 1 retry may be attempted for every 10 regular
+  // requests.  A retry_ratio of 1.0 means that 1 retry may be attempted for
+  // every 1 regular request (in other words, total request load may be doubled
+  // as a result of retries).
+  float retry_ratio = 1;
+  // The proxy may always attempt this number of retries per second, even if it
+  // would violate the retry_ratio.  This is to allow retries to happen even
+  // when the request rate is very low.
+  uint32 min_retries_per_second = 2;
+  // This duration indicates for how long requests should be considered for the
+  // purposes of enforcing the retry_ratio.  A higher value considers a larger
+  // window and therefore allows burstier retries.
+  google.protobuf.Duration ttl = 3;
+}
+
+message RequestMatch {
+  oneof match {
+    string sni = 1;
+    string host = 2;
+    string path = 3;
+    google.protobuf.Empty fixed = 4;
+  }
+}
