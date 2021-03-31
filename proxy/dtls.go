@@ -45,7 +45,7 @@ func (m serveDTLS) HandleConn(ctx context.Context, conn net.Conn) {
 		return
 	}
 	var sni string
-	Update(ctx, func(m *ContextMeta) {
+	CheckContext(ctx, func(m *ContextMeta) {
 		sni = m.ServerName.Load()
 	})
 	conf, err := m.config(sni)

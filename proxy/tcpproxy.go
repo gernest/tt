@@ -258,7 +258,7 @@ type fixedTarget struct {
 }
 
 func (m fixedTarget) match(ctx context.Context, r *bufio.Reader) (Target, string) {
-	Update(ctx, func(m *ContextMeta) {
+	CheckContext(ctx, func(m *ContextMeta) {
 		m.Fixed.Store(true)
 	})
 	return m.t, ""
@@ -408,8 +408,8 @@ func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort str
 		zlg.Info(fmt.Sprintf("%s --> %s", c.RemoteAddr().String(), c.LocalAddr().String()))
 		base := p.base(ctx, ln)
 		base = UpdateContext(base, func(m *ContextMeta) {
-			m.R.A.L.Address = c.LocalAddr().String()
-			m.R.A.R.Address = c.RemoteAddr().Network()
+			m.D.A.L.Address = c.LocalAddr().String()
+			m.D.A.R.Address = c.RemoteAddr().Network()
 		})
 		go serveConn(base, c, x.routes)
 	}
@@ -452,7 +452,7 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
 			return true
 		}
 	}
-	Update(ctx, func(m *ContextMeta) {
+	CheckContext(ctx, func(m *ContextMeta) {
 		m.NoMatch.Store(true)
 	})
 	zlg.Info("no routes matched conn",

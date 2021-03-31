@@ -18,8 +18,8 @@ const (
 
 // Meta a lot of details that is passed around with the  connection.
 type ContextMeta struct {
-	// Request
-	R TCP
+	// Downstream
+	D TCP
 	// Upstream
 	U TCP
 	// ACME true if we are serving acme challenge
@@ -33,6 +33,21 @@ type ContextMeta struct {
 	// Protocol The protocol which we are serving
 	Protocol atomic.Uint32
 	Start    time.Time
+	Speed    SpeedRateConfig
+}
+
+type SpeedRateConfig struct {
+	// This is the amount of bytes read from the client by the server per second.
+	// You can think of this as limit on upload speed, where tt is the server
+	// receiving the data so it will use this value to limit how much it will be
+	// reading per second
+	// You can use this to control upload speeds
+	Downstream atomic.Float64
+
+	// This is the amount of bytes read from the proxied(upstream) end point. In this case
+	// tt will use this to limit how much data it reads from upstream. You can use
+	// this to control download speeds
+	Upstream atomic.Float64
 }
 
 // TCP stats about a tcp socket connection
@@ -74,7 +89,7 @@ func UpdateContext(ctx context.Context, fn func(*ContextMeta)) context.Context {
 	return context.WithValue(ctx, metakey{}, &m)
 }
 
-func Update(ctx context.Context, fn func(*ContextMeta)) {
+func CheckContext(ctx context.Context, fn func(*ContextMeta)) {
 	if x := ctx.Value(metakey{}); x != nil {
 		v := x.(*ContextMeta)
 		fn(v)

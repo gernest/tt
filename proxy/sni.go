@@ -32,7 +32,7 @@ type sniMatch struct {
 func (m sniMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
 	if m.matcher(ctx, sni) {
-		Update(ctx, func(m *ContextMeta) {
+		CheckContext(ctx, func(m *ContextMeta) {
 			m.ServerName.Store(sni)
 		})
 		return m.target, sni
@@ -52,7 +52,7 @@ func (m *acmeMatch) match(ctx context.Context, br *bufio.Reader) (Target, string
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""
 	}
-	Update(ctx, func(x *ContextMeta) {
+	CheckContext(ctx, func(x *ContextMeta) {
 		x.ACME.Store(true)
 	})
 
