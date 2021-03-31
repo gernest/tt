@@ -7,6 +7,7 @@ require (
 	github.com/pion/dtls/v2 v2.0.8
 	github.com/pion/udp v0.1.1
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/wasmerio/wasmer-go v1.0.3
 	go.uber.org/atomic v1.7.0
 	go.uber.org/zap v1.16.0

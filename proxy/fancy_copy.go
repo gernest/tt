@@ -1,12 +1,13 @@
 package proxy
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
 	"net"
 
+	"github.com/gernest/tt/proxy/buffer"
+	"github.com/valyala/bytebufferpool"
 	"golang.org/x/time/rate"
 )
 
@@ -18,7 +19,7 @@ type transit struct {
 	dest            net.Conn
 	readRate        *rate.Limiter
 	writeRate       *rate.Limiter
-	buf             *bytes.Buffer
+	buf             *bytebufferpool.ByteBuffer
 	onRead, onWrite func(int64)
 }
 
@@ -78,10 +79,14 @@ func (s *transit) write(ctx context.Context) error {
 // from is downstream connection while to is the upstream connection.
 func Copy(ctx context.Context, from, to net.Conn) error {
 	bctx, cancel := context.WithCancel(ctx)
+	down := buffer.Get()
+	defer buffer.Put(down)
+	up := buffer.Get()
+	defer buffer.Put(up)
 	a := transit{
 		src:  from,
 		dest: to,
-		buf:  new(bytes.Buffer),
+		buf:  down,
 	}
 	go func() {
 		defer cancel()
@@ -92,7 +97,7 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 	b := transit{
 		src:  to,
 		dest: from,
-		buf:  new(bytes.Buffer),
+		buf:  up,
 	}
 	go func() {
 		defer cancel()
