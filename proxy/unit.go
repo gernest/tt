@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+
+	"golang.org/x/time/rate"
 )
 
 // See: http://en.wikipedia.org/wiki/Binary_prefix
@@ -75,4 +78,29 @@ func parseSize(sizeStr string, uMap unitMap) (int64, error) {
 	}
 
 	return int64(size), nil
+}
+
+// Speed is a unit representing amount of bytes per duration
+// eg 120kib/s
+type Speed string
+
+func (s Speed) Limit() (rate.Limit, error) {
+	if s == "" {
+		return 0, nil
+	}
+	x := strings.Split(string(s), "/")
+	v, err := RAMInBytes(x[0])
+	if err != nil {
+		return 0, err
+	}
+	per := time.Second
+	if len(x) == 2 {
+		switch x[1] {
+		case "m":
+			per = time.Minute
+		case "h":
+			per = time.Hour
+		}
+	}
+	return rate.Limit(float64(v) / per.Seconds()), nil
 }
