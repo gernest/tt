@@ -135,10 +135,7 @@ func (c connCopy) write(b []byte) (int, error) {
 // to>from
 // from is downstream connection while to is the upstream connection.
 func Copy(ctx context.Context, from, to net.Conn) error {
-	var meta *ContextMeta
-	CheckContext(ctx, func(cm *ContextMeta) {
-		meta = cm
-	})
+	meta := GetContextMeta(ctx)
 	bctx, cancel := context.WithCancel(ctx)
 	down := buffer.Get()
 	defer buffer.Put(down)

@@ -258,9 +258,8 @@ type fixedTarget struct {
 }
 
 func (m fixedTarget) match(ctx context.Context, r *bufio.Reader) (Target, string) {
-	CheckContext(ctx, func(m *ContextMeta) {
-		m.Fixed.Store(true)
-	})
+	meta := GetContextMeta(ctx)
+	meta.Fixed.Store(true)
 	return m.t, ""
 }
 
@@ -452,9 +451,8 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
 			return true
 		}
 	}
-	CheckContext(ctx, func(m *ContextMeta) {
-		m.NoMatch.Store(true)
-	})
+	meta := GetContextMeta(ctx)
+	meta.NoMatch.Store(true)
 	zlg.Info("no routes matched conn",
 		zap.String("remote_addr", c.RemoteAddr().String()),
 		zap.String("local_addr", c.LocalAddr().String()),
@@ -587,15 +585,14 @@ func goCloseConn(c net.Conn) { go c.Close() }
 
 // HandleConn implements the Target interface.
 func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
-	CheckContext(ctx, func(cm *ContextMeta) {
-		// we update sppeds that were set on this dial
-		up, _ := dp.UpstreamSpeed.Limit()
-		//TOD log error
-		cm.Speed.Upstream.Store(up)
-		down, _ := dp.DownstreamSpeed.Limit()
-		//TOD log error
-		cm.Speed.Downstream.Store(down)
-	})
+	meta := GetContextMeta(ctx)
+	// we update sppeds that were set on this dial
+	up, _ := dp.UpstreamSpeed.Limit()
+	//TOD log error
+	meta.Speed.Upstream.Store(up)
+	down, _ := dp.DownstreamSpeed.Limit()
+	//TOD log error
+	meta.Speed.Downstream.Store(down)
 	var cancel context.CancelFunc
 	if dp.DialTimeout >= 0 {
 		ctx, cancel = context.WithTimeout(ctx, dp.dialTimeout())

@@ -45,9 +45,9 @@ func (m serveDTLS) HandleConn(ctx context.Context, conn net.Conn) {
 		return
 	}
 	var sni string
-	CheckContext(ctx, func(m *ContextMeta) {
+	if m := GetContextMeta(ctx); m != nil {
 		sni = m.ServerName.Load()
-	})
+	}
 	conf, err := m.config(sni)
 	if err != nil {
 		return

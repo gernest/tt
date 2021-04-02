@@ -32,9 +32,8 @@ type sniMatch struct {
 func (m sniMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
 	if m.matcher(ctx, sni) {
-		CheckContext(ctx, func(m *ContextMeta) {
-			m.ServerName.Store(sni)
-		})
+		meta := GetContextMeta(ctx)
+		meta.ServerName.Store(sni)
 		return m.target, sni
 	}
 	return nil, ""
@@ -52,9 +51,8 @@ func (m *acmeMatch) match(ctx context.Context, br *bufio.Reader) (Target, string
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""
 	}
-	CheckContext(ctx, func(x *ContextMeta) {
-		x.ACME.Store(true)
-	})
+	meta := GetContextMeta(ctx)
+	meta.ACME.Store(true)
 
 	// TODO: cache. ACME issuers will hit multiple times in a short
 	// burst for each issuance event. A short TTL cache + singleflight

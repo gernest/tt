@@ -30,10 +30,35 @@ type ContextMeta struct {
 	NoMatch atomic.Bool
 	// ServerName SNI or Host of the server serving the request
 	ServerName atomic.String
+	// RouteName the name of the route if any
+	RouteName atomic.String
 	// Protocol The protocol which we are serving
 	Protocol atomic.Uint32
 	Start    time.Time
 	Speed    SpeedRateConfig
+	Rate     Rate
+}
+
+// GetRare returns rate limiting configuration for this route
+func (m ContextMeta) GetRare() RateConfig {
+	var key string
+	switch RateBy(m.Rate.By.Load()) {
+	case Host:
+		key = m.ServerName.Load()
+	}
+	return RateConfig{
+		Route:   m.RouteName.Load(),
+		Key:     key,
+		Average: m.Rate.Average.Load(),
+		Burst:   int(m.Rate.Burst.Load()),
+	}
+}
+
+type RateConfig struct {
+	Route   string
+	Key     string
+	Average float64
+	Burst   int
 }
 
 type SpeedRateConfig struct {
@@ -48,6 +73,19 @@ type SpeedRateConfig struct {
 	// tt will use this to limit how much data it reads from upstream. You can use
 	// this to control download speeds
 	Upstream atomic.Float64
+}
+
+type RateBy uint
+
+const (
+	IP RateBy = iota
+	Host
+)
+
+type Rate struct {
+	By      atomic.Uint32
+	Average atomic.Float64
+	Burst   atomic.Int64
 }
 
 // TCP stats about a tcp socket connection
@@ -71,7 +109,6 @@ type Address struct {
 }
 
 type Addr struct {
-	Network string
 	Address string
 }
 
@@ -89,9 +126,6 @@ func UpdateContext(ctx context.Context, fn func(*ContextMeta)) context.Context {
 	return context.WithValue(ctx, metakey{}, &m)
 }
 
-func CheckContext(ctx context.Context, fn func(*ContextMeta)) {
-	if x := ctx.Value(metakey{}); x != nil {
-		v := x.(*ContextMeta)
-		fn(v)
-	}
+func GetContextMeta(ctx context.Context) *ContextMeta {
+	return ctx.Value(metakey{}).(*ContextMeta)
 }

@@ -29,10 +29,9 @@ type httpHostMatch struct {
 func (m httpHostMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	hh := httpHostHeader(br)
 	if m.matcher(ctx, hh) {
-		CheckContext(ctx, func(m *ContextMeta) {
-			m.Protocol.Store(uint32(HTTP))
-			m.ServerName.Store(hh)
-		})
+		meta := GetContextMeta(ctx)
+		meta.Protocol.Store(uint32(HTTP))
+		meta.ServerName.Store(hh)
 		return m.target, hh
 	}
 	return nil, ""
