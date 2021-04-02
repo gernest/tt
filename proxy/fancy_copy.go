@@ -29,9 +29,45 @@ func newRate(v float64) limit {
 	return rate.NewLimiter(rate.Limit(v), 0)
 }
 
+type transitConn interface {
+	ReadTo(dest io.Writer, size int64) (int64, error)
+	io.Writer
+}
+
+type Upstream struct {
+	copy *connCopy
+}
+
+func newUpstream(src, dest net.Conn) *Upstream {
+	return &Upstream{copy: &connCopy{src: src, dest: dest}}
+}
+
+func (u *Upstream) Write(b []byte) (int, error) {
+	return u.copy.write(b)
+}
+
+func (u *Upstream) ReadTo(dest io.Writer, size int64) (int64, error) {
+	return u.copy.read(dest, size)
+}
+
+type Downstream struct {
+	copy *connCopy
+}
+
+func newDownstream(src, dest net.Conn) *Downstream {
+	return &Downstream{copy: &connCopy{src: src, dest: dest}}
+}
+
+func (u *Downstream) Write(b []byte) (int, error) {
+	return u.copy.write(b)
+}
+
+func (u *Downstream) ReadTo(dest io.Writer, size int64) (int64, error) {
+	return u.copy.read(dest, size)
+}
+
 type transit struct {
-	src             net.Conn
-	dest            net.Conn
+	conn            transitConn
 	rate            limit
 	buf             *bytebufferpool.ByteBuffer
 	meta            *ContextMeta
@@ -58,16 +94,10 @@ func (s *transit) copy(ctx context.Context) error {
 
 func (s *transit) read(ctx context.Context) error {
 	s.buf.Reset()
-	if wc, ok := s.src.(*Conn); ok && len(wc.Peeked) > 0 {
-		if _, err := s.buf.Write(wc.Peeked); err != nil {
-			return err
-		}
-		wc.Peeked = nil
-	}
 	if err := s.rate.WaitN(ctx, s.buf.Len()); err != nil {
 		return err
 	}
-	n, err := io.CopyN(s.buf, s.src, BufferSize)
+	n, err := s.conn.ReadTo(s.buf, BufferSize)
 	if err != nil {
 		return err
 	}
@@ -83,11 +113,11 @@ func (s *transit) recordRead(n int64) {
 
 func (s *transit) write(ctx context.Context) error {
 	if s.buf.Len() > 0 {
-		n, err := s.buf.WriteTo(s.dest)
+		n, err := s.conn.Write(s.buf.Bytes())
 		if err != nil {
 			return err
 		}
-		s.recordWrite(n)
+		s.recordWrite(int64(n))
 	}
 	return nil
 }
@@ -96,6 +126,25 @@ func (s *transit) recordWrite(n int64) {
 	if s.onWrite != nil {
 		s.onWrite(s.meta, n)
 	}
+}
+
+type connCopy struct {
+	src  net.Conn
+	dest net.Conn
+}
+
+func (c connCopy) read(dest io.Writer, size int64) (int64, error) {
+	if wc, ok := c.src.(*Conn); ok && len(wc.Peeked) > 0 {
+		if n, err := dest.Write(wc.Peeked); err != nil {
+			return int64(n), err
+		}
+		wc.Peeked = nil
+	}
+	return io.CopyN(dest, c.src, size)
+}
+
+func (c connCopy) write(b []byte) (int, error) {
+	return c.dest.Write(b)
 }
 
 // Copy starts two goroutines. On that copy from=>to and another that copies
@@ -112,8 +161,7 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 	up := buffer.Get()
 	defer buffer.Put(up)
 	downstream := transit{
-		src:  from,
-		dest: to,
+		conn: newDownstream(from, to),
 		meta: meta,
 		rate: newRate(meta.Speed.Downstream.Load()),
 		buf:  down,
@@ -133,8 +181,7 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 		}
 	}()
 	upstream := transit{
-		src:  to,
-		dest: from,
+		conn: newUpstream(from, to),
 		meta: meta,
 		rate: newRate(meta.Speed.Upstream.Load()),
 		buf:  up,
@@ -153,10 +200,6 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 			// do something
 		}
 	}()
-	select {
-	case <-bctx.Done():
-		return bctx.Err()
-	default:
-		return nil
-	}
+	<-bctx.Done()
+	return ctx.Err()
 }
