@@ -8,26 +8,10 @@ import (
 
 	"github.com/gernest/tt/proxy/buffer"
 	"github.com/valyala/bytebufferpool"
-	"golang.org/x/time/rate"
 )
 
 // BufferSize this is the size of data that is read/written by default.
 const BufferSize = KiB
-
-type limit interface {
-	WaitN(context.Context, int) error
-}
-
-type noLimit struct{}
-
-func (noLimit) WaitN(context.Context, int) error { return nil }
-
-func newRate(v float64) limit {
-	if v == 0 {
-		return noLimit{}
-	}
-	return rate.NewLimiter(rate.Limit(v), 0)
-}
 
 type transitConn interface {
 	ReadTo(dest io.Writer, size int64) (int64, error)
