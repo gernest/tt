@@ -121,16 +121,20 @@ func (m configMap) Route(r *api.Route) {
 		zlg.Info("Adding http host route",
 			zap.String("host", e.Host),
 		)
-		m.AddHTTPHostRoute(ipPort, e.Host, target(r))
+		m.AddHTTPHostRoute(ipPort, e.Host, buildTarget(r))
 	case *api.RequestMatch_Sni:
 		zlg.Info("Adding sni route",
 			zap.String("host", e.Sni),
 		)
-		m.AddSNIRoute(ipPort, e.Sni, target(r))
+		m.AddSNIRoute(ipPort, e.Sni, buildTarget(r))
 	case *api.RequestMatch_Fixed:
 		zlg.Info("Adding fixed route")
-		m.AddRoute(ipPort, target(r))
+		m.AddRoute(ipPort, buildTarget(r))
 	}
+}
+
+func buildTarget(r *api.Route) Target {
+	return buildMiddleares(r).then(target(r))
 }
 
 func target(r *api.Route) Target {
