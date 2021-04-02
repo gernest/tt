@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/time/rate"
 )
 
 // See: http://en.wikipedia.org/wiki/Binary_prefix
@@ -84,7 +82,7 @@ func parseSize(sizeStr string, uMap unitMap) (int64, error) {
 // eg 120kib/s
 type Speed string
 
-func (s Speed) Limit() (rate.Limit, error) {
+func (s Speed) Limit() (float64, error) {
 	if s == "" {
 		return 0, nil
 	}
@@ -102,5 +100,5 @@ func (s Speed) Limit() (rate.Limit, error) {
 			per = time.Hour
 		}
 	}
-	return rate.Limit(float64(v) / per.Seconds()), nil
+	return float64(v) / per.Seconds(), nil
 }

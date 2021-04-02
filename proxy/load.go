@@ -191,6 +191,11 @@ func toDial(a *api.WeightedAddr, r *api.Route) *DialProxy {
 	if r.EnableOptimizedCopy {
 		customCopy = Copy
 	}
+	var up, down Speed
+	if speed := r.Speed; speed != nil {
+		up = Speed(speed.Upstream)
+		down = Speed(speed.Downstream)
+	}
 	return &DialProxy{
 		Network:         network,
 		Addr:            ipPort,
@@ -198,6 +203,8 @@ func toDial(a *api.WeightedAddr, r *api.Route) *DialProxy {
 		KeepAlivePeriod: keepAlive,
 		MetricsLabels:   a.MetricLabels,
 		Copy:            customCopy,
+		UpstreamSpeed:   up,
+		DownstreamSpeed: down,
 	}
 }
 

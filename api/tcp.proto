@@ -80,6 +80,18 @@ message Route {
   LoadBalanceAlgo load_balance_algo = 9;
   bool allow_acme = 10;
   bool enable_optimized_copy = 11;
+  Speed speed = 12;
+}
+
+// Speed defines rate limiting of how fast data willl be copied. This is a
+// described in bytes units
+// "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
+//
+// I you want do have upload speed of up to 40 mp per seconds then you can set
+// downstream="20MiB/s"
+message Speed {
+  string downstream = 1;
+  string upstream = 2;
 }
 
 message Retries {

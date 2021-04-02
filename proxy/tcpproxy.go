@@ -569,6 +569,9 @@ type DialProxy struct {
 	// MetricsLabels labels included when emitting metrics about the TPC proxying
 	// with this Dial
 	MetricsLabels map[string]string
+
+	UpstreamSpeed   Speed
+	DownstreamSpeed Speed
 }
 
 // UnderlyingConn returns c.Conn if c of type *Conn,
@@ -584,6 +587,15 @@ func goCloseConn(c net.Conn) { go c.Close() }
 
 // HandleConn implements the Target interface.
 func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
+	CheckContext(ctx, func(cm *ContextMeta) {
+		// we update sppeds that were set on this dial
+		up, _ := dp.UpstreamSpeed.Limit()
+		//TOD log error
+		cm.Speed.Upstream.Store(up)
+		down, _ := dp.DownstreamSpeed.Limit()
+		//TOD log error
+		cm.Speed.Downstream.Store(down)
+	})
 	var cancel context.CancelFunc
 	if dp.DialTimeout >= 0 {
 		ctx, cancel = context.WithTimeout(ctx, dp.dialTimeout())
