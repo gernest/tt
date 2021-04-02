@@ -94,11 +94,11 @@ func (s *transit) copy(ctx context.Context) error {
 
 func (s *transit) read(ctx context.Context) error {
 	s.buf.Reset()
-	if err := s.rate.WaitN(ctx, s.buf.Len()); err != nil {
-		return err
-	}
 	n, err := s.conn.ReadTo(s.buf, BufferSize)
 	if err != nil {
+		return err
+	}
+	if err := s.rate.WaitN(ctx, s.buf.Len()); err != nil {
 		return err
 	}
 	s.recordRead(n)
