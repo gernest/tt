@@ -4,33 +4,7 @@ package api;
 import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 
-message IPAddress {
-  oneof ip {
-    fixed32 ipv4 = 1;
-    IPv6 ipv6 = 2;
-  }
-}
-
-message IPv6 {
-  fixed64 first = 1; // hextets 1-4
-  fixed64 last = 2;  // hextets 5-8
-}
-
-message TcpAddress {
-  IPAddress ip = 1;
-  uint32 port = 2;
-}
-
-service Proxy {
-  rpc Init(InitRequest) returns (Response);
-  rpc Updates(stream Update) returns (Response);
-  rpc GetConfig(GetConfigRequest) returns (Config);
-}
-
-message InitRequest {
-  map<string, string> labels = 1;
-  repeated int32 available_ports = 2;
-}
+service Proxy { rpc Configure(Config) returns (Response); }
 
 message Response {
   oneof result {
@@ -39,18 +13,7 @@ message Response {
   }
 }
 
-message GetConfigRequest {}
-
 message Config { repeated Route routes = 1; }
-
-message Update {
-  oneof update {
-    RouteSet add = 1;
-    RouteSet remove = 2;
-  }
-}
-
-message RouteSet { repeated Route routes = 1; }
 
 message WeightedAddr {
   Address addr = 1;

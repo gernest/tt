@@ -16,7 +16,6 @@ package proxy
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -102,10 +101,27 @@ func New(ctx context.Context, opts Options) *Proxy {
 // RPC returns rpc server used to dynamically update the state of the proxy
 func (p *Proxy) RPC() *Updates {
 	return &Updates{
-		OnInit:      p.OnInit,
-		OnUpdate:    p.OnUpdate,
-		OnGetConfig: p.GetConfig,
+		OnConfigure: p.Configure,
 	}
+}
+
+func (p *Proxy) Configure(x *api.Config) error {
+	// avoid wasteful reloads by making sure that the configuration changed
+	if !proto.Equal(&p.config, x) {
+		m := make(configMap)
+		for _, r := range x.Routes {
+			m.Route(r)
+		}
+		if err := p.Reload(m); err != nil {
+			// restore old apis because we can't load the new ones
+			if n := p.TriggerReload(); n != nil {
+				// TODO we are in a broken state log/error or something
+			}
+			return err
+		}
+		p.config = *x
+	}
+	return nil
 }
 
 func (p *Proxy) TriggerReload() error {
@@ -118,99 +134,6 @@ func (p *Proxy) TriggerReload() error {
 
 func (p *Proxy) GetConfig() (*api.Config, error) {
 	return &p.config, nil
-}
-
-func (p *Proxy) OnUpdate(x *api.Update) {
-	switch e := x.Update.(type) {
-	case *api.Update_Add:
-		if e.Add != nil {
-			if len(p.config.Routes) == 0 {
-				p.config.Routes = e.Add.Routes
-				return
-			}
-			var src [][]byte
-			for _, n := range p.config.Routes {
-				b, _ := proto.Marshal(n)
-				src = append(src, b)
-			}
-			added := false
-			for _, v := range e.Add.Routes {
-				add := false
-				b, _ := proto.Marshal(v)
-				for _, s := range src {
-					if bytes.Equal(s, b) {
-						add, added = true, true
-						break
-					}
-				}
-				if add {
-					p.config.Routes = append(p.config.Routes, v)
-				}
-			}
-			if added {
-				err := p.TriggerReload()
-				if err != nil {
-					zlg.Error(err, "Failed to add routes")
-				}
-			}
-		}
-
-	case *api.Update_Remove:
-		if e.Remove != nil {
-			if len(p.config.Routes) == 0 {
-				return
-			}
-			var src [][]byte
-			for _, n := range p.config.Routes {
-				b, _ := proto.Marshal(n)
-				src = append(src, b)
-			}
-			removed := false
-			var ls []*api.Route
-			for _, v := range e.Remove.Routes {
-				remove := false
-				b, _ := proto.Marshal(v)
-				for _, s := range src {
-					if bytes.Equal(s, b) {
-						remove, removed = true, true
-						break
-					}
-				}
-				if !remove {
-					ls = append(ls, v)
-				}
-			}
-			if removed {
-				p.config.Routes = ls
-				err := p.TriggerReload()
-				if err != nil {
-					zlg.Error(err, "Failed to remove routes")
-				}
-			}
-		}
-	}
-}
-
-type eql struct {
-	src []byte
-}
-
-func (e *eql) eql(n *api.Route) bool {
-	b, _ := proto.Marshal(n)
-	return bytes.Equal(e.src, b)
-}
-
-func (p *Proxy) OnInit(x *api.InitRequest) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.opts.Labels == nil {
-		p.opts.Labels = make(map[string]string)
-	}
-	for k, v := range x.Labels {
-		p.opts.Labels[k] = v
-	}
-	p.availablePorts = make([]int32, len(x.AvailablePorts))
-	copy(p.availablePorts, x.AvailablePorts)
 }
 
 // Matcher reports whether hostname matches the Matcher's criteria.
