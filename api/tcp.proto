@@ -124,3 +124,33 @@ message RequestMatch {
     google.protobuf.Empty fixed = 4;
   }
 }
+
+message Context {
+  enum Protocol {
+    TCP = 0;
+    UDP = 1;
+    HTTP = 2;
+    WEBSOCKET = 3;
+    QUIC = 4;
+  }
+  message Stat {
+    int64 bytesRead = 1;
+    int64 bytesWritten = 2;
+  }
+  message Conn {
+    string localAddress = 1;
+    string remoteAddress = 2;
+    Stat stat = 3;
+  }
+  message Info {
+    string sni = 1;
+    string host = 2;
+    string path = 3;
+    string routeName = 4;
+  }
+  int64 id = 1;
+  Protocol protocol = 2;
+  Conn downstream = 3;
+  Conn upstream = 4;
+  Info info = 5;
+}
