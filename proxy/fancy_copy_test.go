@@ -12,7 +12,7 @@ var _ net.Conn = *&sniSniffConn{}
 
 func TestFancyCopy(t *testing.T) {
 	t.Run("Bidirectional", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.TODO())
+		ctx, cancel := context.WithTimeout(context.TODO(), 100*time.Millisecond)
 		defer cancel()
 
 		// we test that what is read upstream is actually written downstream and what
@@ -21,7 +21,6 @@ func TestFancyCopy(t *testing.T) {
 		ping := []byte("ping")
 		pong := []byte("pong")
 		var up, down bytes.Buffer
-		ok := make(chan struct{})
 		downstream := &conn{
 			readFn: func(b []byte) (int, error) {
 				return copy(b, ping), nil
@@ -32,21 +31,22 @@ func TestFancyCopy(t *testing.T) {
 		}
 		upstream := &conn{
 			writeFn: func(b []byte) (n int, err error) {
-				n, err = up.Write(b)
-				ok <- struct{}{}
-				return
+				return up.Write(b)
 			},
 			readFn: func(b []byte) (int, error) {
-				<-ok
 				return copy(b, pong), nil
 			},
 		}
 		go func() {
 			Copy(ctx, downstream, upstream)
 		}()
-		time.Sleep(10 * time.Millisecond)
-		cancel()
 		<-ctx.Done()
+		if !bytes.Contains(up.Bytes(), ping) {
+			t.Error("expected ping to be copied upstream")
+		}
+		if !bytes.Contains(down.Bytes(), pong) {
+			t.Error("expected pong to be copied downstream")
+		}
 	})
 }
 

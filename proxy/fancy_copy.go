@@ -162,7 +162,7 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 		}
 	}()
 	upstream := transit{
-		conn: newUpstream(from, to),
+		conn: newUpstream(to, from),
 		meta: meta,
 		rate: newRate(meta.Speed.Upstream.Load()),
 		buf:  up,
