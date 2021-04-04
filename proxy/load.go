@@ -191,9 +191,7 @@ func toDial(a *api.WeightedAddr, r *api.Route) *DialProxy {
 	}
 	timeout, _ := ptypes.Duration(r.Timeout)
 	keepAlive, _ := ptypes.Duration(r.KeepAlive)
-	var customCopy func(ctx context.Context, from, to net.Conn) error
 	if r.EnableOptimizedCopy {
-		customCopy = Copy
 	}
 	var up, down Speed
 	if speed := r.Speed; speed != nil {
@@ -206,7 +204,6 @@ func toDial(a *api.WeightedAddr, r *api.Route) *DialProxy {
 		DialTimeout:     timeout,
 		KeepAlivePeriod: keepAlive,
 		MetricsLabels:   a.MetricLabels,
-		Copy:            customCopy,
 		UpstreamSpeed:   up,
 		DownstreamSpeed: down,
 	}

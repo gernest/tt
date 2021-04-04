@@ -490,9 +490,6 @@ type DialProxy struct {
 	// no graceful downgrade.
 	// If zero, no PROXY header is sent. Currently, version 1 is supported.
 	ProxyProtocolVersion int
-	// Copy performs copying of bytes from => to and to => from This is a two way
-	// copy for tcp connections.
-	Copy func(ctx context.Context, from, to net.Conn) error
 	// MetricsLabels labels included when emitting metrics about the TPC proxying
 	// with this Dial
 	MetricsLabels map[string]string
@@ -555,10 +552,6 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 			c.SetKeepAlive(true)
 			c.SetKeepAlivePeriod(ka)
 		}
-	}
-	if dp.Copy != nil {
-		dp.Copy(ctx, src, dst)
-		return
 	}
 	errc := make(chan error, 1)
 	go proxyCopy(errc, src, dst)
