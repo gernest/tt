@@ -16,8 +16,11 @@ const (
 	Websocket
 )
 
+var contextID atomic.Int64
+
 // Meta a lot of details that is passed around with the  connection.
 type ContextMeta struct {
+	ID atomic.Int64
 	// Downstream
 	D TCP
 	// Upstream
@@ -121,6 +124,7 @@ func UpdateContext(ctx context.Context, fn func(*ContextMeta)) context.Context {
 		return ctx
 	}
 	var m ContextMeta
+	m.ID.Store(contextID.Inc())
 	m.Start = time.Now()
 	fn(&m)
 	return context.WithValue(ctx, metakey{}, &m)

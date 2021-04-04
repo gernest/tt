@@ -211,7 +211,12 @@ func (p *Proxy) port(configPort string) string {
 //
 // If it returns a non-nil error, any successfully opened listeners
 // are closed.
-func (p *Proxy) Start() error {
+func (p *Proxy) Start() (err error) {
+	defer func() {
+		if err != nil {
+			p.Close()
+		}
+	}()
 	if p.lns == nil {
 		p.lns = make(map[string]net.Listener)
 	}
@@ -257,10 +262,11 @@ func (p *Proxy) Start() error {
 
 	for hostPort := range set {
 		if _, ok := p.lns[hostPort]; !ok {
-			_, port, err := net.SplitHostPort(hostPort)
+			var port string
+			_, port, err = net.SplitHostPort(hostPort)
 			if err != nil {
 				zlg.Error(err, "Failed to split ip:port", zap.String("ip:port", hostPort))
-				continue
+				return
 			}
 			px, _ := strconv.Atoi(port)
 			if !p.goodPort(px) {
@@ -270,10 +276,10 @@ func (p *Proxy) Start() error {
 				)
 				continue
 			}
-			ln, err := p.netListen()("tcp", hostPort)
+			var ln net.Listener
+			ln, err = p.netListen()("tcp", hostPort)
 			if err != nil {
-				p.Close()
-				return err
+				return
 			}
 			zlg.Info("Started listener", zap.String("addr", hostPort))
 			p.lns[hostPort] = ln
