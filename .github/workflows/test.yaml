@@ -1,0 +1,23 @@
+name: Run  tests
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  unit:
+    name: Go ${{ matrix.go }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        go: [1.16]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Run
+        run: go test ./proxy
