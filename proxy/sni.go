@@ -22,6 +22,9 @@ import (
 	"io"
 	"net"
 	"strings"
+
+	"github.com/gernest/tt/zlg"
+	"go.uber.org/zap"
 )
 
 type sniMatch struct {
@@ -31,7 +34,9 @@ type sniMatch struct {
 
 func (m sniMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
+	zlg.Debug("read sni", zap.String("sni", sni), zap.String("component", "sni_match"))
 	if m.matcher(ctx, sni) {
+		zlg.Debug("sni matched", zap.String("sni", sni), zap.String("component", "sni_match"))
 		meta := GetContextMeta(ctx)
 		meta.ServerName.Store(sni)
 		return m.target, sni

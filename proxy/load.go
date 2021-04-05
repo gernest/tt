@@ -95,6 +95,10 @@ func (m configMap) AddHTTPHostRoute(ipPort, httpHost string, dest Target) {
 }
 
 func (m configMap) AddStopACMESearch(ipPort string) {
+	m.get(ipPort).allowACME = false
+}
+
+func (m configMap) AddAllowACMESearch(ipPort string) {
 	m.get(ipPort).allowACME = true
 }
 

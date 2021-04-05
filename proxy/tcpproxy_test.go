@@ -28,10 +28,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"net"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -457,8 +455,6 @@ func readTLS(dest, domain string) (string, error) {
 }
 
 func TestProxyACME(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
-	defer log.SetOutput(os.Stderr)
 
 	front := newLocalListener(t)
 	defer front.Close()
@@ -472,6 +468,7 @@ func TestProxyACME(t *testing.T) {
 
 	p, cancel := testProxy(t, front)
 	defer cancel()
+	p.AddAllowACMESearch(testFrontAddr)
 	p.AddSNIRoute(testFrontAddr, "foo.com", To(backFoo.Addr().String()))
 	p.AddSNIRoute(testFrontAddr, "bar.com", To(backBar.Addr().String()))
 	p.AddStopACMESearch(testFrontAddr)
@@ -492,17 +489,17 @@ func TestProxyACME(t *testing.T) {
 		{"bar.com.acme.invalid", "bar.com", true},
 		{"quux.com.acme.invalid", "", false},
 	}
-	for _, test := range tests {
+	for d, test := range tests {
 		got, err := readTLS(front.Addr().String(), test.domain)
 		if test.succeeds {
 			if err != nil {
-				t.Fatalf("readTLS %q got error %q, want nil", test.domain, err)
+				t.Fatalf("readTLS %d:%q got error %q, want nil", d, test.domain, err)
 			}
 			if got != test.want {
-				t.Fatalf("readTLS %q got %q, want %q", test.domain, got, test.want)
+				t.Fatalf("readTLS %d:%q got %q, want %q", d, test.domain, got, test.want)
 			}
 		} else if err == nil {
-			t.Fatalf("readTLS %q unexpectedly succeeded", test.domain)
+			t.Fatalf("readTLS %d:%q unexpectedly succeeded", d, test.domain)
 		}
 	}
 }

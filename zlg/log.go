@@ -11,6 +11,7 @@ func init() {
 	var err error
 	c := zap.NewProductionConfig()
 	c.DisableStacktrace = true
+	c.Level.SetLevel(zap.DebugLevel)
 	Logger, err = c.Build(
 		zap.WithCaller(false),
 	)
@@ -22,6 +23,10 @@ func init() {
 // Info logs info
 func Info(msg string, f ...zap.Field) {
 	Logger.Info(msg, f...)
+}
+
+func Debug(msg string, f ...zap.Field) {
+	Logger.Debug(msg, f...)
 }
 
 func Error(err error, msg string, f ...zap.Field) {
