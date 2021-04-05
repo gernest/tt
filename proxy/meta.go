@@ -131,5 +131,8 @@ func UpdateContext(ctx context.Context, fn func(*ContextMeta)) context.Context {
 }
 
 func GetContextMeta(ctx context.Context) *ContextMeta {
-	return ctx.Value(metakey{}).(*ContextMeta)
+	if m := ctx.Value(metakey{}); m != nil {
+		return m.(*ContextMeta)
+	}
+	return &ContextMeta{}
 }
