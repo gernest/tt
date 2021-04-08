@@ -362,9 +362,6 @@ func (noopRoute) match(context.Context, *bufio.Reader) (Target, string) {
 // serveConn runs in its own goroutine and matches c against routes.
 // It returns whether it matched purely for testing.
 func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
-	defer func() {
-
-	}()
 	br := bufio.NewReader(c)
 	for _, route := range routes {
 		if target, hostName := route.match(ctx, br); target != nil {
@@ -445,6 +442,10 @@ type Target interface {
 	// bytes have been consumed for the purposes of route
 	// matching.
 	HandleConn(context.Context, net.Conn)
+}
+
+type Incoming struct {
+	*bufio.Reader
 }
 
 // To is shorthand way of writing &tlsproxy.DialProxy{Addr: addr}.
