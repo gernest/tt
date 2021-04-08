@@ -25,32 +25,29 @@ var (
 )
 
 func main() {
-	proxywasm.SetNewStreamContext(newRootContext)
+	proxywasm.SetNewRootContext(newRootContext)
 }
 
-func newRootContext(rootContextID, contextID uint32) proxywasm.StreamContext {
-	return &notFound{}
+func newRootContext(contextID uint32) proxywasm.RootContext {
+	return &rootContext{}
 }
 
-// notFound serves not found page
-type notFound struct {
-	proxywasm.DefaultStreamContext
+type rootContext struct {
+	proxywasm.DefaultRootContext
 }
 
 // Override DefaultRootContext.
-func (ctx *notFound) OnVMStart(vmConfigurationSize int) bool {
+func (ctx *rootContext) OnVMStart(vmConfigurationSize int) bool {
 	counter = proxywasm.DefineCounterMetric(connectionCounterName)
 	return true
 }
 
 // Override DefaultRootContext.
-func (ctx *notFound) NewStreamContext(contextID uint32) proxywasm.StreamContext {
+func (ctx *rootContext) NewStreamContext(contextID uint32) proxywasm.StreamContext {
 	return &networkContext{}
 }
 
 type networkContext struct {
-	// You'd better embed the default stream context
-	// so that you don't need to reimplement all the methods by yourself.
 	proxywasm.DefaultStreamContext
 }
 
