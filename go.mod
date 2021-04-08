@@ -7,6 +7,7 @@ require (
 	github.com/pion/dtls/v2 v2.0.8
 	github.com/pion/udp v0.1.1
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
+	github.com/tetratelabs/proxy-wasm-go-sdk v0.12.0
 	github.com/urfave/cli v1.22.5
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/wasmerio/wasmer-go v1.0.3
