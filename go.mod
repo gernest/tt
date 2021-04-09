@@ -3,7 +3,10 @@ module github.com/gernest/tt
 go 1.16
 
 require (
+	github.com/ahmetb/go-httpbin v0.0.0-20200921172446-862fbad56b77
+	github.com/andybalholm/brotli v1.0.1 // indirect
 	github.com/golang/protobuf v1.5.2
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/pion/dtls/v2 v2.0.8
 	github.com/pion/udp v0.1.1
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c

@@ -1,3 +1,9 @@
+# github.com/ahmetb/go-httpbin v0.0.0-20200921172446-862fbad56b77
+## explicit
+github.com/ahmetb/go-httpbin
+# github.com/andybalholm/brotli v1.0.1
+## explicit
+github.com/andybalholm/brotli
 # github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/golang/protobuf v1.5.2
@@ -9,6 +15,9 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/gorilla/mux v1.8.0
+## explicit
+github.com/gorilla/mux
 # github.com/pion/dtls/v2 v2.0.8
 ## explicit
 github.com/pion/dtls/v2
@@ -40,6 +49,8 @@ github.com/pion/transport/replaydetector
 # github.com/pion/udp v0.1.1
 ## explicit
 github.com/pion/udp
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
 # github.com/shurcooL/sanitized_anchor_name v1.0.0

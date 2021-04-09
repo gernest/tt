@@ -1,0 +1,12 @@
+sudo: false
+language: go
+go: go1.9
+install:
+  - go get -u github.com/golang/lint/golint
+script:
+  - test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
+  - test -z "$(golint . | tee /dev/stderr)"
+  - go vet -v .
+  - curl https://glide.sh/get | sh
+  - glide install
+  - go test -v -cover  ./...
