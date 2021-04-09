@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"context"
-	"sync"
+	"net"
 
 	"golang.org/x/time/rate"
 )
@@ -22,28 +22,21 @@ func newRate(v float64) limit {
 	return rate.NewLimiter(rate.Limit(v), 0)
 }
 
-type rateManager interface {
-	Get(ctx context.Context) limit
+type RateCopy struct {
+	WaitN func(int) error
+	net.Conn
+	OnWrite func(int)
+	OnRead  func(int)
 }
 
-type defaultRateManager struct {
-	fill func(RateConfig) limit
-	m    map[string]limit
-	mu   sync.Mutex
-}
-
-func (d *defaultRateManager) Get(ctx context.Context) limit {
-	meta := GetContextMeta(ctx)
-	r := meta.GetRare()
-	if r.Key == "" || r.Average == 0 {
-		return noLimit{}
+func (r *RateCopy) Write(b []byte) (n int, err error) {
+	r.OnRead(len(b))
+	if err := r.WaitN(len(b)); err != nil {
+		return 0, err
 	}
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	if r, ok := d.m[r.Key]; ok {
-		return r
-	}
-	n := d.fill(r)
-	d.m[r.Key] = n
-	return n
+	defer func() {
+		r.OnWrite(n)
+	}()
+	n, err = r.Conn.Write(b)
+	return
 }

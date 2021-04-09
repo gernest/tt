@@ -555,8 +555,50 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 		}
 	}
 	errc := make(chan error, 1)
-	go proxyCopy(errc, src, dst)
-	go proxyCopy(errc, dst, src)
+	{
+		// upstream => downstream
+		from := dst
+		to := src
+		if down != 0 {
+			// we are reading from upstream and writing to to downstream so this is
+			// download speed
+			rate := newRate(down)
+			to = &RateCopy{
+				WaitN: func(i int) error {
+					return rate.WaitN(ctx, i)
+				},
+				OnWrite: func(i int) {
+					meta.D.W.Add(int64(i))
+				},
+				OnRead: func(i int) {
+					meta.U.R.Add(int64(i))
+				},
+			}
+		}
+		go proxyCopy(errc, to, from)
+	}
+	{
+		// downstream => upstream
+		from := src
+		to := dst
+		if up != 0 {
+			// we are reading from downstream and writing to upstream. This is limiting
+			// for upload speed
+			rate := newRate(up)
+			to = &RateCopy{
+				WaitN: func(i int) error {
+					return rate.WaitN(ctx, i)
+				},
+				OnWrite: func(i int) {
+					meta.U.W.Add(int64(i))
+				},
+				OnRead: func(i int) {
+					meta.D.R.Add(int64(i))
+				},
+			}
+		}
+		go proxyCopy(errc, to, from)
+	}
 	<-errc
 }
 
