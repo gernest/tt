@@ -11,6 +11,6 @@ import (
 func main() {
 	addr := flag.String("addr", ":8080", "address to use")
 	flag.Parse()
-	log.Println("starting http service at ", *addr)
+	log.Println("starting httpbbin service at ", *addr)
 	log.Fatal(http.ListenAndServe(*addr, httpbin.GetMux()))
 }
