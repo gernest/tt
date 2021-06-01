@@ -57,6 +57,10 @@ type ContextMeta struct {
 	Labels map[string]string
 }
 
+func (m ContextMeta) GetProtocol() Protocol {
+	return Protocol(m.Protocol.Load())
+}
+
 // GetRare returns rate limiting configuration for this route
 func (m ContextMeta) GetRare() RateConfig {
 	var key string
