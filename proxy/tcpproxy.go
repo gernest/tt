@@ -363,11 +363,9 @@ func (noopRoute) match(context.Context, *bufio.Reader) (Target, string) {
 // It returns whether it matched purely for testing.
 func serveConn(ctx context.Context, c net.Conn, routes []route) {
 	br := bufio.NewReader(c)
-	var match bool
+	meta := GetContextMeta(ctx)
 	defer func() {
 		c.Close()
-		meta := GetContextMeta(ctx)
-		meta.NoMatch.Store(!match)
 		meta.Complete()
 	}()
 	for _, route := range routes {
@@ -380,11 +378,11 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) {
 					Conn:     c,
 				}
 			}
-			match = true
 			target.HandleConn(ctx, c)
 			return
 		}
 	}
+	meta.NoMatch.Store(true)
 }
 
 func (p *Proxy) Reload(m configMap) error {
@@ -508,8 +506,6 @@ func UnderlyingConn(c net.Conn) net.Conn {
 	return c
 }
 
-func goCloseConn(c net.Conn) { go c.Close() }
-
 // HandleConn implements the Target interface.
 func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 	meta := GetContextMeta(ctx)
@@ -536,15 +532,15 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 		dp.onDialError()(src, err)
 		return
 	}
-	defer goCloseConn(dst)
+	defer dst.Close()
 
 	if err = dp.sendProxyHeader(dst, src); err != nil {
 		dp.onDialError()(src, err)
 		return
 	}
-	defer goCloseConn(src)
-
+	defer src.Close()
 	if ka := dp.keepAlivePeriod(); ka > 0 {
+		zlg.Debug("setting keep alive", zap.Duration("duration", ka))
 		if c, ok := UnderlyingConn(src).(*net.TCPConn); ok {
 			c.SetKeepAlive(true)
 			c.SetKeepAlivePeriod(ka)
@@ -554,7 +550,11 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 			c.SetKeepAlivePeriod(ka)
 		}
 	}
-	errc := make(chan error, 1)
+	errc := make(chan struct{}, 2)
+	cancelFn := func() {
+		errc <- struct{}{}
+		meta.copyErrCount.Inc()
+	}
 	{
 		// upstream => downstream
 		from := dst
@@ -575,7 +575,7 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 				},
 			}
 		}
-		go proxyCopy(errc, to, from)
+		go proxyCopy(ctx, cancelFn, to, from)
 	}
 	{
 		// downstream => upstream
@@ -597,9 +597,16 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 				},
 			}
 		}
-		go proxyCopy(errc, to, from)
+		go proxyCopy(ctx, cancelFn, to, from)
 	}
-	<-errc
+
+	x := 0
+	for range errc {
+		x++
+		if x > 1 {
+			return
+		}
+	}
 }
 
 func (dp *DialProxy) sendProxyHeader(w io.Writer, src net.Conn) error {
@@ -631,14 +638,46 @@ func (dp *DialProxy) sendProxyHeader(w io.Writer, src net.Conn) error {
 	}
 }
 
+var bufpool = &sync.Pool{
+	New: func() interface{} {
+		return make([]byte, BufferSize)
+	},
+}
+
+func get() []byte {
+	return bufpool.Get().([]byte)
+}
+
+func put(b []byte) {
+	bufpool.Put(b[:0])
+}
+
+func hashConn(conn net.Conn) string {
+	return conn.LocalAddr().String() + "<>" + conn.RemoteAddr().String()
+}
+
 // proxyCopy is the function that copies bytes around.
 // It's a named function instead of a func literal so users get
 // named goroutines in debug goroutine stack dumps.
-func proxyCopy(errc chan<- error, dst, src net.Conn) {
+func proxyCopy(
+	ctx context.Context,
+	cancel func(),
+	dst, src net.Conn,
+) {
+	nl := zlg.Logger.With(
+		zap.String("component", "proxyCopy"),
+		zap.String("src", hashConn(src)),
+		zap.String("dst", hashConn(dst)),
+	)
+	nl.Debug("Start copying ...")
+	defer func() {
+		nl.Debug("Done copying")
+		cancel()
+	}()
 	// Before we unwrap src and/or dst, copy any buffered data.
 	if wc, ok := src.(*Conn); ok && len(wc.Peeked) > 0 {
 		if _, err := dst.Write(wc.Peeked); err != nil {
-			errc <- err
+			nl.Error(err.Error() + "Failed to write to connection")
 			return
 		}
 		wc.Peeked = nil
@@ -648,16 +687,43 @@ func proxyCopy(errc chan<- error, dst, src net.Conn) {
 	// 1.11's splice optimization kicks in.
 	src = UnderlyingConn(src)
 	dst = UnderlyingConn(dst)
-
-	_, err := io.Copy(dst, src)
-	errc <- err
+	buf := get()
+	defer put(buf)
+	meta := GetContextMeta(ctx)
+	for {
+		if meta.copyErrCount.Load() > 1 {
+			nl.Debug("Exiting the copy loopcopy error counts exceeds 1",
+				zap.Int("copyErrCount", int(meta.copyErrCount.Load())),
+			)
+			return
+		}
+		if meta.GetProtocol() == HTTP {
+			// for HTTP set a read deadline
+			src.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
+		}
+		n, err := src.Read(buf)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				// This connection was properly closed we are at the end of the stream. We
+				// copy any remaining data in the buffer and exit
+				_, err = dst.Write(buf[:n])
+				err = nil
+			}
+			if err != nil {
+				nl.Error(err.Error() + "Failed to read data from connection")
+			}
+			return
+		}
+		_, err = dst.Write(buf[:n])
+		if err != nil {
+			zlg.Error(err, "Failed to write to connection")
+			return
+		}
+	}
 }
 
 func (dp *DialProxy) keepAlivePeriod() time.Duration {
-	if dp.KeepAlivePeriod != 0 {
-		return dp.KeepAlivePeriod
-	}
-	return time.Minute
+	return dp.KeepAlivePeriod
 }
 
 func (dp *DialProxy) dialTimeout() time.Duration {

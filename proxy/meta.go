@@ -55,6 +55,8 @@ type ContextMeta struct {
 	Rate       Rate
 	// Labels these are labels that are attached to the request
 	Labels map[string]string
+
+	copyErrCount atomic.Int32
 }
 
 func (m ContextMeta) GetProtocol() Protocol {

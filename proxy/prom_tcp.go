@@ -39,10 +39,10 @@ func (m *ContextMeta) Log() {
 		zap.Duration("duration", m.End.Sub(m.Start)),
 	}
 	if m.NoMatch.Load() {
-		zlg.Info("PASS", fields...)
+		zlg.Info("FAILED", fields...)
 		return
 	}
-	zlg.Info("FAILED", fields...)
+	zlg.Info("PASS", fields...)
 }
 
 func (m *ContextMeta) GetBaseLabels(lbs ...map[string]string) prometheus.Labels {
