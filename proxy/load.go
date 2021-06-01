@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/smallnest/weighted"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type configMap map[string]*config
@@ -108,6 +109,10 @@ const defaultNetwork = "tcp"
 
 // Route generates configuration based on r
 func (m configMap) Route(r *api.Route) {
+	var labels []zapcore.Field
+	for k, v := range r.MetricsLabels {
+		labels = append(labels, zap.String(k, v))
+	}
 	ipPort := defaultIPPort
 	network := defaultNetwork
 	if r.Src != nil {
@@ -118,6 +123,8 @@ func (m configMap) Route(r *api.Route) {
 			ipPort = r.Src.Network
 		}
 	}
+	labels = append(labels, zap.String("ip:port", ipPort))
+	zlg.Info("Loading route", labels...)
 	m.get(ipPort).allowACME = r.AllowAcme
 	m.get(ipPort).network = network
 	switch e := r.Condition.Match.(type) {

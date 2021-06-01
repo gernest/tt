@@ -28,7 +28,7 @@ func Proxy() cli.Command {
 				Value:  5555,
 			},
 			cli.IntFlag{
-				Name:   "control,c",
+				Name:   "control",
 				Usage:  "gRPC server for realtime dynamic routing updates",
 				EnvVar: "TT_CONTROL_PORT",
 				Value:  5500,
@@ -39,7 +39,7 @@ func Proxy() cli.Command {
 				EnvVar: "TT_ALLOWED_PORTS",
 			},
 			cli.StringFlag{
-				Name:  "load",
+				Name:  "config,c",
 				Usage: "If this is provided, routes will be initially loaded from this file",
 				Value: "tt.json",
 			},
@@ -50,9 +50,10 @@ func Proxy() cli.Command {
 
 // start starts the proxy service
 func start(ctx *cli.Context) error {
-	b, err := ioutil.ReadFile(ctx.GlobalString("load"))
+	file := ctx.String("config")
+	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		zlg.Info(err.Error())
+		zlg.Error(err, "Failed to load config file", zap.String("file", file))
 	}
 	var c api.Config
 	if b != nil {
@@ -65,9 +66,9 @@ func start(ctx *cli.Context) error {
 
 	return startCtx(context.Background(),
 		proxy.Options{
-			HostPort:        fmt.Sprintf(":%d", ctx.GlobalInt("port")),
-			ControlHostPort: fmt.Sprintf(":%d", ctx.GlobalInt("control")),
-			AllowedPOrts:    append([]int{ctx.GlobalInt("port")}, ctx.GlobalIntSlice("allowed")...),
+			HostPort:        fmt.Sprintf(":%d", ctx.Int("port")),
+			ControlHostPort: fmt.Sprintf(":%d", ctx.Int("control")),
+			AllowedPOrts:    append([]int{ctx.Int("port")}, ctx.IntSlice("allowed")...),
 			Config:          c,
 		},
 	)
