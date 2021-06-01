@@ -364,6 +364,11 @@ func (noopRoute) match(context.Context, *bufio.Reader) (Target, string) {
 func serveConn(ctx context.Context, c net.Conn, routes []route) {
 	br := bufio.NewReader(c)
 	var match bool
+	defer func() {
+		meta := GetContextMeta(ctx)
+		meta.NoMatch.Store(!match)
+		meta.Complete()
+	}()
 	for _, route := range routes {
 		if target, hostName := route.match(ctx, br); target != nil {
 			if n := br.Buffered(); n > 0 {
@@ -376,12 +381,9 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) {
 			}
 			match = true
 			target.HandleConn(ctx, c)
-			break
+			return
 		}
 	}
-	meta := GetContextMeta(ctx)
-	meta.NoMatch.Store(!match)
-	meta.Complete()
 }
 
 func (p *Proxy) Reload(m configMap) error {
