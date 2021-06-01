@@ -365,6 +365,7 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) {
 	br := bufio.NewReader(c)
 	var match bool
 	defer func() {
+		c.Close()
 		meta := GetContextMeta(ctx)
 		meta.NoMatch.Store(!match)
 		meta.Complete()
