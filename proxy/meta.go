@@ -40,6 +40,8 @@ type ContextMeta struct {
 	Start    time.Time
 	Speed    SpeedRateConfig
 	Rate     Rate
+	// Labels these are labels that are attached to the request
+	Labels map[string]string
 }
 
 // GetRare returns rate limiting configuration for this route

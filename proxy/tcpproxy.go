@@ -320,7 +320,7 @@ func (p *Proxy) start(ctx context.Context) {
 }
 
 func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort string) {
-	x := p.configMap[hostPort]
+	useConfig := p.configMap[hostPort]
 	zlg.Info("Start Listening for traffic", zap.String("host:port", hostPort))
 	for {
 		if ctx.Err() != nil {
@@ -339,7 +339,7 @@ func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort str
 			m.D.A.L.Address = c.LocalAddr().String()
 			m.D.A.R.Address = c.RemoteAddr().Network()
 		})
-		go serveConn(base, c, x.routes)
+		go serveConn(base, c, useConfig.routes)
 	}
 }
 
