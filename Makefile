@@ -1,5 +1,5 @@
 
-
+.PHONY: build
 build:
 	go build  -o bin/http 
 tools/servers/echo/main.go:
