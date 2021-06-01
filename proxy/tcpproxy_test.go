@@ -505,6 +505,7 @@ func TestProxyACME(t *testing.T) {
 }
 
 func TestGenerateTestConfig(t *testing.T) {
+	t.Skip()
 	conf := &api.Config{
 		Routes: []*api.Route{
 			{
@@ -515,7 +516,7 @@ func TestGenerateTestConfig(t *testing.T) {
 				},
 				Endpoint: &api.WeightedAddr{
 					Addr: &api.Address{
-						Address: "echo:8081",
+						Address: "localhost:8081",
 					},
 					MetricLabels: map[string]string{
 						"service": "echo",
@@ -530,7 +531,7 @@ func TestGenerateTestConfig(t *testing.T) {
 				},
 				Endpoint: &api.WeightedAddr{
 					Addr: &api.Address{
-						Address: "httpbin:8080",
+						Address: "localhost:8080",
 					},
 					MetricLabels: map[string]string{
 						"service": "httpbin",
@@ -548,7 +549,7 @@ func TestGenerateTestConfig(t *testing.T) {
 				},
 				Endpoint: &api.WeightedAddr{
 					Addr: &api.Address{
-						Address: "httpbin:8080",
+						Address: "localhost:8080",
 					},
 					MetricLabels: map[string]string{
 						"service": "fixed",
@@ -560,5 +561,5 @@ func TestGenerateTestConfig(t *testing.T) {
 	var m jsonpb.Marshaler
 	var o bytes.Buffer
 	m.Marshal(&o, conf)
-	ioutil.WriteFile("../../testing/dreamtcp.json", o.Bytes(), 0600)
+	ioutil.WriteFile("../tools/servers/config.json", o.Bytes(), 0600)
 }
