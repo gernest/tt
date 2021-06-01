@@ -1,1 +1,46 @@
-{"routes":[{"condition":{"sni":"echo.test"},"endpoint":{"addr":{"address":"localhost:8081"},"metricLabels":{"service":"echo"}}},{"condition":{"host":"httpbin.test"},"endpoint":{"addr":{"address":"localhost:8080"},"metricLabels":{"service":"httpbin"}}},{"src":{"address":":5552"},"condition":{"fixed":{}},"endpoint":{"addr":{"address":"localhost:8080"},"metricLabels":{"service":"fixed"}}}]}
+{
+    "routes": [
+        {
+            "condition": {
+                "sni": "echo.test"
+            },
+            "endpoint": {
+                "addr": {
+                    "address": "localhost:8081"
+                },
+                "metricLabels": {
+                    "service": "echo"
+                }
+            }
+        },
+        {
+            "condition": {
+                "host": "httpbin.test"
+            },
+            "endpoint": {
+                "addr": {
+                    "address": "localhost:8080"
+                },
+                "metricLabels": {
+                    "service": "httpbin"
+                }
+            }
+        },
+        {
+            "src": {
+                "address": ":5552"
+            },
+            "condition": {
+                "fixed": {}
+            },
+            "endpoint": {
+                "addr": {
+                    "address": "localhost:8080"
+                },
+                "metricLabels": {
+                    "service": "fixed"
+                }
+            }
+        }
+    ]
+}

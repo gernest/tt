@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8000", "address to use")
+	addr := flag.String("addr", ":8081", "address to use")
 	mode := flag.String("mode", "server", "client or server")
 	flag.Parse()
 	switch *mode {
