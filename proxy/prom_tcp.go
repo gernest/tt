@@ -14,7 +14,7 @@ var totalTCPRequests = prometheus.NewCounterVec(
 		Name: "tcp_requests_total",
 		Help: "Total number of tcp requests",
 	},
-	[]string{},
+	[]string{"acme", "fixed", "no_match", "protocol", "route", "server_name"},
 )
 
 func (m *ContextMeta) Complete() {
@@ -47,11 +47,12 @@ func (m *ContextMeta) Log() {
 
 func (m *ContextMeta) GetBaseLabels(lbs ...map[string]string) prometheus.Labels {
 	lbs = append(lbs, map[string]string{
-		"acme":     m.ACME.String(),
-		"fixed":    m.Fixed.String(),
-		"no_match": m.NoMatch.String(),
-		"protocol": Protocol(m.Protocol.Load()).String(),
-		"route":    m.RouteName.String(),
+		"acme":        m.ACME.String(),
+		"fixed":       m.Fixed.String(),
+		"no_match":    m.NoMatch.String(),
+		"protocol":    Protocol(m.Protocol.Load()).String(),
+		"route":       m.RouteName.String(),
+		"server_name": m.ServerName.String(),
 	})
 	return m.GetLabels(lbs...)
 }
