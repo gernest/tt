@@ -130,8 +130,7 @@ func clientHelloServerName(br *bufio.Reader) (sni string) {
 	}
 	const recordTypeHandshake = 0x16
 	if hdr[0] != recordTypeHandshake {
-		// Not TLS try dtls
-		return clientHelloServerNameDTLS(br)
+		return ""
 	}
 	recLen := int(hdr[3])<<8 | int(hdr[4]) // ignoring version in hdr[1:3]
 	helloBytes, err := br.Peek(recordHeaderLen + recLen)
@@ -144,6 +143,10 @@ func clientHelloServerName(br *bufio.Reader) (sni string) {
 			return nil, nil
 		},
 	}).Handshake()
+	if sni == "" {
+		// Not TLS try dtls
+		return clientHelloServerNameDTLS(br)
+	}
 	return
 }
 
