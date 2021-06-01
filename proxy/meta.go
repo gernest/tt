@@ -16,6 +16,19 @@ const (
 	Websocket
 )
 
+func (p Protocol) String() string {
+	switch p {
+	case HTTP:
+		return "http"
+	case UDP:
+		return "udp"
+	case Websocket:
+		return "websocket"
+	default:
+		return "tcp"
+	}
+}
+
 var contextID atomic.Int64
 
 // Meta a lot of details that is passed around with the  connection.
@@ -36,10 +49,10 @@ type ContextMeta struct {
 	// RouteName the name of the route if any
 	RouteName atomic.String
 	// Protocol The protocol which we are serving
-	Protocol atomic.Uint32
-	Start    time.Time
-	Speed    SpeedRateConfig
-	Rate     Rate
+	Protocol   atomic.Uint32
+	Start, End time.Time
+	Speed      SpeedRateConfig
+	Rate       Rate
 	// Labels these are labels that are attached to the request
 	Labels map[string]string
 }

@@ -361,8 +361,9 @@ func (noopRoute) match(context.Context, *bufio.Reader) (Target, string) {
 
 // serveConn runs in its own goroutine and matches c against routes.
 // It returns whether it matched purely for testing.
-func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
+func serveConn(ctx context.Context, c net.Conn, routes []route) {
 	br := bufio.NewReader(c)
+	var match bool
 	for _, route := range routes {
 		if target, hostName := route.match(ctx, br); target != nil {
 			if n := br.Buffered(); n > 0 {
@@ -373,18 +374,14 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) bool {
 					Conn:     c,
 				}
 			}
+			match = true
 			target.HandleConn(ctx, c)
-			return true
+			break
 		}
 	}
 	meta := GetContextMeta(ctx)
-	meta.NoMatch.Store(true)
-	zlg.Info("no routes matched conn",
-		zap.String("remote_addr", c.RemoteAddr().String()),
-		zap.String("local_addr", c.LocalAddr().String()),
-	)
-	c.Close()
-	return false
+	meta.NoMatch.Store(!match)
+	meta.Complete()
 }
 
 func (p *Proxy) Reload(m configMap) error {
