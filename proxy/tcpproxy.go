@@ -690,6 +690,17 @@ func proxyCopy(
 	buf := get()
 	defer put(buf)
 	meta := GetContextMeta(ctx)
+	isHttp := meta.GetProtocol() == HTTP
+	prepareRead := func() {
+		if isHttp {
+			src.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
+		}
+	}
+	prepareWrite := func() {
+		if isHttp {
+			dst.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+		}
+	}
 	for {
 		if meta.copyErrCount.Load() > 1 {
 			nl.Debug("Exiting the copy loopcopy error counts exceeds 1",
@@ -697,15 +708,13 @@ func proxyCopy(
 			)
 			return
 		}
-		if meta.GetProtocol() == HTTP {
-			// for HTTP set a read deadline
-			src.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
-		}
+		prepareRead()
 		n, err := src.Read(buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				// This connection was properly closed we are at the end of the stream. We
 				// copy any remaining data in the buffer and exit
+				prepareWrite()
 				_, err = dst.Write(buf[:n])
 				err = nil
 			}
@@ -714,6 +723,7 @@ func proxyCopy(
 			}
 			return
 		}
+		prepareWrite()
 		_, err = dst.Write(buf[:n])
 		if err != nil {
 			zlg.Error(err, "Failed to write to connection")
