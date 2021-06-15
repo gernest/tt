@@ -2,7 +2,7 @@
     "routes": [
         {
             "condition": {
-                "sni": "echo.test"
+                "sni": "random.test"
             },
             "endpoint": {
                 "addr": {
@@ -14,35 +14,6 @@
             },
             "speed": {
                 "downstream": "10kb/s"
-            }
-        },
-        {
-            "condition": {
-                "host": "httpbin.test"
-            },
-            "endpoint": {
-                "addr": {
-                    "address": "localhost:8080"
-                },
-                "metricLabels": {
-                    "service": "httpbin"
-                }
-            }
-        },
-        {
-            "src": {
-                "address": ":5552"
-            },
-            "condition": {
-                "fixed": {}
-            },
-            "endpoint": {
-                "addr": {
-                    "address": "localhost:8080"
-                },
-                "metricLabels": {
-                    "service": "fixed"
-                }
             }
         }
     ]
