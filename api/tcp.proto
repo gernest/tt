@@ -53,7 +53,17 @@ message Route {
 // I you want do have upload speed of up to 40 mp per seconds then you can set
 // downstream="20MiB/s"
 message Speed {
+  // The rate at which bytes are written to downstream connection. By downstream
+  // connection we are refering to a connection established on tt server by the
+  // world
+  //   World => tt => Internal
+  //   World [==> downstream connection] tt => Internal
   string downstream = 1;
+  // The rate at which bytes are written to upstream connection. By upstream
+  // connection we are refering to a connection established by tt server to the
+  // configured internal service.
+  //   World => tt => Internal
+  //   World => tt [=> upstream connection] Internal
   string upstream = 2;
 }
 

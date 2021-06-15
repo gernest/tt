@@ -443,7 +443,17 @@ func (m *Route) GetSpeed() *Speed {
 // I you want do have upload speed of up to 40 mp per seconds then you can set
 // downstream="20MiB/s"
 type Speed struct {
-	Downstream           string   `protobuf:"bytes,1,opt,name=downstream,proto3" json:"downstream,omitempty"`
+	// The rate at which bytes are written to downstream connection. By downstream
+	// connection we are refering to a connection established on tt server by the
+	// world
+	//   World => tt => Internal
+	//   World [==> downstream connection] tt => Internal
+	Downstream string `protobuf:"bytes,1,opt,name=downstream,proto3" json:"downstream,omitempty"`
+	// The rate at which bytes are written to upstream connection. By upstream
+	// connection we are refering to a connection established by tt server to the
+	// configured internal service.
+	//   World => tt => Internal
+	//   World => tt [=> upstream connection] Internal
 	Upstream             string   `protobuf:"bytes,2,opt,name=upstream,proto3" json:"upstream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`

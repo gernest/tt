@@ -522,6 +522,9 @@ func TestGenerateTestConfig(t *testing.T) {
 						"service": "echo",
 					},
 				},
+				Speed: &api.Speed{
+					Downstream: "10kb/s",
+				},
 			},
 			{
 				Condition: &api.RequestMatch{
