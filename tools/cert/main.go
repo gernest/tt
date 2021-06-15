@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build ignore
-
 // Generate a self-signed X.509 certificate for a TLS server. Outputs to
 // 'cert.pem' and 'key.pem' and will overwrite existing files.
 
@@ -23,6 +21,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -35,6 +34,7 @@ var (
 	rsaBits    = flag.Int("rsa-bits", 2048, "Size of RSA key to generate. Ignored if --ecdsa-curve is set")
 	ecdsaCurve = flag.String("ecdsa-curve", "", "ECDSA curve to use to generate a key. Valid values are P224, P256 (recommended), P384, P521")
 	ed25519Key = flag.Bool("ed25519", false, "Generate an Ed25519 key")
+	dir        = flag.String("dir", "./bin/certs", "the directory to save files in")
 )
 
 func publicKey(priv interface{}) interface{} {
@@ -140,8 +140,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create certificate: %v", err)
 	}
+	if *dir != "" {
+		os.MkdirAll(*dir, 0755)
+	}
 
-	certOut, err := os.Create("cert.pem")
+	certOut, err := os.Create(filepath.Join(*dir, "cert.pem"))
 	if err != nil {
 		log.Fatalf("Failed to open cert.pem for writing: %v", err)
 	}
@@ -153,7 +156,7 @@ func main() {
 	}
 	log.Print("wrote cert.pem\n")
 
-	keyOut, err := os.OpenFile("key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(filepath.Join(*dir, "key.pem"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Fatalf("Failed to open key.pem for writing: %v", err)
 		return

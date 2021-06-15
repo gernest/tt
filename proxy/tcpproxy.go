@@ -564,6 +564,7 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 			// download speed
 			rate := newRate(down)
 			to = &RateCopy{
+				Conn: src,
 				WaitN: func(i int) error {
 					return rate.WaitN(ctx, i)
 				},
@@ -586,6 +587,7 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 			// for upload speed
 			rate := newRate(up)
 			to = &RateCopy{
+				Conn: dst,
 				WaitN: func(i int) error {
 					return rate.WaitN(ctx, i)
 				},

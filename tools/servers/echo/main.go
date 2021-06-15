@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,12 +11,21 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8081", "address to use")
+	cert := flag.String("cert", "./bin/certs/echo.test/cert.pem", "tls cert")
+	key := flag.String("key", "./bin/certs/echo.test/key.pem", "tls key")
 	flag.Parse()
-	serve(*addr)
+	serve(*addr, *cert, *key)
 }
 
-func serve(addr string) {
-	ls, err := net.Listen("tcp", ":8000")
+func serve(addr, cert, key string) {
+	x, err := tls.LoadX509KeyPair(cert, key)
+	if err != nil {
+		log.Fatal("Failed to load certs", err)
+	}
+	config := tls.Config{
+		Certificates: []tls.Certificate{x},
+	}
+	ls, err := tls.Listen("tcp", ":8081", &config)
 	if err != nil {
 		log.Fatal(err)
 	}

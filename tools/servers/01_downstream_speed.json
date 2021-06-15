@@ -2,18 +2,18 @@
     "routes": [
         {
             "condition": {
-                "sni": "random.test"
+                "sni": "rando.test"
             },
             "endpoint": {
                 "addr": {
-                    "address": "localhost:8081"
+                    "address": "localhost:8082"
                 },
                 "metricLabels": {
-                    "service": "echo"
+                    "service": "rando"
                 }
             },
             "speed": {
-                "downstream": "10kb/s"
+                "downstream": "10kib/s"
             }
         }
     ]
