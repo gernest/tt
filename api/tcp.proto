@@ -172,6 +172,7 @@ message Rule {
       CONNECT = 6;
       HEAD = 7;
       TRACE = 8;
+      ALL = 9;
     }
   }
 
