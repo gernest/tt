@@ -46,6 +46,9 @@ message Route {
   bool allow_acme = 10;
   bool enable_optimized_copy = 11;
   Speed speed = 12;
+  string name = 13;
+  Rule rule = 14;
+  int32 priority = 15;
 }
 
 // Speed defines rate limiting of how fast data willl be copied. This is a
