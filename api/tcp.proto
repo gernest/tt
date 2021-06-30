@@ -28,6 +28,8 @@ message Address {
   string address = 2;
 }
 
+message Middleware {}
+
 message Route {
   enum LoadBalanceAlgo {
     RoundRobinWeighted = 0;
@@ -49,6 +51,7 @@ message Route {
   string name = 13;
   Rule rule = 14;
   int32 priority = 15;
+  repeated Middleware middlewares = 16;
 }
 
 // Speed defines rate limiting of how fast data willl be copied. This is a
