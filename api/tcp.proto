@@ -161,8 +161,10 @@ message Rule {
       Methods methods = 1;
       StringMatch path = 2;
       string host = 3;
+      Headers headers = 4;
     }
-    message Methods { repeated Method method = 1; }
+    message Methods { repeated Method methods = 1; }
+    message Headers { repeated Header headers = 1; }
     enum Method {
       GET = 0;
       POST = 1;
@@ -175,6 +177,10 @@ message Rule {
       TRACE = 8;
       ALL = 9;
     }
+  }
+  message Header {
+    string key = 1;
+    StringMatch vallue = 2;
   }
 
   message StringMatch {
