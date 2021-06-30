@@ -19,7 +19,7 @@ message Config { repeated Route routes = 1; }
 
 message WeightedAddr {
   Address addr = 1;
-  uint32 weight = 3;
+  int32 weight = 3;
   map<string, string> metric_labels = 4;
 }
 
