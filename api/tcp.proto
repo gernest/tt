@@ -158,10 +158,11 @@ message Rule {
 
   message HTTP {
     oneof match {
-      Method method = 1;
+      Methods methods = 1;
       StringMatch path = 2;
       string host = 3;
     }
+    message Methods { Method method = 1; }
     enum Method {
       GET = 0;
       POST = 1;

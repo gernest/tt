@@ -44,7 +44,7 @@ func score(r *api.Rule) (total int) {
 		}
 	case *api.Rule_Http:
 		switch m := e.Http.Match.(type) {
-		case *api.Rule_HTTP_Method_:
+		case *api.Rule_HTTP_Methods_:
 			total += int(method)
 		case *api.Rule_HTTP_Path:
 			switch m.Path.Match.(type) {
