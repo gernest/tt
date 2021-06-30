@@ -127,3 +127,52 @@ message Context {
   Conn upstream = 4;
   Info info = 5;
 }
+
+message Rule {
+  message List { repeated Rule rules = 1; }
+
+  oneof match {
+    List all = 1;
+    List any = 2;
+    Rule not = 3;
+  }
+
+  message TCP {
+    oneof match {
+      uint32 port = 1;
+      PortRange ports = 2;
+      string sni = 3;
+    }
+
+    message PortRange {
+      uint32 min = 1;
+      uint32 max = 2;
+    }
+  }
+
+  message HTTP {
+    oneof match {
+      Method method = 1;
+      StringMatch path = 2;
+    }
+    enum Method {
+      GET = 0;
+      POST = 1;
+      PUT = 2;
+      DELETE = 3;
+      PATCH = 4;
+      OPTIONS = 5;
+      CONNECT = 6;
+      HEAD = 7;
+      TRACE = 8;
+    }
+  }
+
+  message StringMatch {
+    oneof match {
+      string exact = 1;
+      string prefix = 2;
+      string regexp = 3;
+    }
+  }
+}
