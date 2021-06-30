@@ -1,8 +1,10 @@
 syntax = "proto3";
 
-package api;
+option go_package = "girhub.com/gernest/tt/api";
+
 import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 service Proxy { rpc Configure(Config) returns (Response); }
 
@@ -116,10 +118,11 @@ message Context {
     Stat stat = 3;
   }
   message Info {
-    string sni = 1;
-    string host = 2;
-    string path = 3;
+    google.protobuf.StringValue sni = 1;
+    google.protobuf.StringValue host = 2;
+    google.protobuf.StringValue path = 3;
     string routeName = 4;
+    int32 listenPort = 5;
   }
   int64 id = 1;
   Protocol protocol = 2;
@@ -157,6 +160,7 @@ message Rule {
     oneof match {
       Method method = 1;
       StringMatch path = 2;
+      string host = 3;
     }
     enum Method {
       GET = 0;

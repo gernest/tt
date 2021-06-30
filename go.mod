@@ -20,4 +20,5 @@ require (
 	golang.org/x/net v0.0.0-20210330142815-c8897c278d10 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	google.golang.org/grpc v1.36.1
+	google.golang.org/protobuf v1.26.0
 )

@@ -9,6 +9,7 @@ import (
 var _ api.ProxyServer = (*Updates)(nil)
 
 type Updates struct {
+	api.UnimplementedProxyServer
 	OnConfigure func(*api.Config) error
 }
 

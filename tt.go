@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//go:generate protoc -I api/ --go_out=plugins=grpc:./api api/tcp.proto
+//go:generate protoc -I api/ --go_out=./api --go_opt=paths=source_relative  --go-grpc_out=./api --go-grpc_opt=paths=source_relative api/tcp.proto
 func main() {
 	a := cli.NewApp()
 	a.Name = "tt"
