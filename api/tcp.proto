@@ -135,6 +135,9 @@ message Rule {
     List all = 1;
     List any = 2;
     Rule not = 3;
+
+    TCP tcp = 4;
+    HTTP http = 5;
   }
 
   message TCP {
