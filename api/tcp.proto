@@ -162,7 +162,7 @@ message Rule {
       StringMatch path = 2;
       string host = 3;
     }
-    message Methods { Method method = 1; }
+    message Methods { repeated Method method = 1; }
     enum Method {
       GET = 0;
       POST = 1;
