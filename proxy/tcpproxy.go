@@ -57,7 +57,7 @@ type Proxy struct {
 	ctx context.Context
 
 	// The host:ip on which this host is listening from.
-	opts Options
+	opts *Options
 }
 
 // goodPort returns true if port is good and should be ok to listen on.
@@ -107,7 +107,7 @@ func (p *Proxy) RPC() *Updates {
 
 func (p *Proxy) Configure(x *api.Config) error {
 	// avoid wasteful reloads by making sure that the configuration changed
-	if !proto.Equal(&p.config, x) {
+	if !proto.Equal(p.config, x) {
 		m := make(configMap)
 		for _, r := range x.Routes {
 			m.Route(r)
@@ -119,7 +119,7 @@ func (p *Proxy) Configure(x *api.Config) error {
 			}
 			return err
 		}
-		p.config = *x
+		p.config = x
 	}
 	return nil
 }
@@ -133,7 +133,7 @@ func (p *Proxy) TriggerReload() error {
 }
 
 func (p *Proxy) GetConfig() (*api.Config, error) {
-	return &p.config, nil
+	return p.config, nil
 }
 
 // Matcher reports whether hostname matches the Matcher's criteria.
