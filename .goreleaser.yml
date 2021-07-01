@@ -13,6 +13,12 @@ builds:
       - linux
       - windows
       - darwin
+
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser
 dockers:
   - image_templates:
       - "gernest/tt:{{ .Version }}-amd64"
@@ -23,9 +29,10 @@ dockers:
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
       - "--platform=linux/amd64"
   - image_templates:
-      - "gernest/tt:{{ .Version }}-arm64v8"
+      - "gernest/tt:{{ .Tag }}-arm64v8"
     goarch: arm64
     dockerfile: Dockerfile
     build_flag_templates:
@@ -33,12 +40,18 @@ dockers:
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
       - "--platform=linux/arm64/v8"
 docker_manifests:
-  - name_template: gernest/tt:{{ .Version }}
+  - name_template: gernest/tt:{{ .Tag }}
     image_templates:
-      - gernest/tt:{{ .Version }}-amd64
-      - gernest/tt:{{ .Version }}-arm64v8
+      - gernest/tt:{{ .Tag }}-amd64
+      - gernest/tt:{{ .Tag }}-arm64v8
+  - name_template: gernest/tt:latest
+    image_templates:
+      - gernest/tt:{{ .Tag }}-amd64
+      - gernest/tt:{{ .Tag }}-arm64v8
+
 archives:
   - replacements:
       darwin: Darwin
@@ -46,6 +59,9 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
 checksum:
   name_template: "checksums.txt"
 snapshot:
