@@ -19,12 +19,20 @@ dockers:
     goarch: amd64
     dockerfile: Dockerfile
     build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/amd64"
   - image_templates:
       - "gernest/tt:{{ .Version }}-arm64v8"
     goarch: arm64
     dockerfile: Dockerfile
     build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/arm64/v8"
 docker_manifests:
   - name_template: gernest/tt:{{ .Version }}
