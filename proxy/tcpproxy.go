@@ -44,7 +44,7 @@ type Proxy struct {
 
 	// availablePorts is updatable via the admin api
 	availablePorts []int32
-	config         api.Config
+	config         *api.Config
 
 	lns    map[string]net.Listener
 	cancel context.CancelFunc
@@ -83,7 +83,7 @@ type Options struct {
 	Config          api.Config
 }
 
-func New(ctx context.Context, opts Options) *Proxy {
+func New(ctx context.Context, opts *Options) *Proxy {
 	conf := make(configMap)
 	x := conf.get(opts.HostPort)
 	x.routes = append(x.routes, noopRoute{})

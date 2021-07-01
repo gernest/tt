@@ -64,8 +64,8 @@ func start(ctx *cli.Context) error {
 		}
 	}
 
-	return startCtx(context.Background(),
-		proxy.Options{
+	return StartWithContext(context.Background(),
+		&proxy.Options{
 			HostPort:        fmt.Sprintf(":%d", ctx.Int("port")),
 			ControlHostPort: fmt.Sprintf(":%d", ctx.Int("control")),
 			AllowedPOrts:    append([]int{ctx.Int("port")}, ctx.IntSlice("allowed")...),
@@ -74,8 +74,8 @@ func start(ctx *cli.Context) error {
 	)
 }
 
-// startCtx starts the proxy and uses port to start the admin RPC
-func startCtx(ctx context.Context, o proxy.Options) error {
+// StartWithContext starts the proxy and uses port to start the admin RPC
+func StartWithContext(ctx context.Context, o *proxy.Options) error {
 	x := proxy.New(ctx, o)
 	ls, err := net.Listen("tcp", o.ControlHostPort)
 	if err != nil {
