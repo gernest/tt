@@ -13,6 +13,24 @@ builds:
       - linux
       - windows
       - darwin
+dockers:
+  - image_templates:
+      - "gernest/tt:{{ .Version }}-amd64"
+    goarch: amd64
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "gernest/tt:{{ .Version }}-arm64v8"
+    goarch: arm64
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+docker_manifests:
+  - name_template: gernest/tt:{{ .Version }}
+    image_templates:
+      - gernest/tt:{{ .Version }}-amd64
+      - gernest/tt:{{ .Version }}-arm64v8
 archives:
   - replacements:
       darwin: Darwin
