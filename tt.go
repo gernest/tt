@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime/debug"
 
 	"github.com/gernest/tt/cmd"
 	"github.com/gernest/tt/zlg"
@@ -21,28 +20,11 @@ var (
 func main() {
 	a := cli.NewApp()
 	a.Name = "tt"
-	a.Version = buildVersion(version, commit, date, builtBy)
+	a.Version = fmt.Sprintf("%s-%s+%s@%s", version, commit, date, builtBy)
 	a.Usage = "TCP/UDP -- L4 reverse proxy and load balancer with wasm middlewares "
 	a.Commands = append(a.Commands, cmd.Proxy())
 	if err := a.Run(os.Args); err != nil {
 		zlg.Error(err, "error running the app")
 		os.Exit(1)
 	}
-}
-
-func buildVersion(version, commit, date, builtBy string) string {
-	result := version
-	if commit != "" {
-		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
-	}
-	if date != "" {
-		result = fmt.Sprintf("%s\nbuilt at: %s", result, date)
-	}
-	if builtBy != "" {
-		result = fmt.Sprintf("%s\nbuilt by: %s", result, builtBy)
-	}
-	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
-		result = fmt.Sprintf("%s\nmodule version: %s, checksum: %s", result, info.Main.Version, info.Main.Sum)
-	}
-	return result
 }
