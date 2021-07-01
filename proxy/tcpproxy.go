@@ -602,13 +602,7 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 		go proxyCopy(ctx, cancelFn, to, from)
 	}
 
-	x := 0
-	for range errc {
-		x++
-		if x > 1 {
-			return
-		}
-	}
+	<-errc
 }
 
 func (dp *DialProxy) sendProxyHeader(w io.Writer, src net.Conn) error {
