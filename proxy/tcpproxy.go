@@ -550,11 +550,7 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 			c.SetKeepAlivePeriod(ka)
 		}
 	}
-	errc := make(chan struct{}, 2)
-	cancelFn := func() {
-		errc <- struct{}{}
-		meta.copyErrCount.Inc()
-	}
+	errc := make(chan error, 1)
 	{
 		// upstream => downstream
 		from := dst
@@ -576,7 +572,7 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 				},
 			}
 		}
-		go proxyCopy(ctx, cancelFn, to, from)
+		go proxyCopy(ctx, errc, to, from)
 	}
 	{
 		// downstream => upstream
@@ -599,9 +595,8 @@ func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
 				},
 			}
 		}
-		go proxyCopy(ctx, cancelFn, to, from)
+		go proxyCopy(ctx, errc, to, from)
 	}
-
 	<-errc
 }
 
@@ -656,8 +651,7 @@ func hashConn(conn net.Conn) string {
 // It's a named function instead of a func literal so users get
 // named goroutines in debug goroutine stack dumps.
 func proxyCopy(
-	ctx context.Context,
-	cancel func(),
+	ctx context.Context, errc chan error,
 	dst, src net.Conn,
 ) {
 	nl := zlg.Logger.With(
@@ -668,12 +662,12 @@ func proxyCopy(
 	nl.Debug("Start copying ...")
 	defer func() {
 		nl.Debug("Done copying")
-		cancel()
 	}()
 	// Before we unwrap src and/or dst, copy any buffered data.
 	if wc, ok := src.(*Conn); ok && len(wc.Peeked) > 0 {
 		if _, err := dst.Write(wc.Peeked); err != nil {
 			nl.Error(err.Error() + "Failed to write to connection")
+			errc <- err
 			return
 		}
 		wc.Peeked = nil
@@ -683,49 +677,8 @@ func proxyCopy(
 	// 1.11's splice optimization kicks in.
 	src = UnderlyingConn(src)
 	dst = UnderlyingConn(dst)
-	buf := get()
-	defer put(buf)
-	meta := GetContextMeta(ctx)
-	isHttp := meta.GetProtocol() == HTTP
-	prepareRead := func() {
-		if isHttp {
-			src.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
-		}
-	}
-	prepareWrite := func() {
-		if isHttp {
-			dst.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
-		}
-	}
-	for {
-		if meta.copyErrCount.Load() > 1 {
-			nl.Debug("Exiting the copy loopcopy error counts exceeds 1",
-				zap.Int("copyErrCount", int(meta.copyErrCount.Load())),
-			)
-			return
-		}
-		prepareRead()
-		n, err := src.Read(buf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				// This connection was properly closed we are at the end of the stream. We
-				// copy any remaining data in the buffer and exit
-				prepareWrite()
-				_, err = dst.Write(buf[:n])
-				err = nil
-			}
-			if err != nil {
-				nl.Error(err.Error() + "Failed to read data from connection")
-			}
-			return
-		}
-		prepareWrite()
-		_, err = dst.Write(buf[:n])
-		if err != nil {
-			zlg.Error(err, "Failed to write to connection")
-			return
-		}
-	}
+	_, err := io.Copy(dst, src)
+	errc <- err
 }
 
 func (dp *DialProxy) keepAlivePeriod() time.Duration {
