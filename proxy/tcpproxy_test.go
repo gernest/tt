@@ -178,6 +178,7 @@ func testProxy(t *testing.T, front net.Listener) (*Proxy, context.CancelFunc) {
 		configMap:  make(configMap),
 		ListenFunc: testListenFunc(t, front),
 		ctx:        ctx,
+		opts:       &Options{},
 	}
 	p.opts.AllowedPOrts = []int{567}
 	return p, cancel
