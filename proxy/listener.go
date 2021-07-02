@@ -19,6 +19,8 @@ import (
 	"io"
 	"net"
 	"sync"
+
+	"github.com/gernest/tt/pkg/tcp"
 )
 
 // TargetListener implements both net.Listener and Target.
@@ -34,7 +36,7 @@ type TargetListener struct {
 
 var (
 	_ net.Listener = (*TargetListener)(nil)
-	_ Target       = (*TargetListener)(nil)
+	_ tcp.Target   = (*TargetListener)(nil)
 )
 
 func (tl *TargetListener) lock() {

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/zlg"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/smallnest/weighted"
@@ -24,7 +25,7 @@ func (m configMap) get(ipPort string) *config {
 	return c
 }
 
-func (m configMap) addRoute(ipPort string, r Route) {
+func (m configMap) addRoute(ipPort string, r tcp.Route) {
 	cfg := m.get(ipPort)
 	cfg.routes = append(cfg.routes, r)
 }
@@ -39,7 +40,7 @@ func (m configMap) addRoute(ipPort string, r Route) {
 // with AddStopACMESearch.
 //
 // The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddSNIMatchRoute(ipPort string, matcher Matcher, dest Target) {
+func (m configMap) AddSNIMatchRoute(ipPort string, matcher Matcher, dest tcp.Target) {
 	cfg := m.get(ipPort)
 	if cfg.allowACME {
 		if len(cfg.acmeTargets) == 0 {
@@ -60,7 +61,7 @@ func (m configMap) AddSNIMatchRoute(ipPort string, matcher Matcher, dest Target)
 // with AddStopACMESearch.
 //
 // The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddSNIRoute(ipPort, sni string, dest Target) {
+func (m configMap) AddSNIRoute(ipPort, sni string, dest tcp.Target) {
 	m.AddSNIMatchRoute(ipPort, equals(sni), dest)
 }
 
@@ -71,7 +72,7 @@ func (m configMap) AddSNIRoute(ipPort, sni string, dest Target) {
 // proxies), or as the final fallback rule for an ipPort.
 //
 // The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddRoute(ipPort string, dest Target) {
+func (m configMap) AddRoute(ipPort string, dest tcp.Target) {
 	m.addRoute(ipPort, fixedTarget{dest})
 }
 
@@ -81,7 +82,7 @@ func (m configMap) AddRoute(ipPort string, dest Target) {
 // for any additional routes on ipPort.
 //
 // The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddHTTPHostMatchRoute(ipPort string, match Matcher, dest Target) {
+func (m configMap) AddHTTPHostMatchRoute(ipPort string, match Matcher, dest tcp.Target) {
 	m.addRoute(ipPort, httpHostMatch{match, dest})
 }
 
@@ -91,7 +92,7 @@ func (m configMap) AddHTTPHostMatchRoute(ipPort string, match Matcher, dest Targ
 // additional routes on ipPort.
 //
 // The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddHTTPHostRoute(ipPort, httpHost string, dest Target) {
+func (m configMap) AddHTTPHostRoute(ipPort, httpHost string, dest tcp.Target) {
 	m.AddHTTPHostMatchRoute(ipPort, equals(httpHost), dest)
 }
 
@@ -144,11 +145,11 @@ func (m configMap) Route(r *api.Route) {
 	}
 }
 
-func buildTarget(r *api.Route) Target {
+func buildTarget(r *api.Route) tcp.Target {
 	return buildMiddleares(r).then(target(r))
 }
 
-func target(r *api.Route) Target {
+func target(r *api.Route) tcp.Target {
 	if r.Endpoint != nil {
 		return toDial(r.Endpoint, r)
 	}
@@ -161,8 +162,8 @@ func target(r *api.Route) Target {
 				w.Add(t, int(v.Weight))
 			}
 			return &balance{
-				ba: balanceFn(func() Target {
-					return w.Next().(Target)
+				ba: balanceFn(func() tcp.Target {
+					return w.Next().(tcp.Target)
 				}),
 			}
 		case api.Route_SmoothWeighted:
@@ -172,8 +173,8 @@ func target(r *api.Route) Target {
 				w.Add(t, int(v.Weight))
 			}
 			return &balance{
-				ba: balanceFn(func() Target {
-					return w.Next().(Target)
+				ba: balanceFn(func() tcp.Target {
+					return w.Next().(tcp.Target)
 				}),
 			}
 
@@ -184,8 +185,8 @@ func target(r *api.Route) Target {
 				w.Add(t, int(v.Weight))
 			}
 			return &balance{
-				ba: balanceFn(func() Target {
-					return w.Next().(Target)
+				ba: balanceFn(func() tcp.Target {
+					return w.Next().(tcp.Target)
 				}),
 			}
 		}
@@ -221,16 +222,16 @@ func toDial(a *api.WeightedAddr, r *api.Route) *DialProxy {
 }
 
 type balancer interface {
-	Next() Target
+	Next() tcp.Target
 }
 
-type balanceFn func() Target
+type balanceFn func() tcp.Target
 
-func (fn balanceFn) Next() Target {
+func (fn balanceFn) Next() tcp.Target {
 	return fn()
 }
 
-var _ Target = (*balance)(nil)
+var _ tcp.Target = (*balance)(nil)
 
 type balance struct {
 	ba balancer

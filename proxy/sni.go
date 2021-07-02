@@ -23,18 +23,19 @@ import (
 	"net"
 	"strings"
 
+	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/zlg"
 	"go.uber.org/zap"
 )
 
 type sniMatch struct {
 	matcher Matcher
-	target  Target
+	target  tcp.Target
 }
 
-var _ Route = (*sniMatch)(nil)
+var _ tcp.Route = (*sniMatch)(nil)
 
-func (m sniMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string) {
+func (m sniMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
 	sni := clientHelloServerName(br)
 	zlg.Debug("read sni", zap.String("sni", sni), zap.String("component", "sni_match"))
 	if m.matcher(ctx, sni) {
@@ -53,9 +54,9 @@ type acmeMatch struct {
 	cfg *config
 }
 
-var _ Route = (*acmeMatch)(nil)
+var _ tcp.Route = (*acmeMatch)(nil)
 
-func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string) {
+func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
 	sni := clientHelloServerName(br)
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""
@@ -71,7 +72,7 @@ func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ch := make(chan Target, len(m.cfg.acmeTargets))
+	ch := make(chan tcp.Target, len(m.cfg.acmeTargets))
 	for _, target := range m.cfg.acmeTargets {
 		go tryACME(ctx, ch, target, sni)
 	}
@@ -85,8 +86,8 @@ func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string
 	return nil, ""
 }
 
-func tryACME(ctx context.Context, ch chan<- Target, dest Target, sni string) {
-	var ret Target
+func tryACME(ctx context.Context, ch chan<- tcp.Target, dest tcp.Target, sni string) {
+	var ret tcp.Target
 	defer func() { ch <- ret }()
 
 	conn, targetConn := net.Pipe()

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/zlg"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
@@ -148,25 +149,10 @@ func equals(want string) Matcher {
 
 // config contains the proxying state for one listener.
 type config struct {
-	routes      []Route
-	acmeTargets []Target // accumulates targets that should be probed for acme.
-	allowACME   bool     // if true, AddSNIRoute doesn't add targets to acmeTargets.
+	routes      []tcp.Route
+	acmeTargets []tcp.Target // accumulates targets that should be probed for acme.
+	allowACME   bool         // if true, AddSNIRoute doesn't add targets to acmeTargets.
 	network     string
-}
-
-// A Route matches a connection to a target.
-type Route interface {
-	// Match examines the initial bytes of a connection, looking for a
-	// Match. If a Match is found, Match returns a non-nil Target to
-	// which the stream should be proxied. Match returns nil if the
-	// connection doesn't Match.
-	//
-	// Match must not consume bytes from the given bufio.Reader, it
-	// can only Peek.
-	//
-	// If an sni or host header was parsed successfully, that will be
-	// returned as the second parameter.
-	Match(context.Context, *bufio.Reader) (Target, string)
 }
 
 func (p *Proxy) netListen() func(net, laddr string) (net.Listener, error) {
@@ -177,12 +163,12 @@ func (p *Proxy) netListen() func(net, laddr string) (net.Listener, error) {
 }
 
 type fixedTarget struct {
-	t Target
+	t tcp.Target
 }
 
-var _ Route = (*fixedTarget)(nil)
+var _ tcp.Route = (*fixedTarget)(nil)
 
-func (m fixedTarget) Match(ctx context.Context, r *bufio.Reader) (Target, string) {
+func (m fixedTarget) Match(ctx context.Context, r *bufio.Reader) (tcp.Target, string) {
 	meta := GetContextMeta(ctx)
 	meta.Fixed.Store(true)
 	return m.t, ""
@@ -357,15 +343,15 @@ func ErrIsNetClosed(err error) bool {
 
 type noopRoute struct{}
 
-var _ Route = (*noopRoute)(nil)
+var _ tcp.Route = (*noopRoute)(nil)
 
-func (noopRoute) Match(context.Context, *bufio.Reader) (Target, string) {
+func (noopRoute) Match(context.Context, *bufio.Reader) (tcp.Target, string) {
 	return nil, ""
 }
 
 // serveConn runs in its own goroutine and matches c against routes.
 // It returns whether it matched purely for testing.
-func serveConn(ctx context.Context, c net.Conn, routes []Route) {
+func serveConn(ctx context.Context, c net.Conn, routes []tcp.Route) {
 	br := bufio.NewReader(c)
 	meta := GetContextMeta(ctx)
 	defer func() {
@@ -431,19 +417,6 @@ func (c *Conn) Read(p []byte) (n int, err error) {
 		return n, nil
 	}
 	return c.Conn.Read(p)
-}
-
-// Target is what an incoming matched connection is sent to.
-type Target interface {
-	// HandleConn is called when an incoming connection is
-	// matched. After the call to HandleConn, the tcpproxy
-	// package never touches the conn again. Implementations are
-	// responsible for closing the connection when needed.
-	//
-	// The concrete type of conn will be of type *Conn if any
-	// bytes have been consumed for the purposes of route
-	// matching.
-	HandleConn(context.Context, net.Conn)
 }
 
 type Incoming struct {

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"net"
 
+	"github.com/gernest/tt/pkg/tcp"
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/protocol"
 	"github.com/pion/dtls/v2/pkg/protocol/extension"
@@ -34,7 +35,7 @@ func ListenDTLS(network string, addr *net.UDPAddr) (net.Listener, error) {
 
 type serveDTLS struct {
 	config func(sni string) (*dtls.Config, error)
-	target Target
+	target tcp.Target
 }
 
 func (m serveDTLS) HandleConn(ctx context.Context, conn net.Conn) {

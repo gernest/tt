@@ -19,16 +19,18 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+
+	"github.com/gernest/tt/pkg/tcp"
 )
 
 type httpHostMatch struct {
 	matcher Matcher
-	target  Target
+	target  tcp.Target
 }
 
-var _ Route = (*httpHostMatch)(nil)
+var _ tcp.Route = (*httpHostMatch)(nil)
 
-func (m httpHostMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string) {
+func (m httpHostMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
 	hh := httpHostHeader(br)
 	if m.matcher(ctx, hh) {
 		meta := GetContextMeta(ctx)

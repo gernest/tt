@@ -5,14 +5,15 @@ import (
 	"net"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/tcp"
 	"go.uber.org/zap"
 )
 
-type middleareFunc func(Target) Target
+type middleareFunc func(tcp.Target) tcp.Target
 
 type chain []middleareFunc
 
-func (c chain) then(t Target) Target {
+func (c chain) then(t tcp.Target) tcp.Target {
 	for _, h := range c {
 		t = h(t)
 	}
@@ -23,7 +24,7 @@ func buildMiddleares(r *api.Route) chain {
 	c := chain{}
 	if len(r.MetricsLabels) > 0 {
 		// Inject metrics labels to targets context meta
-		c = append(c, func(t Target) Target {
+		c = append(c, func(t tcp.Target) tcp.Target {
 			m := &metricsLabelsTarget{
 				target: t,
 				labels: make(map[string]string),
@@ -40,7 +41,7 @@ func buildMiddleares(r *api.Route) chain {
 
 // metricsLabelsTarget injects upstream labels
 type metricsLabelsTarget struct {
-	target Target
+	target tcp.Target
 	labels map[string]string
 	logger *zap.Logger
 }
