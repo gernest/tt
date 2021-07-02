@@ -87,7 +87,7 @@ type Options struct {
 func New(ctx context.Context, opts *Options) *Proxy {
 	conf := make(configMap)
 	x := conf.get(opts.HostPort)
-	x.routes = append(x.routes, noopRoute{})
+	x.Routes = append(x.Routes, noopRoute{})
 	for _, r := range opts.Config.Routes {
 		conf.Route(r)
 	}
@@ -135,24 +135,6 @@ func (p *Proxy) TriggerReload() error {
 
 func (p *Proxy) GetConfig() (*api.Config, error) {
 	return p.config, nil
-}
-
-// Matcher reports whether hostname matches the Matcher's criteria.
-type Matcher func(ctx context.Context, hostname string) bool
-
-// equals is a trivial Matcher that implements string equality.
-func equals(want string) Matcher {
-	return func(_ context.Context, got string) bool {
-		return want == got
-	}
-}
-
-// config contains the proxying state for one listener.
-type config struct {
-	routes      []tcp.Route
-	acmeTargets []tcp.Target // accumulates targets that should be probed for acme.
-	allowACME   bool         // if true, AddSNIRoute doesn't add targets to acmeTargets.
-	network     string
 }
 
 func (p *Proxy) netListen() func(net, laddr string) (net.Listener, error) {
@@ -327,7 +309,7 @@ func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort str
 			m.D.A.L.Address = c.LocalAddr().String()
 			m.D.A.R.Address = c.RemoteAddr().Network()
 		})
-		go serveConn(base, c, useConfig.routes)
+		go serveConn(base, c, useConfig.Routes)
 	}
 }
 

@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/tcp/middlewares"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes/empty"
 )
@@ -79,7 +80,7 @@ func clientHelloRecord(t *testing.T, hostName string) string {
 func TestSNI(t *testing.T) {
 	const hostName = "foo.com"
 	greeting := clientHelloRecord(t, hostName)
-	got := clientHelloServerName(bufio.NewReader(strings.NewReader(greeting)))
+	got := middlewares.ClientHelloServerName(bufio.NewReader(strings.NewReader(greeting)))
 	if got != hostName {
 		t.Errorf("got SNI %q; want %q", got, hostName)
 	}

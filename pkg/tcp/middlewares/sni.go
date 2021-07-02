@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package proxy
+package middlewares
 
 import (
 	"bufio"
@@ -29,36 +29,36 @@ import (
 	"go.uber.org/zap"
 )
 
-type sniMatch struct {
-	matcher Matcher
-	target  tcp.Target
+type SniMatch struct {
+	Matcher Matcher
+	Target  tcp.Target
 }
 
-var _ tcp.Route = (*sniMatch)(nil)
+var _ tcp.Route = (*SniMatch)(nil)
 
-func (m sniMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
-	sni := clientHelloServerName(br)
+func (m SniMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
+	sni := ClientHelloServerName(br)
 	zlg.Debug("read sni", zap.String("sni", sni), zap.String("component", "sni_match"))
-	if m.matcher(ctx, sni) {
+	if m.Matcher(ctx, sni) {
 		zlg.Debug("sni matched", zap.String("sni", sni), zap.String("component", "sni_match"))
 		meta := tcp.GetContextMeta(ctx)
 		meta.ServerName.Store(sni)
-		return m.target, sni
+		return m.Target, sni
 	}
 	return nil, ""
 }
 
-// acmeMatch matches "*.acme.invalid" ACME tls-sni-01 challenges and
+// AcmeMatch matches "*.acme.invalid" ACME tls-sni-01 challenges and
 // searches for a Target in cfg.acmeTargets that has the challenge
 // response.
-type acmeMatch struct {
-	cfg *config
+type AcmeMatch struct {
+	Cfg *tcp.Config
 }
 
-var _ tcp.Route = (*acmeMatch)(nil)
+var _ tcp.Route = (*AcmeMatch)(nil)
 
-func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
-	sni := clientHelloServerName(br)
+func (m *AcmeMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
+	sni := ClientHelloServerName(br)
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""
 	}
@@ -73,11 +73,11 @@ func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, st
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ch := make(chan tcp.Target, len(m.cfg.acmeTargets))
-	for _, target := range m.cfg.acmeTargets {
+	ch := make(chan tcp.Target, len(m.Cfg.AcmeTargets))
+	for _, target := range m.Cfg.AcmeTargets {
 		go tryACME(ctx, ch, target, sni)
 	}
-	for range m.cfg.acmeTargets {
+	for range m.Cfg.AcmeTargets {
 		if target := <-ch; target != nil {
 			return target, sni
 		}
@@ -125,10 +125,10 @@ func tryACME(ctx context.Context, ch chan<- tcp.Target, dest tcp.Target, sni str
 	ret = dest
 }
 
-// clientHelloServerName returns the SNI server name inside the TLS ClientHello,
+// ClientHelloServerName returns the SNI server name inside the TLS ClientHello,
 // without consuming any bytes from br.
 // On any error, the empty string is returned.
-func clientHelloServerName(br *bufio.Reader) (sni string) {
+func ClientHelloServerName(br *bufio.Reader) (sni string) {
 	const recordHeaderLen = 5
 	hdr, err := br.Peek(recordHeaderLen)
 	if err != nil {

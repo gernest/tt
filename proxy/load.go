@@ -7,6 +7,7 @@ import (
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/tcp"
+	"github.com/gernest/tt/pkg/tcp/middlewares"
 	"github.com/gernest/tt/zlg"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/smallnest/weighted"
@@ -14,20 +15,20 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type configMap map[string]*config
+type configMap map[string]*tcp.Config
 
-func (m configMap) get(ipPort string) *config {
+func (m configMap) get(ipPort string) *tcp.Config {
 	if c, ok := m[ipPort]; ok {
 		return c
 	}
-	c := &config{}
+	c := &tcp.Config{}
 	m[ipPort] = c
 	return c
 }
 
 func (m configMap) addRoute(ipPort string, r tcp.Route) {
 	cfg := m.get(ipPort)
-	cfg.routes = append(cfg.routes, r)
+	cfg.Routes = append(cfg.Routes, r)
 }
 
 // AddSNIMatchRoute appends a route to the ipPort listener that routes
@@ -40,15 +41,15 @@ func (m configMap) addRoute(ipPort string, r tcp.Route) {
 // with AddStopACMESearch.
 //
 // The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddSNIMatchRoute(ipPort string, matcher Matcher, dest tcp.Target) {
+func (m configMap) AddSNIMatchRoute(ipPort string, matcher middlewares.Matcher, dest tcp.Target) {
 	cfg := m.get(ipPort)
-	if cfg.allowACME {
-		if len(cfg.acmeTargets) == 0 {
-			cfg.routes = append(cfg.routes, &acmeMatch{cfg})
+	if cfg.AllowACME {
+		if len(cfg.AcmeTargets) == 0 {
+			cfg.Routes = append(cfg.Routes, &middlewares.AcmeMatch{cfg})
 		}
-		cfg.acmeTargets = append(cfg.acmeTargets, dest)
+		cfg.AcmeTargets = append(cfg.AcmeTargets, dest)
 	}
-	cfg.routes = append(cfg.routes, sniMatch{matcher, dest})
+	cfg.Routes = append(cfg.Routes, middlewares.SniMatch{matcher, dest})
 }
 
 // AddSNIRoute appends a route to the ipPort listener that routes to
@@ -62,7 +63,7 @@ func (m configMap) AddSNIMatchRoute(ipPort string, matcher Matcher, dest tcp.Tar
 //
 // The ipPort is any valid net.Listen TCP address.
 func (m configMap) AddSNIRoute(ipPort, sni string, dest tcp.Target) {
-	m.AddSNIMatchRoute(ipPort, equals(sni), dest)
+	m.AddSNIMatchRoute(ipPort, middlewares.Equals(sni), dest)
 }
 
 // AddRoute appends an always-matching route to the ipPort listener,
@@ -77,11 +78,11 @@ func (m configMap) AddRoute(ipPort string, dest tcp.Target) {
 }
 
 func (m configMap) AddStopACMESearch(ipPort string) {
-	m.get(ipPort).allowACME = false
+	m.get(ipPort).AllowACME = false
 }
 
 func (m configMap) AddAllowACMESearch(ipPort string) {
-	m.get(ipPort).allowACME = true
+	m.get(ipPort).AllowACME = true
 }
 
 // defaultIPPort used to map to the default ip:port
@@ -106,8 +107,8 @@ func (m configMap) Route(r *api.Route) {
 	}
 	labels = append(labels, zap.String("ip:port", ipPort))
 	zlg.Info("Loading route", labels...)
-	m.get(ipPort).allowACME = r.AllowAcme
-	m.get(ipPort).network = network
+	m.get(ipPort).AllowACME = r.AllowAcme
+	m.get(ipPort).Network = network
 	switch e := r.Condition.Match.(type) {
 	case *api.RequestMatch_Sni:
 		zlg.Info("Adding sni route",
