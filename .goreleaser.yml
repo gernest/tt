@@ -21,7 +21,7 @@ builds:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser
 dockers:
   - image_templates:
-      - "gernest/tt:{{ .Version }}-amd64"
+      - "gernest/tt:{{ .Tag }}-amd64"
     goarch: amd64
     dockerfile: Dockerfile
     build_flag_templates:
