@@ -76,26 +76,6 @@ func (m configMap) AddRoute(ipPort string, dest tcp.Target) {
 	m.addRoute(ipPort, fixedTarget{dest})
 }
 
-// AddHTTPHostMatchRoute appends a route to the ipPort listener that
-// routes to dest if the incoming HTTP/1.x Host header name is
-// accepted by matcher. If it doesn't match, rule processing continues
-// for any additional routes on ipPort.
-//
-// The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddHTTPHostMatchRoute(ipPort string, match Matcher, dest tcp.Target) {
-	m.addRoute(ipPort, httpHostMatch{match, dest})
-}
-
-// AddHTTPHostRoute appends a route to the ipPort listener that
-// routes to dest if the incoming HTTP/1.x Host header name is
-// httpHost. If it doesn't match, rule processing continues for any
-// additional routes on ipPort.
-//
-// The ipPort is any valid net.Listen TCP address.
-func (m configMap) AddHTTPHostRoute(ipPort, httpHost string, dest tcp.Target) {
-	m.AddHTTPHostMatchRoute(ipPort, equals(httpHost), dest)
-}
-
 func (m configMap) AddStopACMESearch(ipPort string) {
 	m.get(ipPort).allowACME = false
 }
@@ -129,11 +109,6 @@ func (m configMap) Route(r *api.Route) {
 	m.get(ipPort).allowACME = r.AllowAcme
 	m.get(ipPort).network = network
 	switch e := r.Condition.Match.(type) {
-	case *api.RequestMatch_Host:
-		zlg.Info("Adding http host route",
-			zap.String("host", e.Host),
-		)
-		m.AddHTTPHostRoute(ipPort, e.Host, buildTarget(r))
 	case *api.RequestMatch_Sni:
 		zlg.Info("Adding sni route",
 			zap.String("host", e.Sni),

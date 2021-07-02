@@ -29,6 +29,14 @@ message Address {
 }
 
 message Middleware {}
+// Protocol exposes
+enum Protocol {
+  TCP = 0;
+  UDP = 1;
+  HTTP = 2;
+  WEBSOCKET = 3;
+  QUIC = 4;
+}
 
 message Route {
   enum LoadBalanceAlgo {
@@ -107,13 +115,6 @@ message RequestMatch {
 }
 
 message Context {
-  enum Protocol {
-    TCP = 0;
-    UDP = 1;
-    HTTP = 2;
-    WEBSOCKET = 3;
-    QUIC = 4;
-  }
   message Stat {
     int64 bytesRead = 1;
     int64 bytesWritten = 2;
