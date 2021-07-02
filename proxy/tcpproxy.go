@@ -169,7 +169,7 @@ type fixedTarget struct {
 var _ tcp.Route = (*fixedTarget)(nil)
 
 func (m fixedTarget) Match(ctx context.Context, r *bufio.Reader) (tcp.Target, string) {
-	meta := GetContextMeta(ctx)
+	meta := tcp.GetContextMeta(ctx)
 	meta.Fixed.Store(true)
 	return m.t, ""
 }
@@ -323,7 +323,7 @@ func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort str
 		}
 		zlg.Info(fmt.Sprintf("%s --> %s", c.RemoteAddr().String(), c.LocalAddr().String()))
 		base := p.base(ctx, ln)
-		base = UpdateContext(base, func(m *ContextMeta) {
+		base = tcp.UpdateContext(base, func(m *tcp.ContextMeta) {
 			m.D.A.L.Address = c.LocalAddr().String()
 			m.D.A.R.Address = c.RemoteAddr().Network()
 		})
@@ -353,7 +353,7 @@ func (noopRoute) Match(context.Context, *bufio.Reader) (tcp.Target, string) {
 // It returns whether it matched purely for testing.
 func serveConn(ctx context.Context, c net.Conn, routes []tcp.Route) {
 	br := bufio.NewReader(c)
-	meta := GetContextMeta(ctx)
+	meta := tcp.GetContextMeta(ctx)
 	defer func() {
 		c.Close()
 		meta.Complete()
@@ -485,7 +485,7 @@ func UnderlyingConn(c net.Conn) net.Conn {
 
 // HandleConn implements the Target interface.
 func (dp *DialProxy) HandleConn(ctx context.Context, src net.Conn) {
-	meta := GetContextMeta(ctx)
+	meta := tcp.GetContextMeta(ctx)
 	// we update sppeds that were set on this dial
 	up, _ := dp.UpstreamSpeed.Limit()
 	//TOD log error

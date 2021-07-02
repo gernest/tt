@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/gernest/tt/pkg/tcp"
+	"github.com/gernest/tt/pkg/tcp/dtls"
 	"github.com/gernest/tt/zlg"
 	"go.uber.org/zap"
 )
@@ -40,7 +41,7 @@ func (m sniMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, stri
 	zlg.Debug("read sni", zap.String("sni", sni), zap.String("component", "sni_match"))
 	if m.matcher(ctx, sni) {
 		zlg.Debug("sni matched", zap.String("sni", sni), zap.String("component", "sni_match"))
-		meta := GetContextMeta(ctx)
+		meta := tcp.GetContextMeta(ctx)
 		meta.ServerName.Store(sni)
 		return m.target, sni
 	}
@@ -61,7 +62,7 @@ func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, st
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""
 	}
-	meta := GetContextMeta(ctx)
+	meta := tcp.GetContextMeta(ctx)
 	meta.ACME.Store(true)
 
 	// TODO: cache. ACME issuers will hit multiple times in a short
@@ -150,7 +151,7 @@ func clientHelloServerName(br *bufio.Reader) (sni string) {
 	}).Handshake()
 	if sni == "" {
 		// Not TLS try dtls
-		return clientHelloServerNameDTLS(br)
+		return dtls.ClientHelloServerNameDTLS(br)
 	}
 	return
 }

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/proxy/buffer"
 	"github.com/valyala/bytebufferpool"
 )
@@ -54,8 +55,8 @@ type transit struct {
 	conn            transitConn
 	rate            limit
 	buf             *bytebufferpool.ByteBuffer
-	meta            *ContextMeta
-	onRead, onWrite func(*ContextMeta, int64)
+	meta            *tcp.ContextMeta
+	onRead, onWrite func(*tcp.ContextMeta, int64)
 }
 
 func (s *transit) copy(ctx context.Context) error {
@@ -135,7 +136,7 @@ func (c connCopy) write(b []byte) (int, error) {
 // to>from
 // from is downstream connection while to is the upstream connection.
 func Copy(ctx context.Context, from, to net.Conn) error {
-	meta := GetContextMeta(ctx)
+	meta := tcp.GetContextMeta(ctx)
 	bctx, cancel := context.WithCancel(ctx)
 	down := buffer.Get()
 	defer buffer.Put(down)
@@ -146,11 +147,11 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 		meta: meta,
 		rate: newRate(meta.Speed.Downstream.Load()),
 		buf:  down,
-		onRead: func(cm *ContextMeta, i int64) {
+		onRead: func(cm *tcp.ContextMeta, i int64) {
 			// We are reading from downstream
 			cm.D.R.Add(i)
 		},
-		onWrite: func(cm *ContextMeta, i int64) {
+		onWrite: func(cm *tcp.ContextMeta, i int64) {
 			//we are writing to upstream
 			cm.U.W.Add(i)
 		},
@@ -166,11 +167,11 @@ func Copy(ctx context.Context, from, to net.Conn) error {
 		meta: meta,
 		rate: newRate(meta.Speed.Upstream.Load()),
 		buf:  up,
-		onRead: func(cm *ContextMeta, i int64) {
+		onRead: func(cm *tcp.ContextMeta, i int64) {
 			// we are reading from upstream
 			cm.U.R.Add(i)
 		},
-		onWrite: func(cm *ContextMeta, i int64) {
+		onWrite: func(cm *tcp.ContextMeta, i int64) {
 			//we are writing to downstream
 			cm.D.W.Add(i)
 		},

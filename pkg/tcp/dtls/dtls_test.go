@@ -1,4 +1,4 @@
-package proxy
+package dtls
 
 import (
 	"bufio"
@@ -52,7 +52,7 @@ func listenSelfSign(ctx context.Context, port int, sni chan string) {
 			if err != nil {
 				return
 			}
-			sni <- clientHelloServerNameDTLS(bufio.NewReader(conn))
+			sni <- ClientHelloServerNameDTLS(bufio.NewReader(conn))
 			conn.Close()
 		}
 	}()

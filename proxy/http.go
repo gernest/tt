@@ -33,8 +33,8 @@ var _ tcp.Route = (*httpHostMatch)(nil)
 func (m httpHostMatch) Match(ctx context.Context, br *bufio.Reader) (tcp.Target, string) {
 	hh := httpHostHeader(br)
 	if m.matcher(ctx, hh) {
-		meta := GetContextMeta(ctx)
-		meta.Protocol.Store(uint32(HTTP))
+		meta := tcp.GetContextMeta(ctx)
+		meta.Protocol.Store(uint32(tcp.HTTP))
 		meta.ServerName.Store(hh)
 		return m.target, hh
 	}

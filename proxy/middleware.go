@@ -48,7 +48,7 @@ type metricsLabelsTarget struct {
 
 func (m *metricsLabelsTarget) HandleConn(ctx context.Context, conn net.Conn) {
 	m.logger.Info("Adding labels")
-	ctx = UpdateContext(ctx, func(cm *ContextMeta) {
+	ctx = tcp.UpdateContext(ctx, func(cm *tcp.ContextMeta) {
 		cm.Labels = m.labels
 	})
 	m.target.HandleConn(ctx, conn)

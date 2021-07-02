@@ -6,6 +6,8 @@ import (
 	"net"
 	"testing"
 	"time"
+
+	"github.com/gernest/tt/pkg/tcp"
 )
 
 var _ net.Conn = *&sniSniffConn{}
@@ -17,7 +19,7 @@ func TestFancyCopy(t *testing.T) {
 
 		// we test that what is read upstream is actually written downstream and what
 		// is read downstream is written upstream
-		ctx = UpdateContext(ctx, func(cm *ContextMeta) {})
+		ctx = tcp.UpdateContext(ctx, func(cm *tcp.ContextMeta) {})
 		ping := []byte("ping")
 		pong := []byte("pong")
 		var up, down bytes.Buffer

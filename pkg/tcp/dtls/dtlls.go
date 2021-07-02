@@ -1,4 +1,4 @@
-package proxy
+package dtls
 
 import (
 	"bufio"
@@ -46,7 +46,7 @@ func (m serveDTLS) HandleConn(ctx context.Context, conn net.Conn) {
 		return
 	}
 	var sni string
-	if m := GetContextMeta(ctx); m != nil {
+	if m := tcp.GetContextMeta(ctx); m != nil {
 		sni = m.ServerName.Load()
 	}
 	conf, err := m.config(sni)
@@ -73,7 +73,7 @@ func unpackPacket(br *bufio.Reader) []byte {
 	return buf
 }
 
-func clientHelloServerNameDTLS(br *bufio.Reader) string {
+func ClientHelloServerNameDTLS(br *bufio.Reader) string {
 	x := unpackPacket(br)
 	if x != nil {
 		h := &recordlayer.RecordLayer{}
