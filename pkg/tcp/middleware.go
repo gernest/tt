@@ -1,30 +1,29 @@
-package proxy
+package tcp
 
 import (
 	"context"
 	"net"
 
 	"github.com/gernest/tt/api"
-	"github.com/gernest/tt/pkg/tcp"
 	"go.uber.org/zap"
 )
 
-type middleareFunc func(tcp.Target) tcp.Target
+type MiddleareFunc func(Target) Target
 
-type chain []middleareFunc
+type Chain []MiddleareFunc
 
-func (c chain) then(t tcp.Target) tcp.Target {
+func (c Chain) Then(t Target) Target {
 	for _, h := range c {
 		t = h(t)
 	}
 	return t
 }
 
-func buildMiddleares(r *api.Route) chain {
-	c := chain{}
+func BuildMiddlewares(r *api.Route) Chain {
+	c := Chain{}
 	if len(r.MetricsLabels) > 0 {
 		// Inject metrics labels to targets context meta
-		c = append(c, func(t tcp.Target) tcp.Target {
+		c = append(c, func(t Target) Target {
 			m := &metricsLabelsTarget{
 				target: t,
 				labels: make(map[string]string),
@@ -41,14 +40,14 @@ func buildMiddleares(r *api.Route) chain {
 
 // metricsLabelsTarget injects upstream labels
 type metricsLabelsTarget struct {
-	target tcp.Target
+	target Target
 	labels map[string]string
 	logger *zap.Logger
 }
 
 func (m *metricsLabelsTarget) HandleConn(ctx context.Context, conn net.Conn) {
 	m.logger.Info("Adding labels")
-	ctx = tcp.UpdateContext(ctx, func(cm *tcp.ContextMeta) {
+	ctx = UpdateContext(ctx, func(cm *ContextMeta) {
 		cm.Labels = m.labels
 	})
 	m.target.HandleConn(ctx, conn)

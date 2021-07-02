@@ -121,7 +121,7 @@ func (m configMap) Route(r *api.Route) {
 }
 
 func buildTarget(r *api.Route) tcp.Target {
-	return buildMiddleares(r).then(target(r))
+	return tcp.BuildMiddlewares(r).Then(target(r))
 }
 
 func target(r *api.Route) tcp.Target {
