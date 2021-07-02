@@ -6,20 +6,26 @@ import (
 	"github.com/gernest/tt/api"
 )
 
-type Configuration struct{}
+type Options struct {
+	HostPort        string
+	ControlHostPort string
+	AllowedPOrts    []int
+	Labels          map[string]string
+	Config          api.Config
+}
 
 type Proxy interface {
 	Config() Config
-	// Start starts the proxy. This must be blocking and only returns when there
+	// Boot starts the proxy. This must be blocking and only returns when there
 	// is an error or when ctx has been cancelled.
-	Start(ctx context.Context, config Configuration) error
-	Close(ctx context.Context) error
+	Boot(ctx context.Context, config *Options) error
+	Close() error
 }
 
 // Config defines methods for dynamic configuration of the proxies.
 type Config interface {
 	Get(ctx context.Context) (*api.Config, error)
-	AddRoute(ctx context.Context, route *api.Route) error
-	UpdateRoute(ctx context.Context, route *api.Route) error
-	DeleteRoute(ctx context.Context, route *api.Route) error
+	Put(ctx context.Context, config *api.Config) error
+	Post(ctx context.Context, config *api.Config) error
+	Delete(ctx context.Context, config *api.Config) error
 }

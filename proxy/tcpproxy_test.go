@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
+	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp/middlewares"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -126,7 +127,7 @@ func testProxy(t *testing.T, front net.Listener) (*Proxy, context.CancelFunc) {
 		configMap:  make(configMap),
 		ListenFunc: testListenFunc(t, front),
 		ctx:        ctx,
-		opts:       &Options{},
+		opts:       &proxyPkg.Options{},
 	}
 	p.opts.AllowedPOrts = []int{567}
 	return p, cancel

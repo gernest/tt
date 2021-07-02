@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"github.com/gernest/tt/api"
+	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/proxy"
 	"github.com/gernest/tt/zlg"
 	"github.com/golang/protobuf/jsonpb"
@@ -65,7 +66,7 @@ func start(ctx *cli.Context) error {
 	}
 
 	return StartWithContext(context.Background(),
-		&proxy.Options{
+		&proxyPkg.Options{
 			HostPort:        fmt.Sprintf(":%d", ctx.Int("port")),
 			ControlHostPort: fmt.Sprintf(":%d", ctx.Int("control")),
 			AllowedPOrts:    append([]int{ctx.Int("port")}, ctx.IntSlice("allowed")...),
@@ -75,7 +76,7 @@ func start(ctx *cli.Context) error {
 }
 
 // StartWithContext starts the proxy and uses port to start the admin RPC
-func StartWithContext(ctx context.Context, o *proxy.Options) error {
+func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 	x := proxy.New(ctx, o)
 	ls, err := net.Listen("tcp", o.ControlHostPort)
 	if err != nil {

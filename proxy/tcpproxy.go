@@ -26,14 +26,17 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
+	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/zlg"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 // ErrPortNotAllowed is returned when opening non whitelisted port.
 var ErrPortNotAllowed = errors.New("proxy: port not allowed")
+
+var _ proxyPkg.Proxy = (*Proxy)(nil)
 
 // Proxy is a proxy. Its zero value is a valid proxy that does
 // nothing. Call methods to add routes before calling Start or Run.
@@ -58,7 +61,7 @@ type Proxy struct {
 	ctx context.Context
 
 	// The host:ip on which this host is listening from.
-	opts *Options
+	opts *proxyPkg.Options
 }
 
 // goodPort returns true if port is good and should be ok to listen on.
@@ -76,15 +79,7 @@ func (p *Proxy) goodPort(port int) bool {
 	return false
 }
 
-type Options struct {
-	HostPort        string
-	ControlHostPort string
-	AllowedPOrts    []int
-	Labels          map[string]string
-	Config          api.Config
-}
-
-func New(ctx context.Context, opts *Options) *Proxy {
+func New(ctx context.Context, opts *proxyPkg.Options) *Proxy {
 	conf := make(configMap)
 	x := conf.get(opts.HostPort)
 	x.Routes = append(x.Routes, noopRoute{})
@@ -97,6 +92,24 @@ func New(ctx context.Context, opts *Options) *Proxy {
 		ctx:       ctx,
 		opts:      opts,
 	}
+}
+
+func (p *Proxy) Boot(ctx context.Context, opts *proxyPkg.Options) error {
+	p.setup(ctx, opts)
+	return p.Start()
+}
+
+func (p *Proxy) setup(ctx context.Context, opts *proxyPkg.Options) {
+	conf := make(configMap)
+	x := conf.get(opts.HostPort)
+	x.Routes = append(x.Routes, noopRoute{})
+	for _, r := range opts.Config.Routes {
+		conf.Route(r)
+	}
+	p.configMap = conf
+	p.lns = make(map[string]net.Listener)
+	p.ctx = ctx
+	p.opts = opts
 }
 
 // RPC returns rpc server used to dynamically update the state of the proxy
@@ -123,6 +136,57 @@ func (p *Proxy) Configure(x *api.Config) error {
 		p.config = x
 	}
 	return nil
+}
+
+func (p *Proxy) Get(ctx context.Context) (*api.Config, error) {
+	return p.config, nil
+}
+
+func (p *Proxy) Put(ctx context.Context, config *api.Config) error {
+	return p.Configure(config)
+}
+
+func clone(a *api.Config) *api.Config {
+	return proto.Clone(a).(*api.Config)
+}
+
+func (p *Proxy) Post(ctx context.Context, config *api.Config) error {
+	old := clone(p.config)
+	m := make(map[string]*api.Route)
+	for i := 0; i < len(old.Routes); i++ {
+		m[old.Routes[i].Name] = old.Routes[i]
+	}
+	for _, n := range config.Routes {
+		if r, ok := m[n.Name]; ok {
+			// Update existing route by replacing the old one with the new route.
+			*r = *n
+		} else {
+			old.Routes = append(old.Routes, n)
+		}
+	}
+	return p.Configure(old)
+}
+
+func (p *Proxy) Delete(ctx context.Context, config *api.Config) error {
+	old := clone(p.config)
+	m := make(map[string]*api.Route)
+	for i := 0; i < len(old.Routes); i++ {
+		m[old.Routes[i].Name] = old.Routes[i]
+	}
+	for _, n := range config.Routes {
+		if r, ok := m[n.Name]; ok {
+			delete(m, r.Name)
+		}
+	}
+	x := &api.Config{}
+	for _, n := range m {
+		x.Routes = append(x.Routes, n)
+	}
+	return p.Configure(x)
+}
+
+func (p *Proxy) Config() proxyPkg.Config {
+	return p
 }
 
 func (p *Proxy) TriggerReload() error {
