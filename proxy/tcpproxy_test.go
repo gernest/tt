@@ -77,7 +77,7 @@ func TestMatchHTTPHost(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			br := bufio.NewReader(tt.r)
 			r := httpHostMatch{equals(tt.host), noopTarget{}}
-			m, name := r.match(context.TODO(), br)
+			m, name := r.Match(context.TODO(), br)
 			got := m != nil
 			if got != tt.want {
 				t.Fatalf("match = %v; want %v", got, tt.want)

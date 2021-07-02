@@ -24,7 +24,7 @@ func (m configMap) get(ipPort string) *config {
 	return c
 }
 
-func (m configMap) addRoute(ipPort string, r route) {
+func (m configMap) addRoute(ipPort string, r Route) {
 	cfg := m.get(ipPort)
 	cfg.routes = append(cfg.routes, r)
 }

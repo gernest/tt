@@ -26,7 +26,9 @@ type httpHostMatch struct {
 	target  Target
 }
 
-func (m httpHostMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
+var _ Route = (*httpHostMatch)(nil)
+
+func (m httpHostMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	hh := httpHostHeader(br)
 	if m.matcher(ctx, hh) {
 		meta := GetContextMeta(ctx)

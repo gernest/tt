@@ -32,7 +32,9 @@ type sniMatch struct {
 	target  Target
 }
 
-func (m sniMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
+var _ Route = (*sniMatch)(nil)
+
+func (m sniMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
 	zlg.Debug("read sni", zap.String("sni", sni), zap.String("component", "sni_match"))
 	if m.matcher(ctx, sni) {
@@ -51,7 +53,9 @@ type acmeMatch struct {
 	cfg *config
 }
 
-func (m *acmeMatch) match(ctx context.Context, br *bufio.Reader) (Target, string) {
+var _ Route = (*acmeMatch)(nil)
+
+func (m *acmeMatch) Match(ctx context.Context, br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
 	if !strings.HasSuffix(sni, ".acme.invalid") {
 		return nil, ""

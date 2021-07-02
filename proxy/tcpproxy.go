@@ -148,25 +148,25 @@ func equals(want string) Matcher {
 
 // config contains the proxying state for one listener.
 type config struct {
-	routes      []route
+	routes      []Route
 	acmeTargets []Target // accumulates targets that should be probed for acme.
 	allowACME   bool     // if true, AddSNIRoute doesn't add targets to acmeTargets.
 	network     string
 }
 
-// A route matches a connection to a target.
-type route interface {
-	// match examines the initial bytes of a connection, looking for a
-	// match. If a match is found, match returns a non-nil Target to
-	// which the stream should be proxied. match returns nil if the
-	// connection doesn't match.
+// A Route matches a connection to a target.
+type Route interface {
+	// Match examines the initial bytes of a connection, looking for a
+	// Match. If a Match is found, Match returns a non-nil Target to
+	// which the stream should be proxied. Match returns nil if the
+	// connection doesn't Match.
 	//
-	// match must not consume bytes from the given bufio.Reader, it
+	// Match must not consume bytes from the given bufio.Reader, it
 	// can only Peek.
 	//
 	// If an sni or host header was parsed successfully, that will be
 	// returned as the second parameter.
-	match(context.Context, *bufio.Reader) (Target, string)
+	Match(context.Context, *bufio.Reader) (Target, string)
 }
 
 func (p *Proxy) netListen() func(net, laddr string) (net.Listener, error) {
@@ -180,7 +180,9 @@ type fixedTarget struct {
 	t Target
 }
 
-func (m fixedTarget) match(ctx context.Context, r *bufio.Reader) (Target, string) {
+var _ Route = (*fixedTarget)(nil)
+
+func (m fixedTarget) Match(ctx context.Context, r *bufio.Reader) (Target, string) {
 	meta := GetContextMeta(ctx)
 	meta.Fixed.Store(true)
 	return m.t, ""
@@ -355,13 +357,15 @@ func ErrIsNetClosed(err error) bool {
 
 type noopRoute struct{}
 
-func (noopRoute) match(context.Context, *bufio.Reader) (Target, string) {
+var _ Route = (*noopRoute)(nil)
+
+func (noopRoute) Match(context.Context, *bufio.Reader) (Target, string) {
 	return nil, ""
 }
 
 // serveConn runs in its own goroutine and matches c against routes.
 // It returns whether it matched purely for testing.
-func serveConn(ctx context.Context, c net.Conn, routes []route) {
+func serveConn(ctx context.Context, c net.Conn, routes []Route) {
 	br := bufio.NewReader(c)
 	meta := GetContextMeta(ctx)
 	defer func() {
@@ -369,7 +373,7 @@ func serveConn(ctx context.Context, c net.Conn, routes []route) {
 		meta.Complete()
 	}()
 	for _, route := range routes {
-		if target, hostName := route.match(ctx, br); target != nil {
+		if target, hostName := route.Match(ctx, br); target != nil {
 			if n := br.Buffered(); n > 0 {
 				peeked, _ := br.Peek(br.Buffered())
 				c = &Conn{
