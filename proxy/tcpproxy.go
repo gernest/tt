@@ -606,20 +606,6 @@ func (dp *DialProxy) sendProxyHeader(w io.Writer, src net.Conn) error {
 	}
 }
 
-var bufpool = &sync.Pool{
-	New: func() interface{} {
-		return make([]byte, BufferSize)
-	},
-}
-
-func get() []byte {
-	return bufpool.Get().([]byte)
-}
-
-func put(b []byte) {
-	bufpool.Put(b[:0])
-}
-
 func hashConn(conn net.Conn) string {
 	return conn.LocalAddr().String() + "<>" + conn.RemoteAddr().String()
 }
