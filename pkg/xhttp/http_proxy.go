@@ -95,6 +95,7 @@ func (p *Proxy) build() error {
 		h := proxy.BindToHostPort(r.Bind, defaultHostPort)
 		m[h] = append(m[h], r)
 	}
+	return nil
 }
 
 func (p *Proxy) Close() error {
