@@ -452,8 +452,10 @@ func TestGenerateTestConfig(t *testing.T) {
 				},
 			},
 			{
-				Src: &api.Address{
-					Address: ":5552",
+				Bind: &api.Bind{
+					To: &api.Bind_Port{
+						Port: 5552,
+					},
 				},
 				Condition: &api.RequestMatch{
 					Match: &api.RequestMatch_Fixed{

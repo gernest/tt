@@ -1,0 +1,49 @@
+{
+    "routes": [
+        {
+            "condition": {
+                "sni": "echo.test"
+            },
+            "endpoint": {
+                "addr": {
+                    "address": "localhost:8081"
+                },
+                "metricLabels": {
+                    "service": "echo"
+                }
+            },
+            "speed": {
+                "downstream": "10kb/s"
+            }
+        },
+        {
+            "condition": {
+                "host": "httpbin.test"
+            },
+            "endpoint": {
+                "addr": {
+                    "address": "localhost:8080"
+                },
+                "metricLabels": {
+                    "service": "httpbin"
+                }
+            }
+        },
+        {
+            "bind": {
+                "port": 5552
+            },
+            "condition": {
+                "fixed": {}
+            },
+            "endpoint": {
+                "addr": {
+                    "address": "localhost:8080"
+                },
+                "metricLabels": {
+                    "service": "fixed"
+                }
+            }
+        }
+    ]
+}

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/gernest/tt/api"
+	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/pkg/tcp/middlewares"
 	"github.com/gernest/tt/zlg"
@@ -95,16 +96,8 @@ func (m configMap) Route(r *api.Route) {
 	for k, v := range r.MetricsLabels {
 		labels = append(labels, zap.String(k, v))
 	}
-	ipPort := defaultIPPort
+	ipPort := proxyPkg.BindToHostPort(r.Bind, defaultIPPort)
 	network := defaultNetwork
-	if r.Src != nil {
-		if r.Src.Address != "" {
-			ipPort = r.Src.Address
-		}
-		if r.Src.Network != "" {
-			ipPort = r.Src.Network
-		}
-	}
 	labels = append(labels, zap.String("ip:port", ipPort))
 	zlg.Info("Loading route", labels...)
 	m.get(ipPort).AllowACME = r.AllowAcme

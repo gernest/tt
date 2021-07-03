@@ -38,13 +38,20 @@ enum Protocol {
   QUIC = 4;
 }
 
+message Bind {
+  oneof to {
+    int32 port = 1;
+    string hostPort = 2;
+  }
+}
+
 message Route {
   enum LoadBalanceAlgo {
     RoundRobinWeighted = 0;
     RandomWeighted = 1;
     SmoothWeighted = 2;
   }
-  Address src = 1;
+  Bind bind = 1;
   RequestMatch condition = 2;
   map<string, string> metrics_labels = 3;
   Retries retries = 4;
