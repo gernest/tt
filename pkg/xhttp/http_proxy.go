@@ -8,6 +8,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const defaultHostPort = ":http"
+
 var _ proxy.Proxy = (*Proxy)(nil)
 
 type Proxy struct {
@@ -80,6 +82,19 @@ func (p *Proxy) Config() proxy.Config {
 
 func (p *Proxy) Boot(ctx context.Context, config *proxy.Options) error {
 	return nil
+}
+
+func (p *Proxy) build() error {
+	// group routes by host:port
+	m := map[string][]*api.Route{}
+	for _, r := range p.config.Routes {
+		// only pick http services
+		if r.Protocol != api.Protocol_HTTP {
+			continue
+		}
+		h := proxy.BindToHostPort(r.Bind, defaultHostPort)
+		m[h] = append(m[h], r)
+	}
 }
 
 func (p *Proxy) Close() error {

@@ -2,9 +2,11 @@ package reverse
 
 import (
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 
+	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/balance"
 )
 
@@ -79,4 +81,13 @@ func DirectorFromLoadBalance(ba balance.Balance) Director {
 		target := ba.Next()
 		Request(target.URL, r)
 	})
+}
+
+func New(route *api.Route) (*httputil.ReverseProxy, error) {
+	ba, err := balance.FromRoute(route)
+	if err != nil {
+		return nil, err
+	}
+	direct := DirectorFromLoadBalance(ba)
+	return &httputil.ReverseProxy{Director: direct.Request}, nil
 }

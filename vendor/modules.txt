@@ -87,9 +87,6 @@ github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types
 # github.com/urfave/cli v1.22.5
 ## explicit
 github.com/urfave/cli
-# github.com/valyala/bytebufferpool v1.0.0
-## explicit
-github.com/valyala/bytebufferpool
 # github.com/wasmerio/wasmer-go v1.0.3
 ## explicit
 github.com/wasmerio/wasmer-go/wasmer

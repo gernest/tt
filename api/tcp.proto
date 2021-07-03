@@ -67,6 +67,7 @@ message Route {
   Rule rule = 14;
   int32 priority = 15;
   repeated Middleware middlewares = 16;
+  Protocol protocol = 17;
 }
 
 // Speed defines rate limiting of how fast data willl be copied. This is a
@@ -194,7 +195,7 @@ message Rule {
   }
   message Header {
     string key = 1;
-    StringMatch vallue = 2;
+    StringMatch value = 2;
   }
 
   message StringMatch {
