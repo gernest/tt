@@ -20,4 +20,4 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - name: Run
-        run: go test ./proxy
+        run: go test ./pkg/...
