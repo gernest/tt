@@ -15,6 +15,9 @@ import (
 func Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
+		if len(route.LoadBalance) == 0 {
+			continue
+		}
 		h, err := reverse.New(route)
 		if err != nil {
 			return nil, err
