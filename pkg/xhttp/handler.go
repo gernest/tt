@@ -15,12 +15,13 @@ import (
 func Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
-		if len(route.LoadBalance) == 0 {
-			continue
-		}
-		h, err := reverse.New(route)
-		if err != nil {
-			return nil, err
+		h := http.Handler(HNoOp{})
+		if len(route.LoadBalance) > 0 {
+			rh, err := reverse.New(route)
+			if err != nil {
+				return nil, err
+			}
+			h = rh
 		}
 		for _, r := range buildRouters(m, route) {
 			r.Handler(h)
@@ -143,6 +144,10 @@ func ReloadHand(ctx context.Context, handlerChan <-chan http.Handler, base http.
 		return h.Load().(http.Handler)
 	}
 }
+
+type HNoOp struct{}
+
+func (HNoOp) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
 
 type H404 struct{}
 
