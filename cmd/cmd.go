@@ -8,6 +8,7 @@ import (
 	"github.com/gernest/tt/api"
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp/proxy"
+	"github.com/gernest/tt/pkg/xhttp"
 	"github.com/gernest/tt/zlg"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
@@ -35,7 +36,12 @@ func start(ctx *cli.Context) error {
 
 // StartWithContext starts the proxy and uses port to start the admin RPC
 func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
-	mgr := New(&proxy.Proxy{})
+	mgr := New(
+		&proxy.Proxy{},
+		&xhttp.Proxy{},
+	)
+	defer mgr.Close()
+
 	ls, err := net.Listen("tcp", o.Listen.Control.HostPort)
 	if err != nil {
 		return err
