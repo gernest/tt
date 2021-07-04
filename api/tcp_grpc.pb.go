@@ -18,7 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProxyClient interface {
-	Configure(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Response, error)
+	Get(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*Config, error)
+	Put(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Response, error)
+	Post(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Response, error)
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type proxyClient struct {
@@ -29,9 +32,36 @@ func NewProxyClient(cc grpc.ClientConnInterface) ProxyClient {
 	return &proxyClient{cc}
 }
 
-func (c *proxyClient) Configure(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Response, error) {
+func (c *proxyClient) Get(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*Config, error) {
+	out := new(Config)
+	err := c.cc.Invoke(ctx, "/Proxy/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *proxyClient) Put(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/Proxy/Configure", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Proxy/Put", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *proxyClient) Post(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/Proxy/Post", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *proxyClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/Proxy/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +72,10 @@ func (c *proxyClient) Configure(ctx context.Context, in *Config, opts ...grpc.Ca
 // All implementations must embed UnimplementedProxyServer
 // for forward compatibility
 type ProxyServer interface {
-	Configure(context.Context, *Config) (*Response, error)
+	Get(context.Context, *ConfigRequest) (*Config, error)
+	Put(context.Context, *Config) (*Response, error)
+	Post(context.Context, *Config) (*Response, error)
+	Delete(context.Context, *DeleteRequest) (*Response, error)
 	mustEmbedUnimplementedProxyServer()
 }
 
@@ -50,8 +83,17 @@ type ProxyServer interface {
 type UnimplementedProxyServer struct {
 }
 
-func (UnimplementedProxyServer) Configure(context.Context, *Config) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Configure not implemented")
+func (UnimplementedProxyServer) Get(context.Context, *ConfigRequest) (*Config, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedProxyServer) Put(context.Context, *Config) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Put not implemented")
+}
+func (UnimplementedProxyServer) Post(context.Context, *Config) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Post not implemented")
+}
+func (UnimplementedProxyServer) Delete(context.Context, *DeleteRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedProxyServer) mustEmbedUnimplementedProxyServer() {}
 
@@ -66,20 +108,74 @@ func RegisterProxyServer(s grpc.ServiceRegistrar, srv ProxyServer) {
 	s.RegisterService(&Proxy_ServiceDesc, srv)
 }
 
-func _Proxy_Configure_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Proxy_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProxyServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proxy/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProxyServer).Get(ctx, req.(*ConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Proxy_Put_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Config)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProxyServer).Configure(ctx, in)
+		return srv.(ProxyServer).Put(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Proxy/Configure",
+		FullMethod: "/Proxy/Put",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProxyServer).Configure(ctx, req.(*Config))
+		return srv.(ProxyServer).Put(ctx, req.(*Config))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Proxy_Post_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Config)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProxyServer).Post(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proxy/Post",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProxyServer).Post(ctx, req.(*Config))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Proxy_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProxyServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proxy/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProxyServer).Delete(ctx, req.(*DeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -92,8 +188,20 @@ var Proxy_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ProxyServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Configure",
-			Handler:    _Proxy_Configure_Handler,
+			MethodName: "Get",
+			Handler:    _Proxy_Get_Handler,
+		},
+		{
+			MethodName: "Put",
+			Handler:    _Proxy_Put_Handler,
+		},
+		{
+			MethodName: "Post",
+			Handler:    _Proxy_Post_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _Proxy_Delete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -35,7 +35,7 @@ func start(ctx *cli.Context) error {
 
 // StartWithContext starts the proxy and uses port to start the admin RPC
 func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
-	x := proxy.New(ctx, o)
+	mgr := New(&proxy.Proxy{})
 	ls, err := net.Listen("tcp", o.Listen.Control.HostPort)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 	defer ls.Close()
 	svr := grpc.NewServer()
 	rctx, cancel := context.WithCancel(ctx)
-	api.RegisterProxyServer(svr, x.RPC())
+	api.RegisterProxyServer(svr, mgr)
 	go func() {
 		defer cancel()
 		zlg.Info("Starting admin rpc sever", zap.String("addr", ls.Addr().String()))
@@ -52,11 +52,9 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 			zlg.Error(err, "Exit admin rpc server")
 		}
 	}()
-	go func() {
-		if err := x.Start(); err != nil {
-			zlg.Error(err, "Failed to start  proxy server")
-		}
-	}()
+	if err := mgr.Boot(ctx, o); err != nil {
+		zlg.Error(err, "Failed to start  proxy server")
+	}
 	<-rctx.Done()
 	return nil
 }
