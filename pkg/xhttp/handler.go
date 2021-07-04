@@ -1,8 +1,11 @@
 package xhttp
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"strings"
+	"sync/atomic"
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/reverse"
@@ -99,4 +102,44 @@ func httpMatch(a *api.Rule_HTTP, route *mux.Route) (r *mux.Route) {
 		}
 	}
 	return
+}
+
+var _ http.Handler = (*Dynamic)(nil)
+
+type Dynamic struct {
+	Get func() http.Handler
+}
+
+func NewDynamic(ctx context.Context, handlerChan <-chan http.Handler) *Dynamic {
+	return &Dynamic{
+		Get: ReloadHand(ctx, handlerChan),
+	}
+}
+
+func (d *Dynamic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	d.Get().ServeHTTP(w, r)
+}
+
+func ReloadHand(ctx context.Context, handlerChan <-chan http.Handler) func() http.Handler {
+	var h atomic.Value
+	h.Store(&H404{})
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case hand := <-handlerChan:
+				h.Store(hand)
+			}
+		}
+	}()
+	return func() http.Handler {
+		return h.Load().(http.Handler)
+	}
+}
+
+type H404 struct{}
+
+func (H404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 }

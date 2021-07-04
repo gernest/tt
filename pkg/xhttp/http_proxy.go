@@ -2,6 +2,7 @@ package xhttp
 
 import (
 	"context"
+	"net"
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/proxy"
@@ -12,9 +13,15 @@ const defaultHostPort = ":http"
 
 var _ proxy.Proxy = (*Proxy)(nil)
 
+type ListenContext struct {
+	Cancel   context.CancelFunc
+	Listener net.Listener
+}
+
 type Proxy struct {
-	opts   *proxy.Options
-	config *api.Config
+	opts    *proxy.Options
+	config  *api.Config
+	context map[string]*ListenContext
 }
 
 func (p *Proxy) Configure(x *api.Config) error {

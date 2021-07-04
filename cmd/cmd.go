@@ -1,84 +1,42 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
 
 	"github.com/gernest/tt/api"
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/proxy"
 	"github.com/gernest/tt/zlg"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
-// Proxy returns command for running tcp proxy
-func Proxy() cli.Command {
-	return cli.Command{
-		Name: "proxy",
-		Flags: []cli.Flag{
-			cli.IntFlag{
-				Name:   "port,p",
-				Usage:  "Port to bind all tcp traffic",
-				EnvVar: "TT_LISTEN_PORT",
-				Value:  5555,
-			},
-			cli.IntFlag{
-				Name:   "control",
-				Usage:  "gRPC server for realtime dynamic routing updates",
-				EnvVar: "TT_CONTROL_PORT",
-				Value:  5500,
-			},
-			cli.IntSliceFlag{
-				Name:   "allowed,a",
-				Usage:  "List of ports that the tcp proxy is allowed to listen to",
-				EnvVar: "TT_ALLOWED_PORTS",
-			},
-			cli.StringFlag{
-				Name:  "config,c",
-				Usage: "If this is provided, routes will be initially loaded from this file",
-				Value: "tt.json",
-			},
-		},
-		Action: start,
-	}
+func App(version, commit, date, builtBy string) *cli.App {
+	a := cli.NewApp()
+	a.Name = "tt"
+	a.Version = fmt.Sprintf("%s-%s+%s@%s", version, commit, date, builtBy)
+	a.Usage = "TCP/UDP -- L4 reverse proxy and load balancer with wasm middlewares"
+	a.Flags = proxyPkg.Options{}.Flags()
+	a.Action = start
+	return a
 }
 
 // start starts the proxy service
 func start(ctx *cli.Context) error {
-	file := ctx.String("config")
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		zlg.Error(err, "Failed to load config file", zap.String("file", file))
+	opts := &proxyPkg.Options{}
+	if err := opts.Parse(ctx); err != nil {
+		return err
 	}
-	var c api.Config
-	if b != nil {
-		var u jsonpb.Unmarshaler
-		err := u.Unmarshal(bytes.NewReader(b), &c)
-		if err != nil {
-			return err
-		}
-	}
-
-	return StartWithContext(context.Background(),
-		&proxyPkg.Options{
-			HostPort:        fmt.Sprintf(":%d", ctx.Int("port")),
-			ControlHostPort: fmt.Sprintf(":%d", ctx.Int("control")),
-			AllowedPOrts:    append([]int{ctx.Int("port")}, ctx.IntSlice("allowed")...),
-			Config:          c,
-		},
-	)
+	return StartWithContext(context.Background(), opts)
 }
 
 // StartWithContext starts the proxy and uses port to start the admin RPC
 func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 	x := proxy.New(ctx, o)
-	ls, err := net.Listen("tcp", o.ControlHostPort)
+	ls, err := net.Listen("tcp", o.Listen.Control.HostPort)
 	if err != nil {
 		return err
 	}

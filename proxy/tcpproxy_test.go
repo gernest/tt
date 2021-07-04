@@ -129,7 +129,7 @@ func testProxy(t *testing.T, front net.Listener) (*Proxy, context.CancelFunc) {
 		ctx:        ctx,
 		opts:       &proxyPkg.Options{},
 	}
-	p.opts.AllowedPOrts = []int{567}
+	p.opts.AllowedPorts = []int{567}
 	return p, cancel
 }
 

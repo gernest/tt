@@ -66,7 +66,7 @@ type Proxy struct {
 
 // goodPort returns true if port is good and should be ok to listen on.
 func (p *Proxy) goodPort(port int) bool {
-	for _, v := range p.opts.AllowedPOrts {
+	for _, v := range p.opts.AllowedPorts {
 		if v == port {
 			return true
 		}
@@ -81,7 +81,7 @@ func (p *Proxy) goodPort(port int) bool {
 
 func New(ctx context.Context, opts *proxyPkg.Options) *Proxy {
 	conf := make(configMap)
-	x := conf.get(opts.HostPort)
+	x := conf.get(opts.Listen.TCP.HostPort)
 	x.Routes = append(x.Routes, noopRoute{})
 	for _, r := range opts.Config.Routes {
 		conf.Route(r)
@@ -101,7 +101,7 @@ func (p *Proxy) Boot(ctx context.Context, opts *proxyPkg.Options) error {
 
 func (p *Proxy) setup(ctx context.Context, opts *proxyPkg.Options) {
 	conf := make(configMap)
-	x := conf.get(opts.HostPort)
+	x := conf.get(opts.Listen.TCP.HostPort)
 	x.Routes = append(x.Routes, noopRoute{})
 	for _, r := range opts.Config.Routes {
 		conf.Route(r)
@@ -234,7 +234,7 @@ func (p *Proxy) Close() error {
 // port Returns host:port if configPort is default we retrun the p.hostPort
 func (p *Proxy) port(configPort string) string {
 	if configPort == defaultIPPort {
-		return p.opts.HostPort
+		return p.opts.Listen.TCP.HostPort
 	}
 	return configPort
 }
@@ -276,7 +276,7 @@ func (p *Proxy) Start() (err error) {
 
 	ctx, cancel := context.WithCancel(p.ctx)
 	p.cancel = cancel
-	zlg.Info("Starting Proxy", zap.String("allowed-ports", fmt.Sprint(p.opts.AllowedPOrts)))
+	zlg.Info("Starting Proxy", zap.String("allowed-ports", fmt.Sprint(p.opts.AllowedPorts)))
 
 	set := make(map[string]struct{})
 	for ipPort := range p.configMap {
