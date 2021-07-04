@@ -8,11 +8,11 @@ import (
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/proxy"
+	"github.com/gernest/tt/zlg"
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
-
-const defaultHostPort = ":http"
 
 var _ proxy.Proxy = (*Proxy)(nil)
 
@@ -111,7 +111,7 @@ func (p *Proxy) build(ctx context.Context) error {
 		if r.Protocol != api.Protocol_HTTP {
 			continue
 		}
-		h := proxy.BindToHostPort(r.Bind, defaultHostPort)
+		h := proxy.BindToHostPort(r.Bind, p.opts.Listen.HTTP.HostPort)
 		m[h] = append(m[h], r)
 	}
 	h := make(map[string]*mux.Router)
@@ -145,7 +145,8 @@ func (p *Proxy) build(ctx context.Context) error {
 	return nil
 }
 
-func (p *Proxy) bindServer(ctx context.Context, ln *ListenContext, base http.Handler) {
+func (p *Proxy) bindServer(ctx context.Context, ln *ListenContext, base *mux.Router) {
+	zlg.Info("Staring http server", zap.String("addr", ln.Listener.Addr().String()))
 	svr := &http.Server{
 		BaseContext: func(l net.Listener) context.Context { return ctx },
 		Handler:     NewDynamic(ctx, ln.HandlerChan, base),
