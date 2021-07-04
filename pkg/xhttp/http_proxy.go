@@ -3,9 +3,12 @@ package xhttp
 import (
 	"context"
 	"net"
+	"net/http"
+	"sync"
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/proxy"
+	"github.com/gorilla/mux"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -14,17 +17,20 @@ const defaultHostPort = ":http"
 var _ proxy.Proxy = (*Proxy)(nil)
 
 type ListenContext struct {
-	Cancel   context.CancelFunc
-	Listener net.Listener
+	Cancel      context.CancelFunc
+	HandlerChan chan http.Handler
+	Listener    net.Listener
 }
 
 type Proxy struct {
 	opts    *proxy.Options
 	config  *api.Config
+	mu      sync.Mutex
 	context map[string]*ListenContext
+	ctx     context.Context
 }
 
-func (p *Proxy) Configure(x *api.Config) error {
+func (p *Proxy) configure(x *api.Config) error {
 	// avoid wasteful reloads by making sure that the configuration changed
 	if !proto.Equal(p.config, x) {
 		return p.reload(x)
@@ -33,7 +39,10 @@ func (p *Proxy) Configure(x *api.Config) error {
 }
 
 func (p *Proxy) reload(a *api.Config) error {
-	return nil
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.config = a
+	return p.build(p.ctx)
 }
 
 func (p *Proxy) Get(ctx context.Context) (*api.Config, error) {
@@ -41,7 +50,7 @@ func (p *Proxy) Get(ctx context.Context) (*api.Config, error) {
 }
 
 func (p *Proxy) Put(ctx context.Context, config *api.Config) error {
-	return p.Configure(config)
+	return p.configure(config)
 }
 
 func clone(a *api.Config) *api.Config {
@@ -62,7 +71,7 @@ func (p *Proxy) Post(ctx context.Context, config *api.Config) error {
 			old.Routes = append(old.Routes, n)
 		}
 	}
-	return p.Configure(old)
+	return p.configure(old)
 }
 
 func (p *Proxy) Delete(ctx context.Context, config *api.Config) error {
@@ -80,7 +89,7 @@ func (p *Proxy) Delete(ctx context.Context, config *api.Config) error {
 	for _, n := range m {
 		x.Routes = append(x.Routes, n)
 	}
-	return p.Configure(x)
+	return p.configure(x)
 }
 
 func (p *Proxy) Config() proxy.Config {
@@ -88,10 +97,13 @@ func (p *Proxy) Config() proxy.Config {
 }
 
 func (p *Proxy) Boot(ctx context.Context, config *proxy.Options) error {
-	return nil
+	p.opts = config
+	p.context = make(map[string]*ListenContext)
+	p.config = &config.Config
+	return p.build(ctx)
 }
 
-func (p *Proxy) build() error {
+func (p *Proxy) build(ctx context.Context) error {
 	// group routes by host:port
 	m := map[string][]*api.Route{}
 	for _, r := range p.config.Routes {
@@ -102,9 +114,94 @@ func (p *Proxy) build() error {
 		h := proxy.BindToHostPort(r.Bind, defaultHostPort)
 		m[h] = append(m[h], r)
 	}
+	h := make(map[string]*mux.Router)
+	var newListeners []string
+	for k, v := range m {
+		x, err := Handler(v)
+		if err != nil {
+			return err
+		}
+		h[k] = x
+		newListeners = append(newListeners, k)
+	}
+
+	// start listeners
+	if err := p.listen(newListeners...); err != nil {
+		return err
+	}
+
+	// register handlers
+	for k, v := range h {
+		ls := p.context[k]
+		if ls.Cancel != nil {
+			// this was already registered before just update the handler
+			ls.HandlerChan <- v
+			continue
+		}
+		ctx, cancel := context.WithCancel(ctx)
+		ls.Cancel = cancel
+		p.bindServer(ctx, ls, v)
+	}
+	return nil
+}
+
+func (p *Proxy) bindServer(ctx context.Context, ln *ListenContext, base http.Handler) {
+	svr := &http.Server{
+		BaseContext: func(l net.Listener) context.Context { return ctx },
+		Handler:     NewDynamic(ctx, ln.HandlerChan, base),
+	}
+	go func() {
+		svr.Serve(ln.Listener)
+	}()
+}
+
+func (p *Proxy) listen(ls ...string) error {
+	m := make(map[string]*ListenContext)
+	for _, l := range ls {
+		if _, ok := p.context[l]; ok {
+			// if we already had a listener we don't want to bind multiple listeners on
+			// the sape port
+			continue
+		}
+		ln, err := net.Listen("tcp", l)
+		if err != nil {
+			return err
+		}
+		m[l] = &ListenContext{
+			HandlerChan: make(chan http.Handler),
+			Listener:    ln,
+		}
+	}
+	// update context to reflect the new changes
+	for k, v := range m {
+		p.context[k] = v
+	}
+	for k, v := range p.context {
+		if _, ok := m[k]; !ok {
+			// This listener was removed we need to properly cear everything associated
+			// with this listener.
+			if v.Cancel != nil {
+				v.Cancel()
+			}
+			if err := v.Listener.Close(); err != nil {
+				return err
+			}
+			delete(p.context, k)
+		}
+	}
+	// By now we have context reflecting the new desired state.
 	return nil
 }
 
 func (p *Proxy) Close() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for k, v := range p.context {
+		if v.Cancel != nil {
+			v.Cancel()
+		}
+		v.Listener.Close()
+		delete(p.context, k)
+	}
 	return nil
 }

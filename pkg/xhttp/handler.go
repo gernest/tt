@@ -110,9 +110,9 @@ type Dynamic struct {
 	Get func() http.Handler
 }
 
-func NewDynamic(ctx context.Context, handlerChan <-chan http.Handler) *Dynamic {
+func NewDynamic(ctx context.Context, handlerChan <-chan http.Handler, base http.Handler) *Dynamic {
 	return &Dynamic{
-		Get: ReloadHand(ctx, handlerChan),
+		Get: ReloadHand(ctx, handlerChan, base),
 	}
 }
 
@@ -120,9 +120,12 @@ func (d *Dynamic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	d.Get().ServeHTTP(w, r)
 }
 
-func ReloadHand(ctx context.Context, handlerChan <-chan http.Handler) func() http.Handler {
+func ReloadHand(ctx context.Context, handlerChan <-chan http.Handler, base http.Handler) func() http.Handler {
 	var h atomic.Value
-	h.Store(&H404{})
+	if base == nil {
+		base = &H404{}
+	}
+	h.Store(base)
 	go func() {
 		for {
 			select {
