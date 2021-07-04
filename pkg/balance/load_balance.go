@@ -33,9 +33,6 @@ func target(w *api.WeightedAddr) (*Target, error) {
 }
 
 func FromRoute(r *api.Route) (Balance, error) {
-	if r.Endpoint != nil {
-		return FromWeightedAddr(api.Route_RandomWeighted, r.Endpoint)
-	}
 	return FromWeightedAddr(r.LoadBalanceAlgo, r.LoadBalance...)
 }
 

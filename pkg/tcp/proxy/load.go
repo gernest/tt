@@ -119,9 +119,6 @@ func buildTarget(r *api.Route) tcp.Target {
 }
 
 func target(r *api.Route) tcp.Target {
-	if r.Endpoint != nil {
-		return toDial(r.Endpoint, r)
-	}
 	if r.LoadBalance != nil {
 		switch r.LoadBalanceAlgo {
 		case api.Route_RoundRobinWeighted:

@@ -66,7 +66,6 @@ message Route {
   Retries retries = 4;
   google.protobuf.Duration timeout = 5;
   google.protobuf.Duration keepAlive = 6;
-  WeightedAddr endpoint = 7;
   repeated WeightedAddr load_balance = 8;
   LoadBalanceAlgo load_balance_algo = 9;
   bool allow_acme = 10;

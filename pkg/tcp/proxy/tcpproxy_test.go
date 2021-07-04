@@ -424,12 +424,14 @@ func TestGenerateTestConfig(t *testing.T) {
 						Sni: "echo.test",
 					},
 				},
-				Endpoint: &api.WeightedAddr{
-					Addr: &api.Address{
-						Address: "localhost:8081",
-					},
-					MetricLabels: map[string]string{
-						"service": "echo",
+				LoadBalance: []*api.WeightedAddr{
+					&api.WeightedAddr{
+						Addr: &api.Address{
+							Address: "localhost:8081",
+						},
+						MetricLabels: map[string]string{
+							"service": "echo",
+						},
 					},
 				},
 				Speed: &api.Speed{
@@ -442,12 +444,14 @@ func TestGenerateTestConfig(t *testing.T) {
 						Host: "httpbin.test",
 					},
 				},
-				Endpoint: &api.WeightedAddr{
-					Addr: &api.Address{
-						Address: "localhost:8080",
-					},
-					MetricLabels: map[string]string{
-						"service": "httpbin",
+				LoadBalance: []*api.WeightedAddr{
+					{
+						Addr: &api.Address{
+							Address: "localhost:8080",
+						},
+						MetricLabels: map[string]string{
+							"service": "httpbin",
+						},
 					},
 				},
 			},
@@ -462,12 +466,14 @@ func TestGenerateTestConfig(t *testing.T) {
 						Fixed: &empty.Empty{},
 					},
 				},
-				Endpoint: &api.WeightedAddr{
-					Addr: &api.Address{
-						Address: "localhost:8080",
-					},
-					MetricLabels: map[string]string{
-						"service": "fixed",
+				LoadBalance: []*api.WeightedAddr{
+					{
+						Addr: &api.Address{
+							Address: "localhost:8080",
+						},
+						MetricLabels: map[string]string{
+							"service": "fixed",
+						},
 					},
 				},
 			},
