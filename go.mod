@@ -5,6 +5,8 @@ go 1.16
 require (
 	github.com/ahmetb/go-httpbin v0.0.0-20200921172446-862fbad56b77
 	github.com/andybalholm/brotli v1.0.1 // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/dgraph-io/ristretto v0.1.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/pion/dtls/v2 v2.0.8

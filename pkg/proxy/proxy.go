@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/gernest/tt/api"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/urfave/cli"
@@ -15,9 +16,10 @@ type Options struct {
 	AllowedPorts []int
 	Labels       map[string]string
 	Config       api.Config
+	Cache        Cache
 }
 
-func (o Options) Flags() []cli.Flag {
+func (o *Options) Flags() []cli.Flag {
 	base := []cli.Flag{
 		cli.IntSliceFlag{
 			Name:   "allowed_ports",
@@ -36,6 +38,7 @@ func (o Options) Flags() []cli.Flag {
 			EnvVar: "TT_ROUTES_CONFIG",
 		},
 	}
+	base = append(base, o.Cache.Flags()...)
 	return append(base, o.Listen.Flags()...)
 }
 
@@ -106,6 +109,54 @@ func (l Listen) Flags() []cli.Flag {
 
 type ListenPort struct {
 	HostPort string
+}
+
+type Cache struct {
+	NumCounters int64
+	MaxCost     int64
+	BufferItems int64
+	Metrics     bool
+}
+
+func (c Cache) Config() *ristretto.Config {
+	return &ristretto.Config{
+		NumCounters: c.NumCounters,
+		MaxCost:     c.MaxCost,
+		BufferItems: c.BufferItems,
+		Metrics:     c.Metrics,
+	}
+}
+
+func (c *Cache) Parse(ctx *cli.Context) error {
+	c.NumCounters = ctx.GlobalInt64("cache_num_counters")
+	c.MaxCost = ctx.GlobalInt64("cache_max_cost")
+	c.BufferItems = ctx.GlobalInt64("cache_buffer_items")
+	c.Metrics = ctx.GlobalBool("cache_metrics")
+	return nil
+}
+
+func (c Cache) Flags() []cli.Flag {
+	return []cli.Flag{
+		cli.Int64Flag{
+			Name:   "cache_num_counters",
+			EnvVar: "TT_CACHE_NUM_COUNTERS",
+			Value:  1e7,
+		},
+		cli.Int64Flag{
+			Name:   "cache_max_cost",
+			EnvVar: "TT_CACHE_MAX_COST",
+			Value:  1 << 30,
+		},
+		cli.Int64Flag{
+			Name:   "cache_buffer_items",
+			EnvVar: "TT_BUFFER_ITEMS",
+			Value:  64,
+		},
+		cli.BoolFlag{
+			Name:   "cache_metrics",
+			EnvVar: "TT_CACHE_METRICS",
+		},
+	}
 }
 
 type Proxy interface {
