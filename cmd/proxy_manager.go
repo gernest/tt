@@ -15,7 +15,7 @@ type ProxyManager struct {
 }
 
 func New(proxies ...proxy.Proxy) *ProxyManager {
-	return &ProxyManager{}
+	return &ProxyManager{Proxies: proxies}
 }
 
 func (p *ProxyManager) Boot(ctx context.Context, opts *proxy.Options) error {

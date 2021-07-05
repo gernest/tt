@@ -2,21 +2,27 @@ package xhttp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync/atomic"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/reverse"
 	"github.com/gorilla/mux"
 )
 
-func Handler(routes []*api.Route) (*mux.Router, error) {
+func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
 		h := http.Handler(HNoOp{})
-		if len(route.LoadBalance) > 0 {
+		if route.IsHealthEndpoint {
+			h = &HHeath{
+				fn: p.Health,
+			}
+		} else if len(route.LoadBalance) > 0 {
 			rh, err := reverse.New(route)
 			if err != nil {
 				return nil, err
@@ -73,10 +79,13 @@ func httpMatch(a *api.Rule_HTTP, route *mux.Route) (r *mux.Route) {
 	}
 	if v := a.GetPath(); v != nil {
 		if prefix := v.GetPrefix(); prefix != "" {
+			if !strings.HasPrefix(prefix, "/") {
+				prefix = "/" + prefix
+			}
 			r = r.PathPrefix(prefix)
 		}
 		if exact := v.GetExact(); exact != "" {
-			if strings.HasPrefix(exact, "/") {
+			if !strings.HasPrefix(exact, "/") {
 				exact = "/" + exact
 			}
 			r = r.Path(exact)
@@ -149,8 +158,39 @@ type HNoOp struct{}
 
 func (HNoOp) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
 
+type HHeath struct {
+	fn func() hrf.Health
+}
+
+func (h HHeath) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/health+json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(h.fn())
+}
+
 type H404 struct{}
 
 func (H404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+}
+
+func HealthEndpoint() *api.Route {
+	return &api.Route{
+		Name:             "helathz",
+		Protocol:         api.Protocol_HTTP,
+		IsHealthEndpoint: true,
+		Rule: &api.Rule{
+			Match: &api.Rule_Http{
+				Http: &api.Rule_HTTP{
+					Match: &api.Rule_HTTP_Path{
+						Path: &api.Rule_StringMatch{
+							Match: &api.Rule_StringMatch_Exact{
+								Exact: "/healthz",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }

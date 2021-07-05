@@ -95,6 +95,7 @@ func New(ctx context.Context, opts *proxyPkg.Options) *Proxy {
 }
 
 func (p *Proxy) Boot(ctx context.Context, opts *proxyPkg.Options) error {
+	zlg.Info("Booting TCP proxy")
 	p.setup(ctx, opts)
 	return p.Start()
 }
@@ -104,7 +105,9 @@ func (p *Proxy) setup(ctx context.Context, opts *proxyPkg.Options) {
 	x := conf.get(opts.Listen.TCP.HostPort)
 	x.Routes = append(x.Routes, noopRoute{})
 	for _, r := range opts.Config.Routes {
-		conf.Route(r)
+		if r.Protocol == api.Protocol_TCP {
+			conf.Route(r)
+		}
 	}
 	p.configMap = conf
 	p.lns = make(map[string]net.Listener)

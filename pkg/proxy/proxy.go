@@ -12,11 +12,19 @@ import (
 )
 
 type Options struct {
-	Listen       Listen
-	AllowedPorts []int
-	Labels       map[string]string
-	Config       api.Config
-	Cache        Cache
+	Listen                Listen
+	AllowedPorts          []int
+	Labels                map[string]string
+	Config                api.Config
+	Cache                 Cache
+	Info                  Info
+	DisableHealthEndpoint bool
+}
+
+type Info struct {
+	Version   string
+	ReleaseID string
+	ID        string
 }
 
 func (o *Options) Flags() []cli.Flag {

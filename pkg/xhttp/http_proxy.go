@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/zlg"
 	"github.com/gorilla/mux"
@@ -97,6 +98,7 @@ func (p *Proxy) Config() proxy.Config {
 }
 
 func (p *Proxy) Boot(ctx context.Context, config *proxy.Options) error {
+	zlg.Info("Booting HTTP proxy")
 	p.opts = config
 	p.context = make(map[string]*ListenContext)
 	p.config = &config.Config
@@ -117,7 +119,7 @@ func (p *Proxy) build(ctx context.Context) error {
 	h := make(map[string]*mux.Router)
 	var newListeners []string
 	for k, v := range m {
-		x, err := Handler(v)
+		x, err := p.Handler(v)
 		if err != nil {
 			return err
 		}
@@ -147,6 +149,11 @@ func (p *Proxy) build(ctx context.Context) error {
 
 func (p *Proxy) bindServer(ctx context.Context, ln *ListenContext, base *mux.Router) {
 	zlg.Info("Staring http server", zap.String("addr", ln.Listener.Addr().String()))
+	base.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		path, _ := route.GetPathTemplate()
+		zlg.Info(path)
+		return nil
+	})
 	svr := &http.Server{
 		BaseContext: func(l net.Listener) context.Context { return ctx },
 		Handler:     NewDynamic(ctx, ln.HandlerChan, base),
@@ -205,4 +212,15 @@ func (p *Proxy) Close() error {
 		delete(p.context, k)
 	}
 	return nil
+}
+
+func (p *Proxy) Health() hrf.Health {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return hrf.Health{
+		Status:    hrf.Pass,
+		Version:   p.opts.Info.Version,
+		ReleaseID: p.opts.Info.ReleaseID,
+		ServiceID: p.opts.Info.ID,
+	}
 }
