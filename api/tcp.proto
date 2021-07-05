@@ -76,6 +76,8 @@ message Route {
   int32 priority = 15;
   repeated Middleware middlewares = 16;
   Protocol protocol = 17;
+  // Set this to true if the route is a registered heath endpoint
+  bool is_health_endpoint = 18;
 }
 
 // Speed defines rate limiting of how fast data willl be copied. This is a
