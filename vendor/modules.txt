@@ -89,12 +89,6 @@ github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types
 github.com/urfave/cli
 # github.com/wasmerio/wasmer-go v1.0.3
 ## explicit
-github.com/wasmerio/wasmer-go/wasmer
-github.com/wasmerio/wasmer-go/wasmer/packaged/include
-github.com/wasmerio/wasmer-go/wasmer/packaged/lib
-github.com/wasmerio/wasmer-go/wasmer/packaged/lib/darwin-amd64
-github.com/wasmerio/wasmer-go/wasmer/packaged/lib/linux-aarch64
-github.com/wasmerio/wasmer-go/wasmer/packaged/lib/linux-amd64
 # go.uber.org/atomic v1.7.0
 ## explicit
 go.uber.org/atomic
@@ -221,3 +215,7 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
+# mosn.io/proxy-wasm-go-host v0.1.1-0.20210524020952-3fb13ba763a6
+## explicit
+mosn.io/proxy-wasm-go-host/proxywasm/common
+mosn.io/proxy-wasm-go-host/proxywasm/v2

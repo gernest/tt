@@ -13,11 +13,12 @@ require (
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.12.0
 	github.com/urfave/cli v1.22.5
-	github.com/wasmerio/wasmer-go v1.0.3
+	github.com/wasmerio/wasmer-go v1.0.3 // indirect
 	go.uber.org/atomic v1.7.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20210330142815-c8897c278d10 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	google.golang.org/grpc v1.36.1
 	google.golang.org/protobuf v1.26.0
+	mosn.io/proxy-wasm-go-host v0.1.1-0.20210524020952-3fb13ba763a6
 )

@@ -498,5 +498,9 @@ honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.1-2019.2.3 h1:3JgtbtFHMiCmsznwGVTUWbgGov+pVqnlf1dEJTNAXeM=
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
+mosn.io/proxy-wasm-go-host v0.1.0 h1:WtXMiOpuDyx3Vruf/BUAiu4bo30rSPx68E5vxEBTT6g=
+mosn.io/proxy-wasm-go-host v0.1.0/go.mod h1:wBRY9Xjf77GZhvAuEc6nQXZ6dQK39kNU2ok/+Z8mSU8=
+mosn.io/proxy-wasm-go-host v0.1.1-0.20210524020952-3fb13ba763a6 h1:6aWdJ5db4OHFhSnSDvZcrAfsJSglbuZNW3DdBPt6PGg=
+mosn.io/proxy-wasm-go-host v0.1.1-0.20210524020952-3fb13ba763a6/go.mod h1:wBRY9Xjf77GZhvAuEc6nQXZ6dQK39kNU2ok/+Z8mSU8=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=
