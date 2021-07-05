@@ -279,8 +279,6 @@ func (p *Proxy) Start() (err error) {
 
 	ctx, cancel := context.WithCancel(p.ctx)
 	p.cancel = cancel
-	zlg.Info("Starting Proxy", zap.String("allowed-ports", fmt.Sprint(p.opts.AllowedPorts)))
-
 	set := make(map[string]struct{})
 	for ipPort := range p.configMap {
 		set[ipPort] = struct{}{}
@@ -318,7 +316,7 @@ func (p *Proxy) Start() (err error) {
 			if err != nil {
 				return
 			}
-			zlg.Info("Started listener", zap.String("addr", hostPort))
+			zlg.Info("Started tcp listener", zap.String("addr", hostPort))
 			p.lns[hostPort] = ln
 		}
 	}
@@ -358,7 +356,7 @@ func (p *Proxy) start(ctx context.Context) {
 
 func (p *Proxy) serveListener(ctx context.Context, ln net.Listener, hostPort string) {
 	useConfig := p.configMap[hostPort]
-	zlg.Info("Start Listening for traffic", zap.String("host:port", hostPort))
+	zlg.Info("Start serving tcp traffic", zap.String("host:port", hostPort))
 	for {
 		if ctx.Err() != nil {
 			return
