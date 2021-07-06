@@ -37,7 +37,44 @@ message Address {
   string address = 2;
 }
 
-message Middleware {}
+message Middleware {
+  oneof match { Wasm wasm = 1; }
+  message Wasm {
+    message Setting {
+      message Env {
+        string key = 1;
+        string value = 2;
+      }
+      message DirectoryMap {
+        string alias = 1;
+        string directory = 2;
+      }
+      string progam_name = 1;
+      repeated string arguments = 2;
+      repeated Env environments = 3;
+      repeated string preopen_directories = 4;
+      repeated DirectoryMap map_directories = 5;
+      bool inherit_stdin = 6;
+      bool capture_stdout = 7;
+      bool inherit_stdout = 8;
+      bool capture_stderr = 9;
+      bool inherit_stderr = 10;
+    }
+    // The name of this middleware. This is optiona, but when set it will be
+    // used in logs and tracing.
+    string name = 1;
+
+    // The name of wasm module to load this is required. If this is let to empty
+    // then this middleware will never be registered.
+    //
+    // This will be eagely lloaded meaning the module doesn't need to be
+    // necessarily precompiled before the route is being registed.
+    string module = 2;
+
+    // Options for creating the wasm module instance.
+    Setting setting = 3;
+  }
+}
 // Protocol exposes
 enum Protocol {
   TCP = 0;
