@@ -6,8 +6,6 @@ github.com/ahmetb/go-httpbin
 github.com/andybalholm/brotli
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
-# github.com/cespare/xxhash v1.1.0
-## explicit
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
 # github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
@@ -99,7 +97,12 @@ github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types
 ## explicit
 github.com/urfave/cli
 # github.com/wasmerio/wasmer-go v1.0.3
-## explicit
+github.com/wasmerio/wasmer-go/wasmer
+github.com/wasmerio/wasmer-go/wasmer/packaged/include
+github.com/wasmerio/wasmer-go/wasmer/packaged/lib
+github.com/wasmerio/wasmer-go/wasmer/packaged/lib/darwin-amd64
+github.com/wasmerio/wasmer-go/wasmer/packaged/lib/linux-aarch64
+github.com/wasmerio/wasmer-go/wasmer/packaged/lib/linux-amd64
 # go.uber.org/atomic v1.7.0
 ## explicit
 go.uber.org/atomic
@@ -230,3 +233,4 @@ google.golang.org/protobuf/types/known/wrapperspb
 ## explicit
 mosn.io/proxy-wasm-go-host/proxywasm/common
 mosn.io/proxy-wasm-go-host/proxywasm/v2
+mosn.io/proxy-wasm-go-host/wasmer
