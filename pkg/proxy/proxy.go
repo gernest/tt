@@ -7,6 +7,7 @@ import (
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/metrics/tseries"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/urfave/cli"
 )
@@ -19,6 +20,7 @@ type Options struct {
 	Cache                 Cache
 	Info                  Info
 	DisableHealthEndpoint bool
+	Metrics               tseries.Config
 }
 
 type Info struct {
@@ -47,6 +49,7 @@ func (o *Options) Flags() []cli.Flag {
 		},
 	}
 	base = append(base, o.Cache.Flags()...)
+	base = append(base, o.Metrics.Flags()...)
 	return append(base, o.Listen.Flags()...)
 }
 
@@ -74,6 +77,12 @@ func (o *Options) Parse(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+	}
+	if err := o.Cache.Parse(ctx); err != nil {
+		return nil
+	}
+	if err := o.Metrics.Parse(ctx); err != nil {
+		return nil
 	}
 	return nil
 }
