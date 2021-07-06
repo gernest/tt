@@ -80,5 +80,8 @@ func parseSize(sizeStr string, uMap unitMap) (int64, error) {
 type Unit string
 
 func (u Unit) Bytes() (int64, error) {
+	if u == "" {
+		return 0, nil
+	}
 	return RAMInBytes(string(u))
 }
