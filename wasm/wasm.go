@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"errors"
+	"sync"
 
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 )
@@ -11,6 +12,7 @@ var ErrModuleNotFound = errors.New("module: 404")
 type Wasm struct {
 	engine  *wasmerGo.Engine
 	store   *wasmerGo.Store
+	mu      sync.RWMutex
 	modules map[string]*wasmerGo.Module
 }
 
@@ -100,5 +102,11 @@ func (w *Wasm) Instance(name string, opts InstanceOptions) (*wasmerGo.Instance, 
 }
 
 func (w *Wasm) get(name string) (*wasmerGo.Module, error) {
-	return nil, ErrModuleNotFound
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	m, ok := w.modules[name]
+	if !ok {
+		return nil, ErrModuleNotFound
+	}
+	return m, nil
 }
