@@ -97,6 +97,7 @@ github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types
 ## explicit
 github.com/urfave/cli
 # github.com/wasmerio/wasmer-go v1.0.3
+## explicit
 github.com/wasmerio/wasmer-go/wasmer
 github.com/wasmerio/wasmer-go/wasmer/packaged/include
 github.com/wasmerio/wasmer-go/wasmer/packaged/lib
@@ -233,4 +234,3 @@ google.golang.org/protobuf/types/known/wrapperspb
 ## explicit
 mosn.io/proxy-wasm-go-host/proxywasm/common
 mosn.io/proxy-wasm-go-host/proxywasm/v2
-mosn.io/proxy-wasm-go-host/wasmer

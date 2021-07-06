@@ -14,6 +14,7 @@ require (
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.12.0
 	github.com/urfave/cli v1.22.5
+	github.com/wasmerio/wasmer-go v1.0.3
 	go.uber.org/atomic v1.7.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20210330142815-c8897c278d10 // indirect

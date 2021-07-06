@@ -3,7 +3,10 @@ package proxy
 import (
 	"context"
 	"net"
+	"strings"
+	"time"
 
+	"github.com/gernest/tt/pkg/unit"
 	"golang.org/x/time/rate"
 )
 
@@ -39,4 +42,29 @@ func (r *RateCopy) Write(b []byte) (n int, err error) {
 	}()
 	n, err = r.Conn.Write(b)
 	return
+}
+
+// Speed is a unit representing amount of bytes per duration
+// eg 120kib/s
+type Speed string
+
+func (s Speed) Limit() (float64, error) {
+	if s == "" {
+		return 0, nil
+	}
+	x := strings.Split(string(s), "/")
+	v, err := unit.RAMInBytes(x[0])
+	if err != nil {
+		return 0, err
+	}
+	per := time.Second
+	if len(x) == 2 {
+		switch x[1] {
+		case "m":
+			per = time.Minute
+		case "h":
+			per = time.Hour
+		}
+	}
+	return float64(v) / per.Seconds(), nil
 }
