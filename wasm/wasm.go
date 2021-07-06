@@ -2,6 +2,10 @@ package wasm
 
 import (
 	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
@@ -113,4 +117,29 @@ func (w *Wasm) get(name string) (*wasmerGo.Module, error) {
 		return nil, ErrModuleNotFound
 	}
 	return m, nil
+}
+
+func (w *Wasm) LoadFromDir(dir string) error {
+	return filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		switch filepath.Ext(path) {
+		case ".wasm", ".wat":
+			return w.CompileFile(path)
+		}
+		return nil
+	})
+}
+
+func (w *Wasm) CompileFile(path string) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return w.Compile(name(path), b)
+}
+
+func name(path string) string {
+	return strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 }
