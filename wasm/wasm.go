@@ -57,7 +57,7 @@ type DirectoryMap struct {
 	Directory string
 }
 
-func (w *Wasm) Instance(name string, opts InstanceOptions) (*wasmerGo.Instance, error) {
+func (w *Wasm) NewInstance(name string, opts InstanceOptions) (*Instance, error) {
 	m, err := w.get(name)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,11 @@ func (w *Wasm) Instance(name string, opts InstanceOptions) (*wasmerGo.Instance, 
 	if err != nil {
 		return nil, err
 	}
-	return wasmerGo.NewInstance(m, o)
+	inst, err := wasmerGo.NewInstance(m, o)
+	if err != nil {
+		return nil, err
+	}
+	return NewWasmerInstance(w, o, inst), nil
 }
 
 func (w *Wasm) get(name string) (*wasmerGo.Module, error) {
