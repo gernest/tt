@@ -49,7 +49,7 @@ message Middleware {
         string alias = 1;
         string directory = 2;
       }
-      string progam_name = 1;
+      string program_name = 1;
       repeated string arguments = 2;
       repeated Env environments = 3;
       repeated string preopen_directories = 4;

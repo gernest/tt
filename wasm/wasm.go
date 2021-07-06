@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gernest/tt/api"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 )
 
@@ -39,29 +40,7 @@ func (w *Wasm) Compile(name string, wasmBytes []byte) error {
 	return nil
 }
 
-type InstanceOptions struct {
-	ProgramName        string
-	Arguments          []string
-	Environments       []Env
-	PreopenDirectories []string
-	MapDirectories     []DirectoryMap
-	InheritStdin       bool
-	CaptureStdout      bool
-	InheritStdout      bool
-	CaptureStderr      bool
-	InheritStderr      bool
-}
-
-type Env struct {
-	Key, Value string
-}
-
-type DirectoryMap struct {
-	Alias     string
-	Directory string
-}
-
-func (w *Wasm) NewInstance(name string, opts InstanceOptions) (*Instance, error) {
+func (w *Wasm) NewInstance(name string, opts *api.Middleware_Wasm_Setting) (*Instance, error) {
 	m, err := w.get(name)
 	if err != nil {
 		return nil, err
