@@ -155,14 +155,14 @@ func clone(a *api.Config) *api.Config {
 
 func (p *Proxy) Post(ctx context.Context, config *api.Config) error {
 	old := clone(p.config)
-	m := make(map[string]*api.Route)
+	m := make(map[string]int)
 	for i := 0; i < len(old.Routes); i++ {
-		m[old.Routes[i].Name] = old.Routes[i]
+		m[old.Routes[i].Name] = i
 	}
 	for _, n := range config.Routes {
-		if r, ok := m[n.Name]; ok {
+		if i, ok := m[n.Name]; ok {
 			// Update existing route by replacing the old one with the new route.
-			*r = *n
+			old.Routes[i] = n
 		} else {
 			old.Routes = append(old.Routes, n)
 		}
