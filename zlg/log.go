@@ -6,6 +6,7 @@ import (
 
 // Logger global default logger
 var Logger *zap.Logger
+var Level zap.AtomicLevel
 
 func init() {
 	var err error
@@ -18,6 +19,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	Level = c.Level
 }
 
 // Info logs info
