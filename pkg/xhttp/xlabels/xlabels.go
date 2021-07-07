@@ -15,6 +15,7 @@ const (
 	UserAgentDesktop = "req_ua_desktop"
 	UserAgentBot     = "req_ua_bot"
 	Duration         = "req_duration"
+	Code             = "res_code"
 	Error            = "error"
 )
 
@@ -32,6 +33,5 @@ var All = []string{
 	UserAgentTablet,
 	UserAgentDesktop,
 	UserAgentBot,
-	Duration,
 	Error,
 }

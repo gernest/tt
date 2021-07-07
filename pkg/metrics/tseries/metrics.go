@@ -3,9 +3,9 @@ package tseries
 import (
 	"context"
 	"net/http"
-	"time"
 
-	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/gernest/tt/pkg/xhttp/xlabels"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type metricsKey struct{}
@@ -13,13 +13,10 @@ type metricsKey struct{}
 type Metrics struct {
 	Route, Service string
 	Request        Request
-	Response       Response
 }
 
 type Request struct {
-	Path      string
 	UserAgent UserAgent
-	Size      int64
 }
 
 type UserAgent struct {
@@ -36,12 +33,6 @@ type UserAgent struct {
 	String    string
 }
 
-type Response struct {
-	Size     int64
-	Code     int
-	Duration time.Duration
-}
-
 func SetMetric(ctx context.Context, m *Metrics) context.Context {
 	return context.WithValue(ctx, metricsKey{}, m)
 }
@@ -50,8 +41,13 @@ func GetMetics(ctx context.Context) *Metrics {
 	return ctx.Value(metricsKey{}).(*Metrics)
 }
 
-func (m *Metrics) RecordRequest(r *http.Request) {}
-
-func (m *Metrics) Labels() labels.Labels {
-	return labels.New()
+func (m *Metrics) Labels(
+	r *http.Request,
+	code int,
+) prometheus.Labels {
+	return prometheus.Labels{
+		xlabels.Code:   sanitizeCode(code),
+		xlabels.Method: sanitizeMethod(r.Method),
+		xlabels.Path:   r.URL.Path,
+	}
 }
