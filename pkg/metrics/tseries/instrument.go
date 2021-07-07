@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/xhttp/xlabels"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -58,15 +59,16 @@ const magicString = "zZgWfBxLqvG8kc8IMv3POi2Bb0tZI3vAnBx+gBaFi9FyPzB/CzKUer1yufD
 func Instrument(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
-		m := &Metrics{}
+		m := &meta.Metrics{}
+		r = r.WithContext(meta.SetMetric(r.Context(), m))
 		var timeTOWriteHeader time.Duration
 		d := newDelegator(w, func(i int) {
 			timeTOWriteHeader = time.Since(now)
 		})
 		next.ServeHTTP(d, r)
 		end := time.Since(now)
-		metricsLables := m.Labels(
-			r, d.Status(),
+		metricsLables := Labels(
+			r, d.Status(), next.(meta.Route).Route(), m.Target,
 		)
 		report(
 			metricsLables, end, computeApproximateRequestSize(r),

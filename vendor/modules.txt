@@ -48,6 +48,9 @@ github.com/golang/snappy
 github.com/gorilla/mux
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/mileusna/useragent v1.0.2
+## explicit
+github.com/mileusna/useragent
 # github.com/oklog/ulid v1.3.1
 github.com/oklog/ulid
 # github.com/pion/dtls/v2 v2.0.8

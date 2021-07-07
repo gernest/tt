@@ -1,53 +1,38 @@
 package tseries
 
 import (
-	"context"
 	"net/http"
+	"strconv"
 
+	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/xhttp/xlabels"
+	ua "github.com/mileusna/useragent"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metricsKey struct{}
-
-type Metrics struct {
-	Route, Service string
-	Request        Request
-}
-
-type Request struct {
-	UserAgent UserAgent
-}
-
-type UserAgent struct {
-	Name      string
-	Version   string
-	OS        string
-	OSVersion string
-	Device    string
-	Mobile    bool
-	Tablet    bool
-	Desktop   bool
-	Bot       bool
-	URL       string
-	String    string
-}
-
-func SetMetric(ctx context.Context, m *Metrics) context.Context {
-	return context.WithValue(ctx, metricsKey{}, m)
-}
-
-func GetMetics(ctx context.Context) *Metrics {
-	return ctx.Value(metricsKey{}).(*Metrics)
-}
-
-func (m *Metrics) Labels(
+func Labels(
 	r *http.Request,
 	code int,
+	info *meta.RouteInfo,
+	target string,
 ) prometheus.Labels {
+	agent := ua.Parse(r.UserAgent())
 	return prometheus.Labels{
-		xlabels.Code:   sanitizeCode(code),
-		xlabels.Method: sanitizeMethod(r.Method),
-		xlabels.Path:   r.URL.Path,
+		xlabels.Route:   info.Route.GetName(),
+		xlabels.Service: info.Route.GetService(),
+		xlabels.Host:    info.VirtualHost,
+		xlabels.Code:    sanitizeCode(code),
+		xlabels.Method:  sanitizeMethod(r.Method),
+		xlabels.Path:    r.URL.Path,
+
+		// user agent labels
+		xlabels.UserAgentName:      agent.Name,
+		xlabels.UserAgentVersion:   agent.Version,
+		xlabels.UserAgentOs:        agent.OS,
+		xlabels.UserAgentOsVersion: agent.OSVersion,
+		xlabels.UserAgentDevice:    agent.Device,
+		xlabels.UserAgentMobile:    strconv.FormatBool(agent.Mobile),
+		xlabels.UserAgentTablet:    strconv.FormatBool(agent.Tablet),
+		xlabels.UserAgentDesktop:   strconv.FormatBool(agent.Desktop),
 	}
 }

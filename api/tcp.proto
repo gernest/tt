@@ -115,6 +115,7 @@ message Route {
   Protocol protocol = 17;
   // Set this to true if the route is a registered heath endpoint
   bool is_health_endpoint = 18;
+  string service = 19;
 }
 
 // Speed defines rate limiting of how fast data willl be copied. This is a

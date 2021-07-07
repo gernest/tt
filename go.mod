@@ -10,6 +10,7 @@ require (
 	github.com/go-kit/kit v0.11.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
+	github.com/mileusna/useragent v1.0.2
 	github.com/pion/dtls/v2 v2.0.8
 	github.com/pion/udp v0.1.1
 	github.com/prometheus/client_golang v1.11.0

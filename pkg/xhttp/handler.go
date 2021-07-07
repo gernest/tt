@@ -10,6 +10,7 @@ import (
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/hrf"
+	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/reverse"
 	"github.com/gorilla/mux"
 )
@@ -17,6 +18,7 @@ import (
 func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
+		info := &meta.RouteInfo{}
 		h := http.Handler(HNoOp{})
 		if route.IsHealthEndpoint {
 			h = &HHeath{
@@ -29,21 +31,24 @@ func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 			}
 			h = rh
 		}
-		for _, r := range buildRouters(m, route) {
-			r.Handler(h)
+		for _, r := range buildRouters(m, route, info) {
+			r.Handler(&H{
+				h:    h,
+				info: info,
+			})
 		}
 	}
 	return m, nil
 }
 
-func buildRouters(m *mux.Router, route *api.Route) (routes []*mux.Route) {
+func buildRouters(m *mux.Router, route *api.Route, info *meta.RouteInfo) (routes []*mux.Route) {
 	switch e := route.Rule.Match.(type) {
 	case *api.Rule_All:
 		r := m.Name(route.Name)
 		// We disallow nesting rules more than this depth. All rules here bust be concrete forhttp
 		for _, v := range e.All.Rules {
 			if h := v.GetHttp(); h != nil {
-				r = httpMatch(h, r)
+				r = httpMatch(h, r, info)
 			}
 		}
 		routes = append(routes, r)
@@ -51,7 +56,7 @@ func buildRouters(m *mux.Router, route *api.Route) (routes []*mux.Route) {
 		for i, v := range e.Any.Rules {
 			if h := v.GetHttp(); h != nil {
 				r := m.Name(fmt.Sprintf("%s-any-%d", route.Name, i))
-				r = httpMatch(h, r)
+				r = httpMatch(h, r, info)
 				routes = append(routes, r)
 			}
 		}
@@ -59,13 +64,13 @@ func buildRouters(m *mux.Router, route *api.Route) (routes []*mux.Route) {
 		//TODO: support this?
 	case *api.Rule_Http:
 		r := m.Name(route.Name)
-		r = httpMatch(route.Rule.GetHttp(), r)
+		r = httpMatch(route.Rule.GetHttp(), r, info)
 		routes = append(routes, r)
 	}
 	return
 }
 
-func httpMatch(a *api.Rule_HTTP, route *mux.Route) (r *mux.Route) {
+func httpMatch(a *api.Rule_HTTP, route *mux.Route, info *meta.RouteInfo) (r *mux.Route) {
 	r = route
 	if v := a.GetMethods(); v != nil {
 		var methods []string
@@ -76,6 +81,7 @@ func httpMatch(a *api.Rule_HTTP, route *mux.Route) (r *mux.Route) {
 	}
 	if v := a.GetHost(); v != "" {
 		r = r.Host(v)
+		info.VirtualHost = v
 	}
 	if v := a.GetPath(); v != nil {
 		if prefix := v.GetPrefix(); prefix != "" {
@@ -154,12 +160,17 @@ func ReloadHand(ctx context.Context, handlerChan <-chan http.Handler, base http.
 	}
 }
 
-type HNoOp struct{}
+type HNoOp struct {
+	r *api.Route
+}
+
+func (n *HNoOp) Route() *api.Route { return n.r }
 
 func (HNoOp) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
 
 type HHeath struct {
 	fn func() hrf.Health
+	r  *api.Route
 }
 
 func (h HHeath) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -193,4 +204,19 @@ func HealthEndpoint() *api.Route {
 			},
 		},
 	}
+}
+
+var _ meta.Route = (*H)(nil)
+
+type H struct {
+	h    http.Handler
+	info *meta.RouteInfo
+}
+
+func (h *H) Route() *meta.RouteInfo {
+	return h.info
+}
+
+func (h *H) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.h.ServeHTTP(w, r)
 }
