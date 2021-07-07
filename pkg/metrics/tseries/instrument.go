@@ -34,28 +34,35 @@ var totalRequests = prometheus.NewCounterVec(
 )
 
 var requestDuration = prometheus.NewHistogramVec(
-	prometheus.HistogramOpts{},
+	prometheus.HistogramOpts{
+		Name: "request_duration",
+		Help: "Duration taken to complete the request",
+	},
 	xlabels.All,
 )
 
 var requestSize = prometheus.NewHistogramVec(
-	prometheus.HistogramOpts{},
+	prometheus.HistogramOpts{
+		Name: "request_size",
+	},
 	xlabels.All,
 )
 
 var responseSize = prometheus.NewHistogramVec(
-	prometheus.HistogramOpts{},
+	prometheus.HistogramOpts{
+		Name: "response_size",
+	},
 	xlabels.All,
 )
 
 var timeToHeader = prometheus.NewHistogramVec(
-	prometheus.HistogramOpts{},
+	prometheus.HistogramOpts{
+		Name: "time_to_write_headers",
+	},
 	xlabels.All,
 )
 
-// magicString is used for the hacky label test in checkLabels. Remove once fixed.
-const magicString = "zZgWfBxLqvG8kc8IMv3POi2Bb0tZI3vAnBx+gBaFi9FyPzB/CzKUer1yufDa"
-
+// Instrument must be the entry point. Adds prometheus metrics for next.
 func Instrument(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
