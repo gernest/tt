@@ -13,6 +13,7 @@ require (
 	github.com/pion/dtls/v2 v2.0.8
 	github.com/pion/udp v0.1.1
 	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prometheus v1.8.2-0.20210705204638-62598878dd08
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.12.0

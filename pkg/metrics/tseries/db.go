@@ -5,6 +5,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/zap"
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prometheus/tsdb"
 )
 
@@ -22,4 +23,11 @@ func open(c *Config) (*tsdb.DB, error) {
 
 func logger() log.Logger {
 	return zap.NewZapSugarLogger(zlg.Logger.Named("tsdb"), zlg.Level.Level())
+}
+
+type Store struct {
+	db *tsdb.DB
+}
+
+func (db *Store) Appender(metrics []*dto.MetricFamily) {
 }
