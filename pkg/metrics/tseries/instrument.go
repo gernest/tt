@@ -68,7 +68,7 @@ func Instrument(next http.Handler) http.HandlerFunc {
 		next.ServeHTTP(d, r)
 		end := time.Since(now)
 		metricsLables := Labels(
-			r, d.Status(), next.(meta.Route).Route(), m.Target,
+			r, d.Status(), m,
 		)
 		report(
 			metricsLables, end, computeApproximateRequestSize(r),

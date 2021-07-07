@@ -11,16 +11,13 @@ type RouteInfo struct {
 	VirtualHost string
 }
 
-// Route helper interface for knowing which matched route is being executed.
-type Route interface {
-	Route() *RouteInfo
-}
-
 type metricsKey struct{}
 
 type Metrics struct {
-	// Target The upstream target used on the request
-	Target string
+	Target      string
+	Service     string
+	Route       string
+	VirtualHost string
 }
 
 func SetMetric(ctx context.Context, m *Metrics) context.Context {

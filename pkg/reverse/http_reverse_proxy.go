@@ -8,6 +8,7 @@ import (
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/balance"
+	"github.com/gernest/tt/pkg/meta"
 )
 
 type Director interface {
@@ -79,6 +80,9 @@ func joinURLPath(a, b *url.URL) (path, rawpath string) {
 func DirectorFromLoadBalance(ba balance.Balance) Director {
 	return DirectorFunc(func(r *http.Request) {
 		target := ba.Next()
+		if m := meta.GetMetics(r.Context()); m != nil {
+			m.Target = target.URL.String()
+		}
 		Request(target.URL, r)
 	})
 }

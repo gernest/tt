@@ -13,13 +13,13 @@ import (
 func Labels(
 	r *http.Request,
 	code int,
-	info *meta.RouteInfo,
-	target string,
+	info *meta.Metrics,
 ) prometheus.Labels {
 	agent := ua.Parse(r.UserAgent())
 	return prometheus.Labels{
-		xlabels.Route:   info.Route.GetName(),
-		xlabels.Service: info.Route.GetService(),
+		xlabels.Route:   info.Route,
+		xlabels.Service: info.Service,
+		xlabels.Target:  info.Target,
 		xlabels.Host:    info.VirtualHost,
 		xlabels.Code:    sanitizeCode(code),
 		xlabels.Method:  sanitizeMethod(r.Method),
