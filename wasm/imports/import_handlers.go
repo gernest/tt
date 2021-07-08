@@ -53,16 +53,23 @@ type L4 interface {
 	CloseCustomStream(streamType x.StreamType) x.Result
 }
 
-type HTTP interface {
+type HTTPRequest interface {
 	GetHttpRequestHeader() common.HeaderMap
 	GetHttpRequestBody() common.IoBuffer
 	GetHttpRequestTrailer() common.HeaderMap
 	GetHttpRequestMetadata() common.HeaderMap
+}
 
+type HTTPResponse interface {
 	GetHttpResponseHeader() common.HeaderMap
 	GetHttpResponseBody() common.IoBuffer
 	GetHttpResponseTrailer() common.HeaderMap
 	GetHttpResponseMetadata() common.HeaderMap
+}
+
+type HTTP interface {
+	HTTPRequest
+	HTTPResponse
 
 	GetHttpCallResponseHeaders() common.HeaderMap
 	GetHttpCalloutResponseBody() common.IoBuffer
