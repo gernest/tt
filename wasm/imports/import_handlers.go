@@ -20,12 +20,17 @@ type Imports interface {
 	GRPC
 	FFI
 }
+
+type Logger interface {
+	Log(logLevel x.LogLevel, msg string) x.Result
+}
+
 type Base interface {
+	Logger
 	// for golang host environment
 	// Wait until async call return, eg. sync http call in golang
 	Wait() x.Action
 	// integration
-	Log(logLevel x.LogLevel, msg string) x.Result
 	SetEffectiveContext(contextID int32) x.Result
 	ContextFinalize() x.Result
 }
