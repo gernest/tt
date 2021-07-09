@@ -13,11 +13,13 @@ import (
 	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/reverse"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 )
 
 func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
+
 		info := &meta.RouteInfo{}
 		h := http.Handler(HNoOp{})
 		if route.IsHealthEndpoint {
@@ -31,12 +33,15 @@ func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 			}
 			h = rh
 		}
+		chain := alice.New(buildMiddlewares(route)...).Then(h)
 		for _, r := range buildRouters(m, route, info) {
 			r.Handler(&H{
-				h:    h,
+				h:    chain,
 				info: info,
 			})
 		}
+
+		// build middlewares
 	}
 	return m, nil
 }
@@ -220,4 +225,26 @@ func (h *H) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		m.VirtualHost = h.info.VirtualHost
 	}
 	h.h.ServeHTTP(w, r)
+}
+
+func StripPathPrefix(mw *api.Middleware_StripPathPrefix) alice.Constructor {
+	return func(h http.Handler) http.Handler {
+		return http.StripPrefix(mw.Prefix, h)
+	}
+}
+
+func buildMiddlewares(r *api.Route) (mw []alice.Constructor) {
+	for _, w := range r.GetMiddlewares().GetMiddlewares() {
+		if h := ware(w); h != nil {
+			mw = append(mw, h)
+		}
+	}
+	return
+}
+
+func ware(mw *api.Middleware) alice.Constructor {
+	if strip := mw.GetStripPathPrefix(); strip != nil {
+		return StripPathPrefix(strip)
+	}
+	return nil
 }

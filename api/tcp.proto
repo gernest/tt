@@ -39,16 +39,20 @@ message Address {
 }
 
 message Middleware {
+  message List { repeated Middleware middlewares = 1; }
+
   enum ExecutionOrder {
     // PRE signals applying the middleware before the final handler.
     PRE = 0;
     // POST signals executing the middleware after the last handler.
     POST = 1;
   }
+
   oneof match {
     Wasm wasm = 1;
     StripPathPrefix strip_path_prefix = 2;
   }
+
   message Wasm {
     message Setting {
       message Env {
@@ -133,7 +137,7 @@ message Route {
   string name = 13;
   Rule rule = 14;
   int32 priority = 15;
-  repeated Middleware middlewares = 16;
+  Middleware.List middlewares = 16;
   Protocol protocol = 17;
   // Set this to true if the route is a registered heath endpoint
   bool is_health_endpoint = 18;
