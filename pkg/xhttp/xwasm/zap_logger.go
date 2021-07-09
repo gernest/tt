@@ -13,6 +13,9 @@ type Zap struct {
 }
 
 func (z *Zap) Log(logLevel x.LogLevel, msg string) x.Result {
+	if z.L == nil {
+		return nyet()
+	}
 	switch logLevel {
 	case x.LogLevelTrace:
 	case x.LogLevelDebug:

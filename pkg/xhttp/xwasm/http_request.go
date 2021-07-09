@@ -14,10 +14,16 @@ type Request struct {
 }
 
 func (r *Request) GetHttpRequestHeader() common.HeaderMap {
+	if r.Request == nil {
+		return nil
+	}
 	return &Header{head: r.Request.Header}
 }
 
 func (r *Request) GetHttpRequestBody() common.IoBuffer {
+	if r.Request == nil {
+		return nil
+	}
 	if io, ok := r.Request.Body.(common.IoBuffer); ok {
 		return io
 	}
@@ -25,9 +31,15 @@ func (r *Request) GetHttpRequestBody() common.IoBuffer {
 }
 
 func (r *Request) GetHttpRequestTrailer() common.HeaderMap {
+	if r.Request == nil {
+		return nil
+	}
 	return &Header{head: r.Request.Trailer}
 }
 
 func (r *Request) GetHttpRequestMetadata() common.HeaderMap {
+	if r.Request == nil {
+		return nil
+	}
 	return &Header{head: r.Request.Trailer}
 }

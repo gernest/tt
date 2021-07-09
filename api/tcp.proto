@@ -39,6 +39,12 @@ message Address {
 }
 
 message Middleware {
+  enum ExecutionOrder {
+    // PRE signals applying the middleware before the final handler.
+    PRE = 0;
+    // POST signals executing the middleware after the last handler.
+    POST = 1;
+  }
   oneof match { Wasm wasm = 1; }
   message Wasm {
     message Setting {
@@ -83,6 +89,7 @@ message Middleware {
 
     // Options for creating the wasm module instance.
     Config config = 3;
+    ExecutionOrder order = 4;
   }
 }
 // Protocol exposes
