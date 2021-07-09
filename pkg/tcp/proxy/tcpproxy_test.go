@@ -34,11 +34,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gernest/tt/api"
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp/middlewares"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes/empty"
 )
 
 type noopTarget struct{}
@@ -412,75 +409,4 @@ func TestProxyACME(t *testing.T) {
 			t.Fatalf("readTLS %d:%q unexpectedly succeeded", d, test.domain)
 		}
 	}
-}
-
-func TestGenerateTestConfig(t *testing.T) {
-	t.Skip()
-	conf := &api.Config{
-		Routes: []*api.Route{
-			{
-				Condition: &api.RequestMatch{
-					Match: &api.RequestMatch_Sni{
-						Sni: "echo.test",
-					},
-				},
-				LoadBalance: []*api.WeightedAddr{
-					&api.WeightedAddr{
-						Addr: &api.Address{
-							Address: "localhost:8081",
-						},
-						MetricLabels: map[string]string{
-							"service": "echo",
-						},
-					},
-				},
-				Speed: &api.Speed{
-					Downstream: "10kb/s",
-				},
-			},
-			{
-				Condition: &api.RequestMatch{
-					Match: &api.RequestMatch_Host{
-						Host: "httpbin.test",
-					},
-				},
-				LoadBalance: []*api.WeightedAddr{
-					{
-						Addr: &api.Address{
-							Address: "localhost:8080",
-						},
-						MetricLabels: map[string]string{
-							"service": "httpbin",
-						},
-					},
-				},
-			},
-			{
-				Bind: &api.Bind{
-					To: &api.Bind_Port{
-						Port: 5552,
-					},
-				},
-				Condition: &api.RequestMatch{
-					Match: &api.RequestMatch_Fixed{
-						Fixed: &empty.Empty{},
-					},
-				},
-				LoadBalance: []*api.WeightedAddr{
-					{
-						Addr: &api.Address{
-							Address: "localhost:8080",
-						},
-						MetricLabels: map[string]string{
-							"service": "fixed",
-						},
-					},
-				},
-			},
-		},
-	}
-	var m jsonpb.Marshaler
-	var o bytes.Buffer
-	m.Marshal(&o, conf)
-	ioutil.WriteFile("../tools/servers/config.json", o.Bytes(), 0600)
 }

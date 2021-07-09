@@ -1,0 +1,18 @@
+{
+  "loadBalance": [
+    {
+      "addr": {
+        "address": "https://httpbin.org"
+      }
+    }
+  ],
+  "name": "httpbin",
+  "rule": {
+    "http": {
+      "path": {
+        "prefix": "/httpbin"
+      }
+    }
+  },
+  "protocol": "HTTP"
+}
