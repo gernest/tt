@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -21,6 +22,7 @@ type Options struct {
 	Info                  Info
 	DisableHealthEndpoint bool
 	Metrics               tseries.Config
+	Wasm                  Wasm
 }
 
 type Info struct {
@@ -50,6 +52,7 @@ func (o *Options) Flags() []cli.Flag {
 	}
 	base = append(base, o.Cache.Flags()...)
 	base = append(base, o.Metrics.Flags()...)
+	base = append(base, o.Wasm.FLags()...)
 	return append(base, o.Listen.Flags()...)
 }
 
@@ -82,6 +85,9 @@ func (o *Options) Parse(ctx *cli.Context) error {
 		return nil
 	}
 	if err := o.Metrics.Parse(ctx); err != nil {
+		return nil
+	}
+	if err := o.Wasm.Parse(ctx); err != nil {
 		return nil
 	}
 	return nil
@@ -172,6 +178,40 @@ func (c Cache) Flags() []cli.Flag {
 		cli.BoolFlag{
 			Name:   "cache_metrics",
 			EnvVar: "TT_CACHE_METRICS",
+		},
+	}
+}
+
+type Wasm struct {
+	Enabled bool
+	Dir     string
+}
+
+func (w *Wasm) Parse(ctx *cli.Context) error {
+	w.Enabled = ctx.GlobalBoolT("wasm-enabled")
+	w.Dir = ctx.GlobalString("wasm-modules-dir")
+	if w.Enabled && w.Dir != "" {
+		stat, err := os.Stat(w.Dir)
+		if err != nil {
+			return err
+		}
+		if !stat.IsDir() {
+			return fmt.Errorf("%q is not a directory", w.Dir)
+		}
+	}
+	return nil
+}
+
+func (Wasm) FLags() []cli.Flag {
+	return []cli.Flag{
+		cli.BoolTFlag{
+			Name:  "wasm-enabled",
+			Usage: "Enables wasm modules",
+		},
+		cli.StringFlag{
+			Name:   "wasm-modules-dir",
+			Usage:  "Directory to load wasm modules from",
+			EnvVar: "TT_WASM_DIR",
 		},
 	}
 }
