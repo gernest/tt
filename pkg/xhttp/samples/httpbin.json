@@ -14,5 +14,14 @@
       }
     }
   },
+  "middlewares": {
+    "list": [
+      {
+        "stripPathPrefix": {
+          "prefix": "/httpbin/"
+        }
+      }
+    ]
+  },
   "protocol": "HTTP"
 }

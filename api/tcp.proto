@@ -39,7 +39,7 @@ message Address {
 }
 
 message Middleware {
-  message List { repeated Middleware middlewares = 1; }
+  message List { repeated Middleware list = 1; }
 
   enum ExecutionOrder {
     // PRE signals applying the middleware before the final handler.

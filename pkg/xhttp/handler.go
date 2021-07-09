@@ -234,7 +234,7 @@ func StripPathPrefix(mw *api.Middleware_StripPathPrefix) alice.Constructor {
 }
 
 func buildMiddlewares(r *api.Route) (mw []alice.Constructor) {
-	for _, w := range r.GetMiddlewares().GetMiddlewares() {
+	for _, w := range r.GetMiddlewares().GetList() {
 		if h := ware(w); h != nil {
 			mw = append(mw, h)
 		}

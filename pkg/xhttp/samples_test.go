@@ -35,6 +35,17 @@ var sample0 = &api.Route{
 			},
 		},
 	},
+	Middlewares: &api.Middleware_List{
+		List: []*api.Middleware{
+			{
+				Match: &api.Middleware_StripPathPrefix_{
+					StripPathPrefix: &api.Middleware_StripPathPrefix{
+						Prefix: "/httpbin/",
+					},
+				},
+			},
+		},
+	},
 	Rule: &api.Rule{
 		Match: &api.Rule_Http{
 			Http: &api.Rule_HTTP{
