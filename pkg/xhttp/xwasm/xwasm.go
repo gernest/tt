@@ -101,8 +101,13 @@ func Handler(ctx context.Context,
 					mwLog.Error("ProxyOnContextFinalize", zap.Error(err))
 				}
 			}()
-			activeExports.ProxyOnHttpRequestHeaders()
 
+			action, err := activeExports.ProxyOnHttpRequestHeaders(httpContextID, int32(len(r.Header)), 0)
+			if err != nil {
+				mwLog.Error("ProxyOnHttpRequestHeaders", zap.Error(err))
+				return
+			}
+			mwLog.Info("Responded with", zap.Int32("action", int32(action)))
 			if mw.Order == api.Middleware_PRE {
 				// we are applying the module before applying the next handler. This means
 				// all hooks which are related to response will not apply here because we
