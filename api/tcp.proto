@@ -45,7 +45,10 @@ message Middleware {
     // POST signals executing the middleware after the last handler.
     POST = 1;
   }
-  oneof match { Wasm wasm = 1; }
+  oneof match {
+    Wasm wasm = 1;
+    StripPathPrefix strip_path_prefix = 2;
+  }
   message Wasm {
     message Setting {
       message Env {
@@ -91,6 +94,8 @@ message Middleware {
     Config config = 3;
     ExecutionOrder order = 4;
   }
+
+  message StripPathPrefix { string prefix = 1; }
 }
 // Protocol exposes
 enum Protocol {
