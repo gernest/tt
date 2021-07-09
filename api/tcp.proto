@@ -5,6 +5,7 @@ option go_package = "girhub.com/gernest/tt/api";
 import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 message ConfigRequest {}
 
@@ -59,6 +60,15 @@ message Middleware {
       bool inherit_stdout = 8;
       bool capture_stderr = 9;
       bool inherit_stderr = 10;
+    }
+
+    message Config {
+      // The options used to create wasm instance of the module.
+      Setting instance = 1;
+
+      // Plugin specific settings that the wasm module will load and use to
+      // configer itself.
+      google.protobuf.Struct plugin = 2;
     }
     // The name of this middleware. This is optiona, but when set it will be
     // used in logs and tracing.
