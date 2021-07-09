@@ -82,7 +82,7 @@ message Middleware {
     string module = 2;
 
     // Options for creating the wasm module instance.
-    Setting setting = 3;
+    Config config = 3;
   }
 }
 // Protocol exposes
