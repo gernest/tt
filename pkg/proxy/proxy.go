@@ -44,7 +44,7 @@ func (o *Options) setuproutes() error {
 		if filepath.Ext(path) != ".json" {
 			return nil
 		}
-		f, err := os.Open(filepath.Join(o.RoutesPath, path))
+		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func (o *Options) Flags() []cli.Flag {
 			EnvVar: "TT_ROUTES_CONFIG",
 		},
 		cli.StringFlag{
-			Name:   "routes-path",
+			Name:   "routes-path,r",
 			Usage:  "path to the routes config file",
 			EnvVar: "TT_ROUTES_CONFIG",
 		},

@@ -11,6 +11,7 @@ import (
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/meta"
+	"github.com/gernest/tt/pkg/metrics/tseries"
 	"github.com/gernest/tt/pkg/reverse"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -20,7 +21,9 @@ func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
 
-		info := &meta.RouteInfo{}
+		info := &meta.RouteInfo{
+			Route: route,
+		}
 		h := http.Handler(HNoOp{})
 		if route.IsHealthEndpoint {
 			h = &HHeath{
@@ -141,7 +144,9 @@ func NewDynamic(ctx context.Context, handlerChan <-chan http.Handler, base http.
 }
 
 func (d *Dynamic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	d.Get().ServeHTTP(w, r)
+	next := d.Get()
+	next = tseries.Instrument(next)
+	next.ServeHTTP(w, r)
 }
 
 func ReloadHand(ctx context.Context, handlerChan <-chan http.Handler, base http.Handler) func() http.Handler {

@@ -34,5 +34,6 @@ func Labels(
 		xlabels.UserAgentMobile:    strconv.FormatBool(agent.Mobile),
 		xlabels.UserAgentTablet:    strconv.FormatBool(agent.Tablet),
 		xlabels.UserAgentDesktop:   strconv.FormatBool(agent.Desktop),
+		xlabels.UserAgentBot:       strconv.FormatBool(agent.Bot),
 	}
 }
