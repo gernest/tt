@@ -8,6 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/gernest/tt/api"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
@@ -28,6 +29,7 @@ type Instance struct {
 	vm           *Wasm
 	importObject *wasmerGo.ImportObject
 	instance     *wasmerGo.Instance
+	mw           *api.Middleware_Wasm
 
 	lock     sync.Mutex
 	started  uint32
@@ -42,15 +44,23 @@ type Instance struct {
 	data interface{}
 }
 
-func NewWasmerInstance(vm *Wasm, imp *wasmerGo.ImportObject, instance *wasmerGo.Instance) *Instance {
+func NewWasmerInstance(vm *Wasm,
+	imp *wasmerGo.ImportObject,
+	instance *wasmerGo.Instance,
+	mw *api.Middleware_Wasm,
+) *Instance {
 	ins := &Instance{
 		vm:           vm,
 		importObject: imp,
 		instance:     instance,
-		lock:         sync.Mutex{},
+		mw:           mw,
 	}
 	ins.stopCond = sync.NewCond(&ins.lock)
 	return ins
+}
+
+func (w *Instance) Config() *api.Middleware_Wasm {
+	return w.mw
 }
 
 func (w *Instance) GetData() interface{} {

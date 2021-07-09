@@ -40,12 +40,17 @@ func (w *Wasm) Compile(name string, wasmBytes []byte) error {
 	return nil
 }
 
-func (w *Wasm) NewInstance(name string, opts *api.Middleware_Wasm_Setting) (*Instance, error) {
-	m, err := w.get(name)
+func (w *Wasm) NewInstance(mw *api.Middleware_Wasm) (*Instance, error) {
+	opts := mw.GetConfig().Instance
+	m, err := w.get(mw.GetName())
 	if err != nil {
 		return nil, err
 	}
-	state := wasmerGo.NewWasiStateBuilder(opts.ProgramName)
+	name := mw.GetName()
+	if opts.ProgramName != "" {
+		name = opts.ProgramName
+	}
+	state := wasmerGo.NewWasiStateBuilder(name)
 	for _, a := range opts.Arguments {
 		state.Argument(a)
 	}
@@ -85,7 +90,7 @@ func (w *Wasm) NewInstance(name string, opts *api.Middleware_Wasm_Setting) (*Ins
 	if err != nil {
 		return nil, err
 	}
-	return NewWasmerInstance(w, o, inst), nil
+	return NewWasmerInstance(w, o, inst, mw), nil
 }
 
 func (w *Wasm) get(name string) (*wasmerGo.Module, error) {
