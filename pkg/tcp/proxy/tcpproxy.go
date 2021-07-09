@@ -83,7 +83,7 @@ func New(ctx context.Context, opts *proxyPkg.Options) *Proxy {
 	conf := make(configMap)
 	x := conf.get(opts.Listen.TCP.HostPort)
 	x.Routes = append(x.Routes, noopRoute{})
-	for _, r := range opts.Config.Routes {
+	for _, r := range opts.Routes.Routes {
 		conf.Route(r)
 	}
 	return &Proxy{
@@ -104,7 +104,7 @@ func (p *Proxy) setup(ctx context.Context, opts *proxyPkg.Options) {
 	conf := make(configMap)
 	x := conf.get(opts.Listen.TCP.HostPort)
 	x.Routes = append(x.Routes, noopRoute{})
-	for _, r := range opts.Config.Routes {
+	for _, r := range opts.Routes.Routes {
 		if r.Protocol == api.Protocol_TCP {
 			conf.Route(r)
 		}

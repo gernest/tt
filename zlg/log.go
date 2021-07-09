@@ -32,5 +32,5 @@ func Debug(msg string, f ...zap.Field) {
 }
 
 func Error(err error, msg string, f ...zap.Field) {
-	Logger.Error(msg, append(f, zap.String("error", err.Error()))...)
+	Logger.Error(msg, append(f, zap.Error(err))...)
 }

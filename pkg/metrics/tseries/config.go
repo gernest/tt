@@ -12,17 +12,17 @@ import (
 const days = 24 * time.Hour
 
 type Config struct {
-	ENabled                  bool
-	Path                     string
-	MinBlockDuration         time.Duration
-	MaxBlockDuration         time.Duration
-	MaxBlockChunkSegmentSize units.Base2Bytes
-	WALSegmentSize           units.Base2Bytes
-	RetentionDuration        time.Duration
-	MaxBytes                 units.Base2Bytes
-	NoLockfile               bool
-	AllowOverlappingBlocks   bool
-	WALCompression           bool
+	ENabled                  bool             `json:",omitempty"`
+	Path                     string           `json:",omitempty"`
+	MinBlockDuration         time.Duration    `json:",omitempty"`
+	MaxBlockDuration         time.Duration    `json:",omitempty"`
+	MaxBlockChunkSegmentSize units.Base2Bytes `json:",omitempty"`
+	WALSegmentSize           units.Base2Bytes `json:",omitempty"`
+	RetentionDuration        time.Duration    `json:",omitempty"`
+	MaxBytes                 units.Base2Bytes `json:",omitempty"`
+	NoLockfile               bool             `json:",omitempty"`
+	AllowOverlappingBlocks   bool             `json:",omitempty"`
+	WALCompression           bool             `json:",omitempty"`
 }
 
 func (c *Config) Parse(ctx *cli.Context) (err error) {

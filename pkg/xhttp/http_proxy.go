@@ -101,7 +101,7 @@ func (p *Proxy) Boot(ctx context.Context, config *proxy.Options) error {
 	zlg.Info("Booting HTTP proxy")
 	p.opts = config
 	p.context = make(map[string]*ListenContext)
-	p.config = &config.Config
+	p.config = &config.Routes
 	return p.build(ctx)
 }
 

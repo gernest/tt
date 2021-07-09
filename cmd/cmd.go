@@ -52,7 +52,7 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 
 	// add health endpoint
 	if !o.DisableHealthEndpoint {
-		o.Config.Routes = append(o.Config.Routes, xhttp.HealthEndpoint())
+		o.Routes.Routes = append(o.Routes.Routes, xhttp.HealthEndpoint())
 	}
 	ls, err := net.Listen("tcp", o.Listen.Control.HostPort)
 	if err != nil {

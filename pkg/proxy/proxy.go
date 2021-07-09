@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/metrics/tseries"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/urfave/cli"
 )
 
@@ -23,12 +26,42 @@ type Options struct {
 	DisableHealthEndpoint bool              `json:",omitempty"`
 	Metrics               tseries.Config    `json:",omitempty"`
 	Wasm                  Wasm              `json:",omitempty"`
+	Routes                api.Config        `json:"-"`
+}
+
+func (o *Options) setuproutes() error {
+	if o.RoutesPath == "" {
+		return nil
+	}
+	var m jsonpb.Unmarshaler
+	return filepath.Walk(o.RoutesPath, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != ".json" {
+			return nil
+		}
+		f, err := os.Open(filepath.Join(o.RoutesPath, path))
+		if err != nil {
+			return err
+		}
+		var r api.Route
+		err = m.Unmarshal(f, &r)
+		if err != nil {
+			return err
+		}
+		o.Routes.Routes = append(o.Routes.Routes, &r)
+		return err
+	})
 }
 
 type Info struct {
-	Version   string
-	ReleaseID string
-	ID        string
+	Version   string `json:",omitempty"`
+	ReleaseID string `json:",omitempty"`
+	ID        string `json:",omitempty"`
 }
 
 func (o *Options) Flags() []cli.Flag {
@@ -62,6 +95,12 @@ func (o *Options) Flags() []cli.Flag {
 }
 
 func (o *Options) Parse(ctx *cli.Context) error {
+	if err := o.parse(ctx); err != nil {
+		return err
+	}
+	return o.setuproutes()
+}
+func (o *Options) parse(ctx *cli.Context) error {
 	if c := ctx.GlobalString("config"); c != "" {
 		f, err := os.Open(c)
 		if err != nil {
@@ -139,11 +178,11 @@ type ListenPort struct {
 }
 
 type Cache struct {
-	Enabled     bool
-	NumCounters int64
-	MaxCost     int64
-	BufferItems int64
-	Metrics     bool
+	Enabled     bool  `json:",omitempty"`
+	NumCounters int64 `json:",omitempty"`
+	MaxCost     int64 `json:",omitempty"`
+	BufferItems int64 `json:",omitempty"`
+	Metrics     bool  `json:",omitempty"`
 }
 
 func (c Cache) Config() *ristretto.Config {
@@ -193,8 +232,8 @@ func (c Cache) Flags() []cli.Flag {
 }
 
 type Wasm struct {
-	Enabled bool
-	Dir     string
+	Enabled bool   `json:",omitempty"`
+	Dir     string `json:",omitempty"`
 }
 
 func (w *Wasm) Parse(ctx *cli.Context) error {
