@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -9,20 +10,19 @@ import (
 	"github.com/dgraph-io/ristretto"
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/metrics/tseries"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/urfave/cli"
 )
 
 type Options struct {
-	Listen                Listen
-	AllowedPorts          []int
-	Labels                map[string]string
-	Config                api.Config
-	Cache                 Cache
-	Info                  Info
-	DisableHealthEndpoint bool
-	Metrics               tseries.Config
-	Wasm                  Wasm
+	Listen                Listen            `json:",omitempty"`
+	AllowedPorts          []int             `json:",omitempty"`
+	Labels                map[string]string `json:",omitempty"`
+	RoutesPath            string            `json:",omitempty"`
+	Cache                 Cache             `json:",omitempty"`
+	Info                  Info              `json:",omitempty"`
+	DisableHealthEndpoint bool              `json:",omitempty"`
+	Metrics               tseries.Config    `json:",omitempty"`
+	Wasm                  Wasm              `json:",omitempty"`
 }
 
 type Info struct {
@@ -46,6 +46,11 @@ func (o *Options) Flags() []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:   "config,c",
+			Usage:  "path to configuration file",
+			EnvVar: "TT_ROUTES_CONFIG",
+		},
+		cli.StringFlag{
+			Name:   "routes-path",
 			Usage:  "path to the routes config file",
 			EnvVar: "TT_ROUTES_CONFIG",
 		},
@@ -57,6 +62,17 @@ func (o *Options) Flags() []cli.Flag {
 }
 
 func (o *Options) Parse(ctx *cli.Context) error {
+	if c := ctx.GlobalString("config"); c != "" {
+		f, err := os.Open(c)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		err = json.NewDecoder(f).Decode(&o)
+		if err != nil {
+			return err
+		}
+	}
 	if err := o.Listen.Parse(ctx); err != nil {
 		return err
 	}
@@ -68,19 +84,7 @@ func (o *Options) Parse(ctx *cli.Context) error {
 			o.Labels[x[0]] = x[1]
 		}
 	}
-	if c := ctx.GlobalString("config"); c != "" {
-		f, err := os.Open(c)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		var u jsonpb.Unmarshaler
-
-		err = u.Unmarshal(f, &o.Config)
-		if err != nil {
-			return err
-		}
-	}
+	o.RoutesPath = ctx.GlobalString("routes-path")
 	if err := o.Cache.Parse(ctx); err != nil {
 		return nil
 	}
@@ -135,6 +139,7 @@ type ListenPort struct {
 }
 
 type Cache struct {
+	Enabled     bool
 	NumCounters int64
 	MaxCost     int64
 	BufferItems int64
@@ -151,6 +156,7 @@ func (c Cache) Config() *ristretto.Config {
 }
 
 func (c *Cache) Parse(ctx *cli.Context) error {
+	c.Enabled = ctx.Bool("cache_enabled")
 	c.NumCounters = ctx.GlobalInt64("cache_num_counters")
 	c.MaxCost = ctx.GlobalInt64("cache_max_cost")
 	c.BufferItems = ctx.GlobalInt64("cache_buffer_items")
@@ -160,6 +166,10 @@ func (c *Cache) Parse(ctx *cli.Context) error {
 
 func (c Cache) Flags() []cli.Flag {
 	return []cli.Flag{
+		cli.BoolFlag{
+			Name:   "cache_enabled",
+			EnvVar: "TT_CACHE_ENABLED",
+		},
 		cli.Int64Flag{
 			Name:   "cache_num_counters",
 			EnvVar: "TT_CACHE_NUM_COUNTERS",

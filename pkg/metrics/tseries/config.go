@@ -12,6 +12,7 @@ import (
 const days = 24 * time.Hour
 
 type Config struct {
+	ENabled                  bool
 	Path                     string
 	MinBlockDuration         time.Duration
 	MaxBlockDuration         time.Duration
