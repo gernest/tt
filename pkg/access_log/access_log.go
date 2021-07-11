@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gernest/tt/api"
+	"go.uber.org/atomic"
 )
 
 var pool = &sync.Pool{
@@ -66,9 +67,7 @@ func (e *Entry) resetReverseProxy() {
 type Access struct {
 	sync    Sync
 	in, out chan *Entry
-}
-
-func (a *Access) Start(ctx context.Context) {
+	stopped atomic.Bool
 }
 
 func New(opts Options, syncer Sync) *Access {
@@ -94,6 +93,15 @@ func (a *Access) Run(ctx context.Context) {
 	}
 }
 
+func (a *Access) Close() error {
+	a.stopped.Store(true)
+	close(a.in)
+	close(a.out)
+	return nil
+}
+
 func (a *Access) Record(e *Entry) {
-	a.in <- e
+	if a.stopped.Load() {
+		a.in <- e
+	}
 }
