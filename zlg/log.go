@@ -1,6 +1,8 @@
 package zlg
 
 import (
+	"context"
+
 	"go.uber.org/zap"
 )
 
@@ -33,4 +35,17 @@ func Debug(msg string, f ...zap.Field) {
 
 func Error(err error, msg string, f ...zap.Field) {
 	Logger.Error(msg, append(f, zap.Error(err))...)
+}
+
+type zapKey struct{}
+
+func Set(ctx context.Context, lg *zap.Logger) context.Context {
+	return context.WithValue(ctx, zapKey{}, lg)
+}
+
+func Get(ctx context.Context) *zap.Logger {
+	if v := ctx.Value(zapKey{}); v != nil {
+		return v.(*zap.Logger)
+	}
+	return Logger
 }

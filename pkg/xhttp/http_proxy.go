@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/gernest/tt/api"
+	accesslog "github.com/gernest/tt/pkg/access_log"
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/zlg"
@@ -24,11 +25,13 @@ type ListenContext struct {
 }
 
 type Proxy struct {
-	opts    *proxy.Options
-	config  *api.Config
-	mu      sync.Mutex
-	context map[string]*ListenContext
-	ctx     context.Context
+	opts         *proxy.Options
+	config       *api.Config
+	mu           sync.Mutex
+	context      map[string]*ListenContext
+	ctx          context.Context
+	accessLogger *accesslog.Access
+	zlg          *zap.Logger
 }
 
 func (p *Proxy) configure(x *api.Config) error {
@@ -98,7 +101,7 @@ func (p *Proxy) Config() proxy.Config {
 }
 
 func (p *Proxy) Boot(ctx context.Context, config *proxy.Options) error {
-	zlg.Info("Booting HTTP proxy")
+	p.zlg = zlg.Logger.Named("http")
 	p.opts = config
 	p.context = make(map[string]*ListenContext)
 	p.config = &config.Routes
@@ -106,6 +109,7 @@ func (p *Proxy) Boot(ctx context.Context, config *proxy.Options) error {
 }
 
 func (p *Proxy) build(ctx context.Context) error {
+	p.zlg.Info("Building routes")
 	// group routes by host:port
 	m := map[string][]*api.Route{}
 	for _, r := range p.config.Routes {
@@ -127,9 +131,20 @@ func (p *Proxy) build(ctx context.Context) error {
 		newListeners = append(newListeners, k)
 	}
 
-	// start listeners
+	p.zlg.Info("Starting listenrets")
 	if err := p.listen(newListeners...); err != nil {
 		return err
+	}
+	if p.accessLogger == nil {
+		// we only need one instance of this. No need to create a new one upon
+		// reloading of routes
+		p.zlg.Info("Starting access log")
+		p.accessLogger = accesslog.New(p.opts.AccessLog,
+			&accesslog.Zap{
+				Logger: p.zlg.Named("access"),
+			},
+		)
+		go p.accessLogger.Run(ctx)
 	}
 
 	// register handlers
@@ -148,12 +163,14 @@ func (p *Proxy) build(ctx context.Context) error {
 }
 
 func (p *Proxy) bindServer(ctx context.Context, ln *ListenContext, base *mux.Router) {
-	zlg.Info("Staring http server", zap.String("addr", ln.Listener.Addr().String()))
+	p.zlg.Info("Starting  server", zap.String("addr", ln.Listener.Addr().String()))
 	base.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		path, _ := route.GetPathTemplate()
-		zlg.Info(path)
+		p.zlg.Info(path)
 		return nil
 	})
+	// set logger
+	ctx = zlg.Set(ctx, p.zlg)
 	svr := &http.Server{
 		BaseContext: func(l net.Listener) context.Context { return ctx },
 		Handler:     NewDynamic(ctx, ln.HandlerChan, base),
