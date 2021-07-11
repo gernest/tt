@@ -11,6 +11,7 @@ import (
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gernest/tt/api"
+	accesslog "github.com/gernest/tt/pkg/access_log"
 	"github.com/gernest/tt/pkg/metrics/tseries"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/urfave/cli"
@@ -26,6 +27,7 @@ type Options struct {
 	DisableHealthEndpoint bool              `json:",omitempty"`
 	Metrics               tseries.Config    `json:",omitempty"`
 	Wasm                  Wasm              `json:",omitempty"`
+	AccessLog             accesslog.Options `json:",omitempty"`
 	Routes                api.Config        `json:"-"`
 }
 
@@ -101,39 +103,68 @@ func (o *Options) Parse(ctx *cli.Context) error {
 	return o.setuproutes()
 }
 func (o *Options) parse(ctx *cli.Context) error {
-	if c := ctx.GlobalString("config"); c != "" {
-		f, err := os.Open(c)
-		if err != nil {
-			return err
+	return ls(
+		o.base(),
+		&o.Listen,
+		&o.Cache,
+		&o.Metrics,
+		&o.Wasm,
+		&o.AccessLog,
+		o.configFile(),
+	)(ctx)
+}
+
+func (o *Options) configFile() parser {
+	return parseFn(func(ctx *cli.Context) error {
+		if c := ctx.GlobalString("config"); c != "" {
+			f, err := os.Open(c)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			err = json.NewDecoder(f).Decode(&o)
+			if err != nil {
+				return err
+			}
 		}
-		defer f.Close()
-		err = json.NewDecoder(f).Decode(&o)
-		if err != nil {
-			return err
+		return nil
+	})
+}
+func (o *Options) base() parser {
+	return parseFn(func(ctx *cli.Context) error {
+		o.Labels = make(map[string]string)
+		for _, v := range ctx.GlobalStringSlice("labels") {
+			x := strings.Split(v, ":")
+			if len(x) == 2 {
+				o.Labels[x[0]] = x[1]
+			}
 		}
-	}
-	if err := o.Listen.Parse(ctx); err != nil {
-		return err
-	}
-	o.AllowedPorts = ctx.GlobalIntSlice("allowed_ports")
-	o.Labels = make(map[string]string)
-	for _, v := range ctx.GlobalStringSlice("labels") {
-		x := strings.Split(v, ":")
-		if len(x) == 2 {
-			o.Labels[x[0]] = x[1]
+		o.AllowedPorts = ctx.GlobalIntSlice("allowed_ports")
+
+		o.RoutesPath = ctx.GlobalString("routes-path")
+		return nil
+	})
+}
+
+type parser interface {
+	Parse(ctx *cli.Context) error
+}
+
+type parseFn func(*cli.Context) error
+
+func (fn parseFn) Parse(ctx *cli.Context) error {
+	return fn(ctx)
+}
+
+func ls(p ...parser) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		for _, v := range p {
+			if err := v.Parse(c); err != nil {
+				return err
+			}
 		}
-	}
-	o.RoutesPath = ctx.GlobalString("routes-path")
-	if err := o.Cache.Parse(ctx); err != nil {
 		return nil
 	}
-	if err := o.Metrics.Parse(ctx); err != nil {
-		return nil
-	}
-	if err := o.Wasm.Parse(ctx); err != nil {
-		return nil
-	}
-	return nil
 }
 
 type Listen struct {
