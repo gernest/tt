@@ -71,7 +71,7 @@ type Access struct {
 func (a *Access) Start(ctx context.Context) {
 }
 
-func New(opts RingOptions, syncer Sync) *Access {
+func New(opts Options, syncer Sync) *Access {
 	return &Access{
 		in:  make(chan *Entry, opts.InSize),
 		out: make(chan *Entry, opts.OutSize),

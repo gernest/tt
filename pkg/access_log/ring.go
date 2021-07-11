@@ -7,11 +7,6 @@ package accesslog
 
 import "context"
 
-type RingOptions struct {
-	InSize  int
-	OutSize int
-}
-
 type Ring struct {
 	In  <-chan *Entry
 	Out chan *Entry

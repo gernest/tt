@@ -15,4 +15,4 @@ type BatchSync interface {
 type BlackHole struct{}
 
 func (BlackHole) sync()         {}
-func (BlackHole) Sync(e *Entry) {}
+func (BlackHole) Sync(e *Entry) { e.Release() }
