@@ -14,13 +14,9 @@ package tseries
 // limitations under the License.
 
 import (
-	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
-	accesslog "github.com/gernest/tt/pkg/access_log"
-	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/xhttp/xlabels"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,222 +24,62 @@ import (
 
 var totalRequests = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "http_total_requests",
-		Help: "Total number of internal errors encountered by the promhttp metric handler.",
+		Namespace: "tt",
+		Name:      "http_total_requests",
+		Help:      "Total number of requests",
 	},
-	xlabels.All,
+	[]string{"code", "method"},
 )
 
 var requestDuration = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "request_duration",
-		Help: "Duration taken to complete the request",
+		Namespace: "tt",
+		Name:      "http_request_duration",
+		Help:      "Duration taken to complete http request",
 	},
-	xlabels.All,
+	[]string{"code", "method"},
 )
 
 var requestSize = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "request_size",
+		Namespace: "tt",
+		Name:      "request_size",
+		Help:      "Size in bytes of the request",
 	},
-	xlabels.All,
+	[]string{"code", "method"},
 )
 
 var responseSize = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "response_size",
+		Namespace: "tt",
+		Name:      "response_size",
 	},
-	xlabels.All,
+	[]string{"code", "method"},
 )
 
 var timeToHeader = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "time_to_write_headers",
+		Namespace: "tt",
+		Name:      "time_to_write_headers",
 	},
 	xlabels.All,
 )
 
-// Instrument must be the entry point. Adds prometheus metrics for next.
-func Instrument(next http.Handler) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		now := time.Now()
-		entry := accesslog.NewEntry()
-		r = r.WithContext(meta.SetMetric(r.Context(), &entry.AccessEntry))
-		var timeTOWriteHeader time.Duration
-		d := newDelegator(w, func(i int) {
-			timeTOWriteHeader = time.Since(now)
-		})
-		next.ServeHTTP(d, r)
-		end := time.Since(now)
-		entry.Update(
-			r, d.Status(), d.Written(), end, timeTOWriteHeader,
-		)
-		accesslog.Get(ctx).Record(entry)
-	})
-}
-
-func report(
-	labels prometheus.Labels,
+func Record(
+	code int,
+	method string,
 	totalDuration time.Duration,
-	reqSize int,
-	resSize int,
+	reqSize int64,
+	resSize int64,
 	headerDuration time.Duration,
 ) {
+	labels := prometheus.Labels{
+		"code":   strconv.FormatInt(int64(code), 10),
+		"method": method,
+	}
 	totalRequests.With(labels).Inc()
 	requestDuration.With(labels).Observe(float64(totalDuration.Milliseconds()))
 	requestSize.With(labels).Observe(float64(reqSize))
 	responseSize.With(labels).Observe(float64(resSize))
 	timeToHeader.With(labels).Observe(float64(headerDuration.Milliseconds()))
-}
-
-func computeApproximateRequestSize(r *http.Request) int {
-	s := 0
-	if r.URL != nil {
-		s += len(r.URL.String())
-	}
-
-	s += len(r.Method)
-	s += len(r.Proto)
-	for name, values := range r.Header {
-		s += len(name)
-		for _, value := range values {
-			s += len(value)
-		}
-	}
-	s += len(r.Host)
-
-	// N.B. r.Form and r.MultipartForm are assumed to be included in r.URL.
-
-	if r.ContentLength != -1 {
-		s += int(r.ContentLength)
-	}
-	return s
-}
-
-func sanitizeMethod(m string) string {
-	switch m {
-	case "GET", "get":
-		return "get"
-	case "PUT", "put":
-		return "put"
-	case "HEAD", "head":
-		return "head"
-	case "POST", "post":
-		return "post"
-	case "DELETE", "delete":
-		return "delete"
-	case "CONNECT", "connect":
-		return "connect"
-	case "OPTIONS", "options":
-		return "options"
-	case "NOTIFY", "notify":
-		return "notify"
-	default:
-		return strings.ToLower(m)
-	}
-}
-
-// If the wrapped http.Handler has not set a status code, i.e. the value is
-// currently 0, santizeCode will return 200, for consistency with behavior in
-// the stdlib.
-func sanitizeCode(s int) string {
-	switch s {
-	case 100:
-		return "100"
-	case 101:
-		return "101"
-
-	case 200, 0:
-		return "200"
-	case 201:
-		return "201"
-	case 202:
-		return "202"
-	case 203:
-		return "203"
-	case 204:
-		return "204"
-	case 205:
-		return "205"
-	case 206:
-		return "206"
-
-	case 300:
-		return "300"
-	case 301:
-		return "301"
-	case 302:
-		return "302"
-	case 304:
-		return "304"
-	case 305:
-		return "305"
-	case 307:
-		return "307"
-
-	case 400:
-		return "400"
-	case 401:
-		return "401"
-	case 402:
-		return "402"
-	case 403:
-		return "403"
-	case 404:
-		return "404"
-	case 405:
-		return "405"
-	case 406:
-		return "406"
-	case 407:
-		return "407"
-	case 408:
-		return "408"
-	case 409:
-		return "409"
-	case 410:
-		return "410"
-	case 411:
-		return "411"
-	case 412:
-		return "412"
-	case 413:
-		return "413"
-	case 414:
-		return "414"
-	case 415:
-		return "415"
-	case 416:
-		return "416"
-	case 417:
-		return "417"
-	case 418:
-		return "418"
-
-	case 500:
-		return "500"
-	case 501:
-		return "501"
-	case 502:
-		return "502"
-	case 503:
-		return "503"
-	case 504:
-		return "504"
-	case 505:
-		return "505"
-
-	case 428:
-		return "428"
-	case 429:
-		return "429"
-	case 431:
-		return "431"
-	case 511:
-		return "511"
-
-	default:
-		return strconv.Itoa(s)
-	}
 }

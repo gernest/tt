@@ -9,9 +9,9 @@ import (
 	"sync/atomic"
 
 	"github.com/gernest/tt/api"
+	accesslog "github.com/gernest/tt/pkg/access_log"
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/meta"
-	"github.com/gernest/tt/pkg/metrics/tseries"
 	"github.com/gernest/tt/pkg/reverse"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -145,7 +145,7 @@ func NewDynamic(ctx context.Context, handlerChan <-chan http.Handler, base http.
 
 func (d *Dynamic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	next := d.Get()
-	next = tseries.Instrument(next)
+	next = accesslog.Instrument(next)
 	next.ServeHTTP(w, r)
 }
 
