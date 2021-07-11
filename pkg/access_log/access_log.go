@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/zlg"
 	"github.com/golang/protobuf/ptypes"
 	ua "github.com/mileusna/useragent"
 	"go.uber.org/atomic"
@@ -255,10 +256,11 @@ type Access struct {
 	stopped atomic.Bool
 }
 
-func New(opts Options, syncer Sync) *Access {
+func New(opts Options, logSync Sync) *Access {
 	return &Access{
-		in:  make(chan *Entry, opts.InSize),
-		out: make(chan *Entry, opts.OutSize),
+		in:   make(chan *Entry, opts.InSize),
+		out:  make(chan *Entry, opts.OutSize),
+		sync: logSync,
 	}
 }
 
@@ -286,9 +288,8 @@ func (a *Access) Close() error {
 }
 
 func (a *Access) Record(e *Entry) {
-	if a.stopped.Load() {
-		a.in <- e
-	}
+	zlg.Info("Recording entry")
+	a.in <- e
 }
 
 type accessLogKey struct{}
