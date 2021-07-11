@@ -298,12 +298,12 @@ message AccessEntry {
 
   message Request {
     UserAgent user_agent = 1;
-    Method method = 2;
+    string method = 2;
     int32 size = 3;
+    string path = 4;
   }
 
-  // Client stores metrics on the httpclient that makes upstream calls.
-  message Client {
+  message ReverseProxy {
     // Number of bytes sent to the downstream service.
     int64 bytes_sent = 1;
     int64 bytes_received = 2;
@@ -314,13 +314,13 @@ message AccessEntry {
     int64 size = 1;
     int32 status_code = 2;
   }
-
   // The name of the registered route.Do not confuse this with http route. This
   // is configured route on tt
   string route = 1;
-
   // The service ID. A service is a collection of routes.
   string service = 2;
-
   string virtual_host = 4;
+  Request request = 5;
+  Response response = 6;
+  ReverseProxy reverse_proxy = 7;
 }
