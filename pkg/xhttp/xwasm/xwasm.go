@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/gernest/tt/wasm"
-	"github.com/gernest/tt/zlg"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v2"

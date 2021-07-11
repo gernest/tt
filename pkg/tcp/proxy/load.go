@@ -9,7 +9,7 @@ import (
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/pkg/tcp/middlewares"
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/smallnest/weighted"
 	"go.uber.org/zap"

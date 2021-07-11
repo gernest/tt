@@ -3,7 +3,7 @@ package tcp
 import (
 	"time"
 
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

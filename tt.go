@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/gernest/tt/cmd"
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 )
 
 var (

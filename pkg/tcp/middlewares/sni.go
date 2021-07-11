@@ -25,7 +25,7 @@ import (
 
 	"github.com/gernest/tt/pkg/tcp"
 	"github.com/gernest/tt/pkg/tcp/dtls"
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"go.uber.org/zap"
 )
 

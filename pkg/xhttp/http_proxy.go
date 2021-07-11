@@ -10,7 +10,7 @@ import (
 	accesslog "github.com/gernest/tt/pkg/access_log"
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/proxy"
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"

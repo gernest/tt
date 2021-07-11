@@ -9,7 +9,7 @@ import (
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp/proxy"
 	"github.com/gernest/tt/pkg/xhttp"
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

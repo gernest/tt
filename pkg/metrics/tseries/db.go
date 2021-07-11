@@ -1,7 +1,7 @@
 package tseries
 
 import (
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/zap"
 	"github.com/prometheus/client_golang/prometheus"

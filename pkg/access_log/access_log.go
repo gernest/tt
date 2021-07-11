@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gernest/tt/api"
-	"github.com/gernest/tt/zlg"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/golang/protobuf/ptypes"
 	ua "github.com/mileusna/useragent"
 	"go.uber.org/atomic"
