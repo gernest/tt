@@ -83,7 +83,7 @@ func (c *Config) configure() error {
 	return nil
 }
 
-func (c *Config) Flags() []cli.Flag {
+func (Config) Flags() []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:   "ts-path",

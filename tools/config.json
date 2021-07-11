@@ -35,5 +35,8 @@
   "Wasm": {
     "Enabled": true
   },
-  "AccessLog": {}
+  "AccessLog": {
+    "InSize": 100,
+    "OutSize": 100
+  }
 }

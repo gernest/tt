@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,10 +32,16 @@ type Options struct {
 	Routes                api.Config        `json:"-"`
 }
 
+func (o *Options) Save(to string) error {
+	b, _ := json.MarshalIndent(o, "", "  ")
+	return ioutil.WriteFile(to, b, 0600)
+}
+
 func (o *Options) setuproutes() error {
 	if o.RoutesPath == "" {
 		return nil
 	}
+	// o.Save("config.json")
 	var m jsonpb.Unmarshaler
 	return filepath.Walk(o.RoutesPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -67,33 +74,42 @@ type Info struct {
 }
 
 func (o *Options) Flags() []cli.Flag {
-	base := []cli.Flag{
-		cli.IntSliceFlag{
-			Name:   "allowed_ports",
-			EnvVar: "TT_ALLOWED_PORTS",
-			Usage:  "Ports that tt is allowed to open",
-			Value:  &cli.IntSlice{5700, 5500},
-		},
-		cli.StringSliceFlag{
-			Name:   "labels",
-			Usage:  "labels attacked to logs and metrics in the form of key:value",
-			EnvVar: "TT_LABELS",
-		},
-		cli.StringFlag{
-			Name:   "config,c",
-			Usage:  "path to configuration file",
-			EnvVar: "TT_ROUTES_CONFIG",
-		},
-		cli.StringFlag{
-			Name:   "routes-path,r",
-			Usage:  "path to the routes config file",
-			EnvVar: "TT_ROUTES_CONFIG",
-		},
-	}
-	base = append(base, o.Cache.Flags()...)
-	base = append(base, o.Metrics.Flags()...)
-	base = append(base, o.Wasm.FLags()...)
-	return append(base, o.Listen.Flags()...)
+	return fls(
+		o.baseFlags(),
+		o.Listen,
+		o.Cache,
+		&o.Metrics,
+		o.Wasm,
+		o.AccessLog,
+	)
+}
+
+func (o *Options) baseFlags() flagList {
+	return flagListFn(func() []cli.Flag {
+		return []cli.Flag{
+			cli.IntSliceFlag{
+				Name:   "allowed_ports",
+				EnvVar: "TT_ALLOWED_PORTS",
+				Usage:  "Ports that tt is allowed to open",
+				Value:  &cli.IntSlice{5700, 5500},
+			},
+			cli.StringSliceFlag{
+				Name:   "labels",
+				Usage:  "labels attacked to logs and metrics in the form of key:value",
+				EnvVar: "TT_LABELS",
+			},
+			cli.StringFlag{
+				Name:   "config,c",
+				Usage:  "path to configuration file",
+				EnvVar: "TT_ROUTES_CONFIG",
+			},
+			cli.StringFlag{
+				Name:   "routes-path,r",
+				Usage:  "path to the routes config file",
+				EnvVar: "TT_ROUTES_CONFIG",
+			},
+		}
+	})
 }
 
 func (o *Options) Parse(ctx *cli.Context) error {
@@ -165,6 +181,23 @@ func ls(p ...parser) func(*cli.Context) error {
 		}
 		return nil
 	}
+}
+
+type flagList interface {
+	Flags() []cli.Flag
+}
+
+type flagListFn func() []cli.Flag
+
+func (fn flagListFn) Flags() []cli.Flag {
+	return fn()
+}
+
+func fls(f ...flagList) (o []cli.Flag) {
+	for _, v := range f {
+		o = append(o, v.Flags()...)
+	}
+	return
 }
 
 type Listen struct {
@@ -282,7 +315,7 @@ func (w *Wasm) Parse(ctx *cli.Context) error {
 	return nil
 }
 
-func (Wasm) FLags() []cli.Flag {
+func (Wasm) Flags() []cli.Flag {
 	return []cli.Flag{
 		cli.BoolTFlag{
 			Name:  "wasm-enabled",
