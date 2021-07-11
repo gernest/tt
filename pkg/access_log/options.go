@@ -3,8 +3,8 @@ package accesslog
 import "github.com/urfave/cli"
 
 type Options struct {
-	InSize  int
-	OutSize int
+	InSize  int `json:",omitempty"`
+	OutSize int `json:",omitempty"`
 }
 
 func (o *Options) Parse(ctx *cli.Context) error {
