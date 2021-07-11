@@ -220,6 +220,19 @@ message Context {
   Info info = 5;
 }
 
+enum Method {
+  GET = 0;
+  POST = 1;
+  PUT = 2;
+  DELETE = 3;
+  PATCH = 4;
+  OPTIONS = 5;
+  CONNECT = 6;
+  HEAD = 7;
+  TRACE = 8;
+  ALL = 9;
+}
+
 message Rule {
   message List { repeated Rule rules = 1; }
 
@@ -254,18 +267,6 @@ message Rule {
     }
     message Methods { repeated Method methods = 1; }
     message Headers { repeated Header headers = 1; }
-    enum Method {
-      GET = 0;
-      POST = 1;
-      PUT = 2;
-      DELETE = 3;
-      PATCH = 4;
-      OPTIONS = 5;
-      CONNECT = 6;
-      HEAD = 7;
-      TRACE = 8;
-      ALL = 9;
-    }
   }
   message Header {
     string key = 1;
@@ -279,4 +280,47 @@ message Rule {
       string regexp = 3;
     }
   }
+}
+
+// AccessEntry records metrics about a http request.
+message AccessEntry {
+  // UserAgent details about the user agent sending the http request.
+  message UserAgent {
+    string name = 1;
+    string version = 2;
+    string os = 3;
+    string os_version = 4;
+    string device = 5;
+    bool mobile = 6;
+    bool tablet = 7;
+    bool desktop = 8;
+  }
+
+  message Request {
+    UserAgent user_agent = 1;
+    Method method = 2;
+    int32 size = 3;
+  }
+
+  // Client stores metrics on the httpclient that makes upstream calls.
+  message Client {
+    // Number of bytes sent to the downstream service.
+    int64 bytes_sent = 1;
+    int64 bytes_received = 2;
+  }
+
+  message Response {
+    // Total size in bytes of the response.
+    int64 size = 1;
+    int32 status_code = 2;
+  }
+
+  // The name of the registered route.Do not confuse this with http route. This
+  // is configured route on tt
+  string route = 1;
+
+  // The service ID. A service is a collection of routes.
+  string service = 2;
+
+  string virtual_host = 4;
 }
