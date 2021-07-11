@@ -294,6 +294,7 @@ message AccessEntry {
     bool mobile = 6;
     bool tablet = 7;
     bool desktop = 8;
+    bool bot = 9;
   }
 
   message Request {
@@ -307,20 +308,29 @@ message AccessEntry {
     // Number of bytes sent to the downstream service.
     int64 bytes_sent = 1;
     int64 bytes_received = 2;
+    string target = 3;
   }
 
   message Response {
     // Total size in bytes of the response.
     int64 size = 1;
     int32 status_code = 2;
+    google.protobuf.Duration time_to_write_header = 3;
   }
-  // The name of the registered route.Do not confuse this with http route. This
-  // is configured route on tt
-  string route = 1;
-  // The service ID. A service is a collection of routes.
-  string service = 2;
-  string virtual_host = 4;
-  Request request = 5;
-  Response response = 6;
-  ReverseProxy reverse_proxy = 7;
+
+  message Info {
+    // The name of the registered route.Do not confuse this with http route.
+    // This
+    // is configured route on tt
+    string route = 1;
+    // The service ID. A service is a collection of routes.
+    string service = 2;
+    string virtual_host = 4;
+  }
+  Request request = 1;
+  Response response = 2;
+  ReverseProxy reverse_proxy = 3;
+  Info info = 4;
+
+  google.protobuf.Duration duration = 5;
 }

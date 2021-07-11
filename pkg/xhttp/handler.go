@@ -225,9 +225,9 @@ func (h *H) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if m := meta.GetMetics(r.Context()); m != nil {
 		// we are updating analytics details since this is the last handler in the
 		// chain. Target is updated by the reverse proxy handler.
-		m.Route = h.info.Route.Name
-		m.Service = h.info.Route.Service
-		m.VirtualHost = h.info.VirtualHost
+		m.Info.Route = h.info.Route.Name
+		m.Info.Service = h.info.Route.Service
+		m.Info.VirtualHost = h.info.VirtualHost
 	}
 	h.h.ServeHTTP(w, r)
 }

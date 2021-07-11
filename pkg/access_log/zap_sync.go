@@ -18,9 +18,9 @@ func (z *Zap) Sync(e *Entry) {
 func (e *Entry) fields() (ls []zap.Field) {
 	ls = append(ls,
 		zap.Int32("status", e.Response.StatusCode),
-		zap.String("route", e.Route),
-		zap.String("service", e.Service),
-		zap.String("host", e.VirtualHost),
+		zap.String("route", e.Info.Route),
+		zap.String("service", e.Info.Service),
+		zap.String("host", e.Info.VirtualHost),
 	)
 	return
 }

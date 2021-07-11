@@ -10,20 +10,12 @@ type RouteInfo struct {
 	Route       *api.Route
 	VirtualHost string
 }
-
 type metricsKey struct{}
 
-type Metrics struct {
-	Target      string
-	Service     string
-	Route       string
-	VirtualHost string
-}
-
-func SetMetric(ctx context.Context, m *Metrics) context.Context {
+func SetMetric(ctx context.Context, m *api.AccessEntry) context.Context {
 	return context.WithValue(ctx, metricsKey{}, m)
 }
 
-func GetMetics(ctx context.Context) *Metrics {
-	return ctx.Value(metricsKey{}).(*Metrics)
+func GetMetics(ctx context.Context) *api.AccessEntry {
+	return ctx.Value(metricsKey{}).(*api.AccessEntry)
 }

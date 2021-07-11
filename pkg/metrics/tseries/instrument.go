@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	accesslog "github.com/gernest/tt/pkg/access_log"
 	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/xhttp/xlabels"
 
@@ -65,22 +66,20 @@ var timeToHeader = prometheus.NewHistogramVec(
 // Instrument must be the entry point. Adds prometheus metrics for next.
 func Instrument(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		now := time.Now()
-		m := &meta.Metrics{}
-		r = r.WithContext(meta.SetMetric(r.Context(), m))
+		entry := accesslog.NewEntry()
+		r = r.WithContext(meta.SetMetric(r.Context(), &entry.AccessEntry))
 		var timeTOWriteHeader time.Duration
 		d := newDelegator(w, func(i int) {
 			timeTOWriteHeader = time.Since(now)
 		})
 		next.ServeHTTP(d, r)
 		end := time.Since(now)
-		metricsLables := Labels(
-			r, d.Status(), m,
+		entry.Update(
+			r, d.Status(), d.Written(), end, timeTOWriteHeader,
 		)
-		report(
-			metricsLables, end, computeApproximateRequestSize(r),
-			int(d.Written()), timeTOWriteHeader,
-		)
+		accesslog.Get(ctx).Record(entry)
 	})
 }
 

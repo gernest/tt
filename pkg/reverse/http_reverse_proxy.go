@@ -81,7 +81,7 @@ func DirectorFromLoadBalance(ba balance.Balance) Director {
 	return DirectorFunc(func(r *http.Request) {
 		target := ba.Next()
 		if m := meta.GetMetics(r.Context()); m != nil {
-			m.Target = target.URL.String()
+			m.ReverseProxy.Target = target.URL.String()
 		}
 		Request(target.URL, r)
 	})
