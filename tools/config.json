@@ -1,0 +1,39 @@
+{
+  "Listen": {
+    "TCP": {
+      "HostPort": ":5700"
+    },
+    "HTTP": {
+      "HostPort": ":5500"
+    },
+    "Control": {
+      "HostPort": ":5600"
+    }
+  },
+  "AllowedPorts": [
+    5700,
+    5500
+  ],
+  "RoutesPath": "pkg/xhttp/samples/httpbin.json",
+  "Cache": {
+    "NumCounters": 10000000,
+    "MaxCost": 1073741824,
+    "BufferItems": 64
+  },
+  "Info": {
+    "Version": "dev",
+    "ReleaseID": "dev-+@",
+    "ID": "tt.8x8.co.tz"
+  },
+  "Metrics": {
+    "Path": "data/",
+    "MinBlockDuration": 7200000000000,
+    "MaxBlockDuration": 129600000000000,
+    "RetentionDuration": 1296000000000000,
+    "WALCompression": true
+  },
+  "Wasm": {
+    "Enabled": true
+  },
+  "AccessLog": {}
+}
