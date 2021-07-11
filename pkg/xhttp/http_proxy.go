@@ -171,6 +171,8 @@ func (p *Proxy) bindServer(ctx context.Context, ln *ListenContext, base *mux.Rou
 	})
 	// set logger
 	ctx = zlg.Set(ctx, p.zlg)
+	//set access_log
+	ctx = accesslog.Set(ctx, p.accessLogger)
 	svr := &http.Server{
 		BaseContext: func(l net.Listener) context.Context { return ctx },
 		Handler:     NewDynamic(ctx, ln.HandlerChan, base),

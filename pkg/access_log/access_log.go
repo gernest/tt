@@ -105,3 +105,22 @@ func (a *Access) Record(e *Entry) {
 		a.in <- e
 	}
 }
+
+type accessLogKey struct{}
+
+var oblivion = BlackHole{}
+
+func Get(ctx context.Context) Recorder {
+	if a := ctx.Value(accessLogKey{}); a != nil {
+		return a.(*Access)
+	}
+	return oblivion
+}
+
+func Set(ctx context.Context, a *Access) context.Context {
+	return context.WithValue(ctx, accessLogKey{}, a)
+}
+
+type Recorder interface {
+	Record(e *Entry)
+}
