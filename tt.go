@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/gernest/tt/cmd"
+	"github.com/gernest/tt/pkg/cmd"
 	"github.com/gernest/tt/pkg/zlg"
 )
 
