@@ -3,6 +3,7 @@ package xwasm
 import (
 	"context"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/zlg"
@@ -38,10 +39,22 @@ func NewImports(
 	return &Wasm{}
 }
 
-func Handler(ctx context.Context,
-	vm *wasm.Wasm,
+// Handler creates a wasm VM and returns a handler that loads a wasm module and
+// creates an instance of it on every request which is used for evaluation
+func Handler(
+	ctx context.Context,
+	wasmModulesPath string,
 	mw *api.Middleware_Wasm) (func(http.Handler) http.Handler, error) {
-
+	vm := wasm.New()
+	file := filepath.Join(wasmModulesPath, mw.Module)
+	zlg.Info("Compiling wasm module",
+		zap.String("middleware", mw.Name),
+		zap.String("module", mw.Module),
+	)
+	zlg.Debug("Module path " + file)
+	if err := vm.CompileFile(file); err != nil {
+		return nil, err
+	}
 	var id atomic.Int32
 	rootContext := id.Inc()
 	mwLog := zlg.Logger.Named("PROXY_WASM").With(
