@@ -247,6 +247,55 @@ func (Route_LoadBalanceAlgo) EnumDescriptor() ([]byte, []int) {
 	return file_tcp_proto_rawDescGZIP(), []int{8, 0}
 }
 
+type RaftLog_OP int32
+
+const (
+	RaftLog_SET   RaftLog_OP = 0
+	RaftLog_GET   RaftLog_OP = 2
+	RaftLog_RANGE RaftLog_OP = 3
+)
+
+// Enum value maps for RaftLog_OP.
+var (
+	RaftLog_OP_name = map[int32]string{
+		0: "SET",
+		2: "GET",
+		3: "RANGE",
+	}
+	RaftLog_OP_value = map[string]int32{
+		"SET":   0,
+		"GET":   2,
+		"RANGE": 3,
+	}
+)
+
+func (x RaftLog_OP) Enum() *RaftLog_OP {
+	p := new(RaftLog_OP)
+	*p = x
+	return p
+}
+
+func (x RaftLog_OP) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RaftLog_OP) Descriptor() protoreflect.EnumDescriptor {
+	return file_tcp_proto_enumTypes[4].Descriptor()
+}
+
+func (RaftLog_OP) Type() protoreflect.EnumType {
+	return &file_tcp_proto_enumTypes[4]
+}
+
+func (x RaftLog_OP) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RaftLog_OP.Descriptor instead.
+func (RaftLog_OP) EnumDescriptor() ([]byte, []int) {
+	return file_tcp_proto_rawDescGZIP(), []int{16, 0}
+}
+
 type ConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1518,6 +1567,94 @@ func (x *AccessEntry) GetDuration() *duration.Duration {
 	return nil
 }
 
+type RaftLog struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Context:
+	//	*RaftLog_Data
+	//	*RaftLog_Prefix
+	Context isRaftLog_Context `protobuf_oneof:"context"`
+	Op      RaftLog_OP        `protobuf:"varint,3,opt,name=op,proto3,enum=RaftLog_OP" json:"op,omitempty"`
+}
+
+func (x *RaftLog) Reset() {
+	*x = RaftLog{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_tcp_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RaftLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RaftLog) ProtoMessage() {}
+
+func (x *RaftLog) ProtoReflect() protoreflect.Message {
+	mi := &file_tcp_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RaftLog.ProtoReflect.Descriptor instead.
+func (*RaftLog) Descriptor() ([]byte, []int) {
+	return file_tcp_proto_rawDescGZIP(), []int{16}
+}
+
+func (m *RaftLog) GetContext() isRaftLog_Context {
+	if m != nil {
+		return m.Context
+	}
+	return nil
+}
+
+func (x *RaftLog) GetData() []byte {
+	if x, ok := x.GetContext().(*RaftLog_Data); ok {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *RaftLog) GetPrefix() []byte {
+	if x, ok := x.GetContext().(*RaftLog_Prefix); ok {
+		return x.Prefix
+	}
+	return nil
+}
+
+func (x *RaftLog) GetOp() RaftLog_OP {
+	if x != nil {
+		return x.Op
+	}
+	return RaftLog_SET
+}
+
+type isRaftLog_Context interface {
+	isRaftLog_Context()
+}
+
+type RaftLog_Data struct {
+	Data []byte `protobuf:"bytes,1,opt,name=data,proto3,oneof"`
+}
+
+type RaftLog_Prefix struct {
+	Prefix []byte `protobuf:"bytes,2,opt,name=prefix,proto3,oneof"`
+}
+
+func (*RaftLog_Data) isRaftLog_Context() {}
+
+func (*RaftLog_Prefix) isRaftLog_Context() {}
+
 type Middleware_List struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1529,7 +1666,7 @@ type Middleware_List struct {
 func (x *Middleware_List) Reset() {
 	*x = Middleware_List{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[17]
+		mi := &file_tcp_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1542,7 +1679,7 @@ func (x *Middleware_List) String() string {
 func (*Middleware_List) ProtoMessage() {}
 
 func (x *Middleware_List) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[17]
+	mi := &file_tcp_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1587,7 +1724,7 @@ type Middleware_Wasm struct {
 func (x *Middleware_Wasm) Reset() {
 	*x = Middleware_Wasm{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[18]
+		mi := &file_tcp_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1600,7 +1737,7 @@ func (x *Middleware_Wasm) String() string {
 func (*Middleware_Wasm) ProtoMessage() {}
 
 func (x *Middleware_Wasm) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[18]
+	mi := &file_tcp_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1655,7 +1792,7 @@ type Middleware_StripPathPrefix struct {
 func (x *Middleware_StripPathPrefix) Reset() {
 	*x = Middleware_StripPathPrefix{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[19]
+		mi := &file_tcp_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1668,7 +1805,7 @@ func (x *Middleware_StripPathPrefix) String() string {
 func (*Middleware_StripPathPrefix) ProtoMessage() {}
 
 func (x *Middleware_StripPathPrefix) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[19]
+	mi := &file_tcp_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1711,7 +1848,7 @@ type Middleware_Wasm_Setting struct {
 func (x *Middleware_Wasm_Setting) Reset() {
 	*x = Middleware_Wasm_Setting{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[20]
+		mi := &file_tcp_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1724,7 +1861,7 @@ func (x *Middleware_Wasm_Setting) String() string {
 func (*Middleware_Wasm_Setting) ProtoMessage() {}
 
 func (x *Middleware_Wasm_Setting) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[20]
+	mi := &file_tcp_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1825,7 +1962,7 @@ type Middleware_Wasm_Config struct {
 func (x *Middleware_Wasm_Config) Reset() {
 	*x = Middleware_Wasm_Config{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[21]
+		mi := &file_tcp_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1838,7 +1975,7 @@ func (x *Middleware_Wasm_Config) String() string {
 func (*Middleware_Wasm_Config) ProtoMessage() {}
 
 func (x *Middleware_Wasm_Config) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[21]
+	mi := &file_tcp_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1880,7 +2017,7 @@ type Middleware_Wasm_Setting_Env struct {
 func (x *Middleware_Wasm_Setting_Env) Reset() {
 	*x = Middleware_Wasm_Setting_Env{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[22]
+		mi := &file_tcp_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1893,7 +2030,7 @@ func (x *Middleware_Wasm_Setting_Env) String() string {
 func (*Middleware_Wasm_Setting_Env) ProtoMessage() {}
 
 func (x *Middleware_Wasm_Setting_Env) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[22]
+	mi := &file_tcp_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1935,7 +2072,7 @@ type Middleware_Wasm_Setting_DirectoryMap struct {
 func (x *Middleware_Wasm_Setting_DirectoryMap) Reset() {
 	*x = Middleware_Wasm_Setting_DirectoryMap{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[23]
+		mi := &file_tcp_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1948,7 +2085,7 @@ func (x *Middleware_Wasm_Setting_DirectoryMap) String() string {
 func (*Middleware_Wasm_Setting_DirectoryMap) ProtoMessage() {}
 
 func (x *Middleware_Wasm_Setting_DirectoryMap) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[23]
+	mi := &file_tcp_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1990,7 +2127,7 @@ type Context_Stat struct {
 func (x *Context_Stat) Reset() {
 	*x = Context_Stat{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[25]
+		mi := &file_tcp_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2003,7 +2140,7 @@ func (x *Context_Stat) String() string {
 func (*Context_Stat) ProtoMessage() {}
 
 func (x *Context_Stat) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[25]
+	mi := &file_tcp_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2046,7 +2183,7 @@ type Context_Conn struct {
 func (x *Context_Conn) Reset() {
 	*x = Context_Conn{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[26]
+		mi := &file_tcp_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2059,7 +2196,7 @@ func (x *Context_Conn) String() string {
 func (*Context_Conn) ProtoMessage() {}
 
 func (x *Context_Conn) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[26]
+	mi := &file_tcp_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2111,7 +2248,7 @@ type Context_Info struct {
 func (x *Context_Info) Reset() {
 	*x = Context_Info{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[27]
+		mi := &file_tcp_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2124,7 +2261,7 @@ func (x *Context_Info) String() string {
 func (*Context_Info) ProtoMessage() {}
 
 func (x *Context_Info) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[27]
+	mi := &file_tcp_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2186,7 +2323,7 @@ type Rule_List struct {
 func (x *Rule_List) Reset() {
 	*x = Rule_List{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[28]
+		mi := &file_tcp_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2199,7 +2336,7 @@ func (x *Rule_List) String() string {
 func (*Rule_List) ProtoMessage() {}
 
 func (x *Rule_List) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[28]
+	mi := &file_tcp_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2237,7 +2374,7 @@ type Rule_TCP struct {
 func (x *Rule_TCP) Reset() {
 	*x = Rule_TCP{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[29]
+		mi := &file_tcp_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2250,7 +2387,7 @@ func (x *Rule_TCP) String() string {
 func (*Rule_TCP) ProtoMessage() {}
 
 func (x *Rule_TCP) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[29]
+	mi := &file_tcp_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2332,7 +2469,7 @@ type Rule_HTTP struct {
 func (x *Rule_HTTP) Reset() {
 	*x = Rule_HTTP{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[30]
+		mi := &file_tcp_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2345,7 +2482,7 @@ func (x *Rule_HTTP) String() string {
 func (*Rule_HTTP) ProtoMessage() {}
 
 func (x *Rule_HTTP) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[30]
+	mi := &file_tcp_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2436,7 +2573,7 @@ type Rule_Header struct {
 func (x *Rule_Header) Reset() {
 	*x = Rule_Header{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[31]
+		mi := &file_tcp_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2449,7 +2586,7 @@ func (x *Rule_Header) String() string {
 func (*Rule_Header) ProtoMessage() {}
 
 func (x *Rule_Header) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[31]
+	mi := &file_tcp_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2494,7 +2631,7 @@ type Rule_StringMatch struct {
 func (x *Rule_StringMatch) Reset() {
 	*x = Rule_StringMatch{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[32]
+		mi := &file_tcp_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2507,7 +2644,7 @@ func (x *Rule_StringMatch) String() string {
 func (*Rule_StringMatch) ProtoMessage() {}
 
 func (x *Rule_StringMatch) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[32]
+	mi := &file_tcp_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2585,7 +2722,7 @@ type Rule_TCP_PortRange struct {
 func (x *Rule_TCP_PortRange) Reset() {
 	*x = Rule_TCP_PortRange{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[33]
+		mi := &file_tcp_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2598,7 +2735,7 @@ func (x *Rule_TCP_PortRange) String() string {
 func (*Rule_TCP_PortRange) ProtoMessage() {}
 
 func (x *Rule_TCP_PortRange) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[33]
+	mi := &file_tcp_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2639,7 +2776,7 @@ type Rule_HTTP_Methods struct {
 func (x *Rule_HTTP_Methods) Reset() {
 	*x = Rule_HTTP_Methods{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[34]
+		mi := &file_tcp_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2652,7 +2789,7 @@ func (x *Rule_HTTP_Methods) String() string {
 func (*Rule_HTTP_Methods) ProtoMessage() {}
 
 func (x *Rule_HTTP_Methods) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[34]
+	mi := &file_tcp_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2686,7 +2823,7 @@ type Rule_HTTP_Headers struct {
 func (x *Rule_HTTP_Headers) Reset() {
 	*x = Rule_HTTP_Headers{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[35]
+		mi := &file_tcp_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2699,7 +2836,7 @@ func (x *Rule_HTTP_Headers) String() string {
 func (*Rule_HTTP_Headers) ProtoMessage() {}
 
 func (x *Rule_HTTP_Headers) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[35]
+	mi := &file_tcp_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2742,7 +2879,7 @@ type AccessEntry_UserAgent struct {
 func (x *AccessEntry_UserAgent) Reset() {
 	*x = AccessEntry_UserAgent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[36]
+		mi := &file_tcp_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2755,7 +2892,7 @@ func (x *AccessEntry_UserAgent) String() string {
 func (*AccessEntry_UserAgent) ProtoMessage() {}
 
 func (x *AccessEntry_UserAgent) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[36]
+	mi := &file_tcp_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2848,7 +2985,7 @@ type AccessEntry_Request struct {
 func (x *AccessEntry_Request) Reset() {
 	*x = AccessEntry_Request{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[37]
+		mi := &file_tcp_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2861,7 +2998,7 @@ func (x *AccessEntry_Request) String() string {
 func (*AccessEntry_Request) ProtoMessage() {}
 
 func (x *AccessEntry_Request) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[37]
+	mi := &file_tcp_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2919,7 +3056,7 @@ type AccessEntry_ReverseProxy struct {
 func (x *AccessEntry_ReverseProxy) Reset() {
 	*x = AccessEntry_ReverseProxy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[38]
+		mi := &file_tcp_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2932,7 +3069,7 @@ func (x *AccessEntry_ReverseProxy) String() string {
 func (*AccessEntry_ReverseProxy) ProtoMessage() {}
 
 func (x *AccessEntry_ReverseProxy) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[38]
+	mi := &file_tcp_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2983,7 +3120,7 @@ type AccessEntry_Response struct {
 func (x *AccessEntry_Response) Reset() {
 	*x = AccessEntry_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[39]
+		mi := &file_tcp_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2996,7 +3133,7 @@ func (x *AccessEntry_Response) String() string {
 func (*AccessEntry_Response) ProtoMessage() {}
 
 func (x *AccessEntry_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[39]
+	mi := &file_tcp_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3050,7 +3187,7 @@ type AccessEntry_Info struct {
 func (x *AccessEntry_Info) Reset() {
 	*x = AccessEntry_Info{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_tcp_proto_msgTypes[40]
+		mi := &file_tcp_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3063,7 +3200,7 @@ func (x *AccessEntry_Info) String() string {
 func (*AccessEntry_Info) ProtoMessage() {}
 
 func (x *AccessEntry_Info) ProtoReflect() protoreflect.Message {
-	mi := &file_tcp_proto_msgTypes[40]
+	mi := &file_tcp_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3445,29 +3582,37 @@ var file_tcp_proto_rawDesc = []byte{
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
 	0x21, 0x0a, 0x0c, 0x76, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x5f, 0x68, 0x6f, 0x73, 0x74, 0x18,
 	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x76, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x48, 0x6f,
-	0x73, 0x74, 0x2a, 0x3f, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x07,
-	0x0a, 0x03, 0x54, 0x43, 0x50, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x55, 0x44, 0x50, 0x10, 0x01,
-	0x12, 0x08, 0x0a, 0x04, 0x48, 0x54, 0x54, 0x50, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x57, 0x45,
-	0x42, 0x53, 0x4f, 0x43, 0x4b, 0x45, 0x54, 0x10, 0x03, 0x12, 0x08, 0x0a, 0x04, 0x51, 0x55, 0x49,
-	0x43, 0x10, 0x04, 0x2a, 0x73, 0x0a, 0x06, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x07, 0x0a,
-	0x03, 0x47, 0x45, 0x54, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x50, 0x4f, 0x53, 0x54, 0x10, 0x01,
-	0x12, 0x07, 0x0a, 0x03, 0x50, 0x55, 0x54, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06, 0x44, 0x45, 0x4c,
-	0x45, 0x54, 0x45, 0x10, 0x03, 0x12, 0x09, 0x0a, 0x05, 0x50, 0x41, 0x54, 0x43, 0x48, 0x10, 0x04,
-	0x12, 0x0b, 0x0a, 0x07, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x53, 0x10, 0x05, 0x12, 0x0b, 0x0a,
-	0x07, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0x10, 0x06, 0x12, 0x08, 0x0a, 0x04, 0x48, 0x45,
-	0x41, 0x44, 0x10, 0x07, 0x12, 0x09, 0x0a, 0x05, 0x54, 0x52, 0x41, 0x43, 0x45, 0x10, 0x08, 0x12,
-	0x07, 0x0a, 0x03, 0x41, 0x4c, 0x4c, 0x10, 0x09, 0x32, 0x83, 0x01, 0x0a, 0x05, 0x50, 0x72, 0x6f,
-	0x78, 0x79, 0x12, 0x1e, 0x0a, 0x03, 0x47, 0x65, 0x74, 0x12, 0x0e, 0x2e, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x07, 0x2e, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x12, 0x19, 0x0a, 0x03, 0x50, 0x75, 0x74, 0x12, 0x07, 0x2e, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x1a, 0x09, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a,
-	0x04, 0x50, 0x6f, 0x73, 0x74, 0x12, 0x07, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x1a, 0x09,
-	0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x06, 0x44, 0x65, 0x6c,
-	0x65, 0x74, 0x65, 0x12, 0x0e, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x09, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x1b,
-	0x5a, 0x19, 0x67, 0x69, 0x72, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x65, 0x72,
-	0x6e, 0x65, 0x73, 0x74, 0x2f, 0x74, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x73, 0x74, 0x22, 0x84, 0x01, 0x0a, 0x07, 0x52, 0x61, 0x66, 0x74, 0x4c, 0x6f, 0x67, 0x12, 0x14,
+	0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x04,
+	0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x06, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x06, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x12, 0x1b,
+	0x0a, 0x02, 0x6f, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0b, 0x2e, 0x52, 0x61, 0x66,
+	0x74, 0x4c, 0x6f, 0x67, 0x2e, 0x4f, 0x50, 0x52, 0x02, 0x6f, 0x70, 0x22, 0x21, 0x0a, 0x02, 0x4f,
+	0x50, 0x12, 0x07, 0x0a, 0x03, 0x53, 0x45, 0x54, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x47, 0x45,
+	0x54, 0x10, 0x02, 0x12, 0x09, 0x0a, 0x05, 0x52, 0x41, 0x4e, 0x47, 0x45, 0x10, 0x03, 0x42, 0x09,
+	0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x2a, 0x3f, 0x0a, 0x08, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x43, 0x50, 0x10, 0x00, 0x12, 0x07,
+	0x0a, 0x03, 0x55, 0x44, 0x50, 0x10, 0x01, 0x12, 0x08, 0x0a, 0x04, 0x48, 0x54, 0x54, 0x50, 0x10,
+	0x02, 0x12, 0x0d, 0x0a, 0x09, 0x57, 0x45, 0x42, 0x53, 0x4f, 0x43, 0x4b, 0x45, 0x54, 0x10, 0x03,
+	0x12, 0x08, 0x0a, 0x04, 0x51, 0x55, 0x49, 0x43, 0x10, 0x04, 0x2a, 0x73, 0x0a, 0x06, 0x4d, 0x65,
+	0x74, 0x68, 0x6f, 0x64, 0x12, 0x07, 0x0a, 0x03, 0x47, 0x45, 0x54, 0x10, 0x00, 0x12, 0x08, 0x0a,
+	0x04, 0x50, 0x4f, 0x53, 0x54, 0x10, 0x01, 0x12, 0x07, 0x0a, 0x03, 0x50, 0x55, 0x54, 0x10, 0x02,
+	0x12, 0x0a, 0x0a, 0x06, 0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x10, 0x03, 0x12, 0x09, 0x0a, 0x05,
+	0x50, 0x41, 0x54, 0x43, 0x48, 0x10, 0x04, 0x12, 0x0b, 0x0a, 0x07, 0x4f, 0x50, 0x54, 0x49, 0x4f,
+	0x4e, 0x53, 0x10, 0x05, 0x12, 0x0b, 0x0a, 0x07, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0x10,
+	0x06, 0x12, 0x08, 0x0a, 0x04, 0x48, 0x45, 0x41, 0x44, 0x10, 0x07, 0x12, 0x09, 0x0a, 0x05, 0x54,
+	0x52, 0x41, 0x43, 0x45, 0x10, 0x08, 0x12, 0x07, 0x0a, 0x03, 0x41, 0x4c, 0x4c, 0x10, 0x09, 0x32,
+	0x83, 0x01, 0x0a, 0x05, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x12, 0x1e, 0x0a, 0x03, 0x47, 0x65, 0x74,
+	0x12, 0x0e, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x07, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x19, 0x0a, 0x03, 0x50, 0x75, 0x74,
+	0x12, 0x07, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x1a, 0x09, 0x2e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x04, 0x50, 0x6f, 0x73, 0x74, 0x12, 0x07, 0x2e, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x1a, 0x09, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x23, 0x0a, 0x06, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x0e, 0x2e, 0x44, 0x65, 0x6c,
+	0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x09, 0x2e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x1b, 0x5a, 0x19, 0x67, 0x69, 0x72, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x65, 0x72, 0x6e, 0x65, 0x73, 0x74, 0x2f, 0x74, 0x74, 0x2f, 0x61,
+	0x70, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3482,128 +3627,131 @@ func file_tcp_proto_rawDescGZIP() []byte {
 	return file_tcp_proto_rawDescData
 }
 
-var file_tcp_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_tcp_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
+var file_tcp_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_tcp_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
 var file_tcp_proto_goTypes = []interface{}{
 	(Protocol)(0),                       // 0: Protocol
 	(Method)(0),                         // 1: Method
 	(Middleware_ExecutionOrder)(0),      // 2: Middleware.ExecutionOrder
 	(Route_LoadBalanceAlgo)(0),          // 3: Route.LoadBalanceAlgo
-	(*ConfigRequest)(nil),               // 4: ConfigRequest
-	(*DeleteRequest)(nil),               // 5: DeleteRequest
-	(*Response)(nil),                    // 6: Response
-	(*Config)(nil),                      // 7: Config
-	(*WeightedAddr)(nil),                // 8: WeightedAddr
-	(*Address)(nil),                     // 9: Address
-	(*Middleware)(nil),                  // 10: Middleware
-	(*Bind)(nil),                        // 11: Bind
-	(*Route)(nil),                       // 12: Route
-	(*Speed)(nil),                       // 13: Speed
-	(*Retries)(nil),                     // 14: Retries
-	(*RetryBudget)(nil),                 // 15: RetryBudget
-	(*RequestMatch)(nil),                // 16: RequestMatch
-	(*Context)(nil),                     // 17: Context
-	(*Rule)(nil),                        // 18: Rule
-	(*AccessEntry)(nil),                 // 19: AccessEntry
-	nil,                                 // 20: WeightedAddr.MetricLabelsEntry
-	(*Middleware_List)(nil),             // 21: Middleware.List
-	(*Middleware_Wasm)(nil),             // 22: Middleware.Wasm
-	(*Middleware_StripPathPrefix)(nil),  // 23: Middleware.StripPathPrefix
-	(*Middleware_Wasm_Setting)(nil),     // 24: Middleware.Wasm.Setting
-	(*Middleware_Wasm_Config)(nil),      // 25: Middleware.Wasm.Config
-	(*Middleware_Wasm_Setting_Env)(nil), // 26: Middleware.Wasm.Setting.Env
-	(*Middleware_Wasm_Setting_DirectoryMap)(nil), // 27: Middleware.Wasm.Setting.DirectoryMap
-	nil,                              // 28: Route.MetricsLabelsEntry
-	(*Context_Stat)(nil),             // 29: Context.Stat
-	(*Context_Conn)(nil),             // 30: Context.Conn
-	(*Context_Info)(nil),             // 31: Context.Info
-	(*Rule_List)(nil),                // 32: Rule.List
-	(*Rule_TCP)(nil),                 // 33: Rule.TCP
-	(*Rule_HTTP)(nil),                // 34: Rule.HTTP
-	(*Rule_Header)(nil),              // 35: Rule.Header
-	(*Rule_StringMatch)(nil),         // 36: Rule.StringMatch
-	(*Rule_TCP_PortRange)(nil),       // 37: Rule.TCP.PortRange
-	(*Rule_HTTP_Methods)(nil),        // 38: Rule.HTTP.Methods
-	(*Rule_HTTP_Headers)(nil),        // 39: Rule.HTTP.Headers
-	(*AccessEntry_UserAgent)(nil),    // 40: AccessEntry.UserAgent
-	(*AccessEntry_Request)(nil),      // 41: AccessEntry.Request
-	(*AccessEntry_ReverseProxy)(nil), // 42: AccessEntry.ReverseProxy
-	(*AccessEntry_Response)(nil),     // 43: AccessEntry.Response
-	(*AccessEntry_Info)(nil),         // 44: AccessEntry.Info
-	(*duration.Duration)(nil),        // 45: google.protobuf.Duration
-	(*empty.Empty)(nil),              // 46: google.protobuf.Empty
-	(*_struct.Struct)(nil),           // 47: google.protobuf.Struct
-	(*wrappers.StringValue)(nil),     // 48: google.protobuf.StringValue
+	(RaftLog_OP)(0),                     // 4: RaftLog.OP
+	(*ConfigRequest)(nil),               // 5: ConfigRequest
+	(*DeleteRequest)(nil),               // 6: DeleteRequest
+	(*Response)(nil),                    // 7: Response
+	(*Config)(nil),                      // 8: Config
+	(*WeightedAddr)(nil),                // 9: WeightedAddr
+	(*Address)(nil),                     // 10: Address
+	(*Middleware)(nil),                  // 11: Middleware
+	(*Bind)(nil),                        // 12: Bind
+	(*Route)(nil),                       // 13: Route
+	(*Speed)(nil),                       // 14: Speed
+	(*Retries)(nil),                     // 15: Retries
+	(*RetryBudget)(nil),                 // 16: RetryBudget
+	(*RequestMatch)(nil),                // 17: RequestMatch
+	(*Context)(nil),                     // 18: Context
+	(*Rule)(nil),                        // 19: Rule
+	(*AccessEntry)(nil),                 // 20: AccessEntry
+	(*RaftLog)(nil),                     // 21: RaftLog
+	nil,                                 // 22: WeightedAddr.MetricLabelsEntry
+	(*Middleware_List)(nil),             // 23: Middleware.List
+	(*Middleware_Wasm)(nil),             // 24: Middleware.Wasm
+	(*Middleware_StripPathPrefix)(nil),  // 25: Middleware.StripPathPrefix
+	(*Middleware_Wasm_Setting)(nil),     // 26: Middleware.Wasm.Setting
+	(*Middleware_Wasm_Config)(nil),      // 27: Middleware.Wasm.Config
+	(*Middleware_Wasm_Setting_Env)(nil), // 28: Middleware.Wasm.Setting.Env
+	(*Middleware_Wasm_Setting_DirectoryMap)(nil), // 29: Middleware.Wasm.Setting.DirectoryMap
+	nil,                              // 30: Route.MetricsLabelsEntry
+	(*Context_Stat)(nil),             // 31: Context.Stat
+	(*Context_Conn)(nil),             // 32: Context.Conn
+	(*Context_Info)(nil),             // 33: Context.Info
+	(*Rule_List)(nil),                // 34: Rule.List
+	(*Rule_TCP)(nil),                 // 35: Rule.TCP
+	(*Rule_HTTP)(nil),                // 36: Rule.HTTP
+	(*Rule_Header)(nil),              // 37: Rule.Header
+	(*Rule_StringMatch)(nil),         // 38: Rule.StringMatch
+	(*Rule_TCP_PortRange)(nil),       // 39: Rule.TCP.PortRange
+	(*Rule_HTTP_Methods)(nil),        // 40: Rule.HTTP.Methods
+	(*Rule_HTTP_Headers)(nil),        // 41: Rule.HTTP.Headers
+	(*AccessEntry_UserAgent)(nil),    // 42: AccessEntry.UserAgent
+	(*AccessEntry_Request)(nil),      // 43: AccessEntry.Request
+	(*AccessEntry_ReverseProxy)(nil), // 44: AccessEntry.ReverseProxy
+	(*AccessEntry_Response)(nil),     // 45: AccessEntry.Response
+	(*AccessEntry_Info)(nil),         // 46: AccessEntry.Info
+	(*duration.Duration)(nil),        // 47: google.protobuf.Duration
+	(*empty.Empty)(nil),              // 48: google.protobuf.Empty
+	(*_struct.Struct)(nil),           // 49: google.protobuf.Struct
+	(*wrappers.StringValue)(nil),     // 50: google.protobuf.StringValue
 }
 var file_tcp_proto_depIdxs = []int32{
-	12, // 0: Config.routes:type_name -> Route
-	9,  // 1: WeightedAddr.addr:type_name -> Address
-	20, // 2: WeightedAddr.metric_labels:type_name -> WeightedAddr.MetricLabelsEntry
-	22, // 3: Middleware.wasm:type_name -> Middleware.Wasm
-	23, // 4: Middleware.strip_path_prefix:type_name -> Middleware.StripPathPrefix
-	11, // 5: Route.bind:type_name -> Bind
-	16, // 6: Route.condition:type_name -> RequestMatch
-	28, // 7: Route.metrics_labels:type_name -> Route.MetricsLabelsEntry
-	14, // 8: Route.retries:type_name -> Retries
-	45, // 9: Route.timeout:type_name -> google.protobuf.Duration
-	45, // 10: Route.keepAlive:type_name -> google.protobuf.Duration
-	8,  // 11: Route.load_balance:type_name -> WeightedAddr
+	13, // 0: Config.routes:type_name -> Route
+	10, // 1: WeightedAddr.addr:type_name -> Address
+	22, // 2: WeightedAddr.metric_labels:type_name -> WeightedAddr.MetricLabelsEntry
+	24, // 3: Middleware.wasm:type_name -> Middleware.Wasm
+	25, // 4: Middleware.strip_path_prefix:type_name -> Middleware.StripPathPrefix
+	12, // 5: Route.bind:type_name -> Bind
+	17, // 6: Route.condition:type_name -> RequestMatch
+	30, // 7: Route.metrics_labels:type_name -> Route.MetricsLabelsEntry
+	15, // 8: Route.retries:type_name -> Retries
+	47, // 9: Route.timeout:type_name -> google.protobuf.Duration
+	47, // 10: Route.keepAlive:type_name -> google.protobuf.Duration
+	9,  // 11: Route.load_balance:type_name -> WeightedAddr
 	3,  // 12: Route.load_balance_algo:type_name -> Route.LoadBalanceAlgo
-	13, // 13: Route.speed:type_name -> Speed
-	18, // 14: Route.rule:type_name -> Rule
-	21, // 15: Route.middlewares:type_name -> Middleware.List
+	14, // 13: Route.speed:type_name -> Speed
+	19, // 14: Route.rule:type_name -> Rule
+	23, // 15: Route.middlewares:type_name -> Middleware.List
 	0,  // 16: Route.protocol:type_name -> Protocol
-	15, // 17: Retries.budget:type_name -> RetryBudget
-	45, // 18: RetryBudget.ttl:type_name -> google.protobuf.Duration
-	46, // 19: RequestMatch.fixed:type_name -> google.protobuf.Empty
+	16, // 17: Retries.budget:type_name -> RetryBudget
+	47, // 18: RetryBudget.ttl:type_name -> google.protobuf.Duration
+	48, // 19: RequestMatch.fixed:type_name -> google.protobuf.Empty
 	0,  // 20: Context.protocol:type_name -> Protocol
-	30, // 21: Context.downstream:type_name -> Context.Conn
-	30, // 22: Context.upstream:type_name -> Context.Conn
-	31, // 23: Context.info:type_name -> Context.Info
-	32, // 24: Rule.all:type_name -> Rule.List
-	32, // 25: Rule.any:type_name -> Rule.List
-	18, // 26: Rule.not:type_name -> Rule
-	33, // 27: Rule.tcp:type_name -> Rule.TCP
-	34, // 28: Rule.http:type_name -> Rule.HTTP
-	41, // 29: AccessEntry.request:type_name -> AccessEntry.Request
-	43, // 30: AccessEntry.response:type_name -> AccessEntry.Response
-	42, // 31: AccessEntry.reverse_proxy:type_name -> AccessEntry.ReverseProxy
-	44, // 32: AccessEntry.info:type_name -> AccessEntry.Info
-	45, // 33: AccessEntry.duration:type_name -> google.protobuf.Duration
-	10, // 34: Middleware.List.list:type_name -> Middleware
-	25, // 35: Middleware.Wasm.config:type_name -> Middleware.Wasm.Config
-	2,  // 36: Middleware.Wasm.order:type_name -> Middleware.ExecutionOrder
-	26, // 37: Middleware.Wasm.Setting.environments:type_name -> Middleware.Wasm.Setting.Env
-	27, // 38: Middleware.Wasm.Setting.map_directories:type_name -> Middleware.Wasm.Setting.DirectoryMap
-	24, // 39: Middleware.Wasm.Config.instance:type_name -> Middleware.Wasm.Setting
-	47, // 40: Middleware.Wasm.Config.plugin:type_name -> google.protobuf.Struct
-	29, // 41: Context.Conn.stat:type_name -> Context.Stat
-	48, // 42: Context.Info.sni:type_name -> google.protobuf.StringValue
-	48, // 43: Context.Info.host:type_name -> google.protobuf.StringValue
-	48, // 44: Context.Info.path:type_name -> google.protobuf.StringValue
-	18, // 45: Rule.List.rules:type_name -> Rule
-	37, // 46: Rule.TCP.ports:type_name -> Rule.TCP.PortRange
-	38, // 47: Rule.HTTP.methods:type_name -> Rule.HTTP.Methods
-	36, // 48: Rule.HTTP.path:type_name -> Rule.StringMatch
-	39, // 49: Rule.HTTP.headers:type_name -> Rule.HTTP.Headers
-	36, // 50: Rule.Header.value:type_name -> Rule.StringMatch
-	1,  // 51: Rule.HTTP.Methods.methods:type_name -> Method
-	35, // 52: Rule.HTTP.Headers.headers:type_name -> Rule.Header
-	40, // 53: AccessEntry.Request.user_agent:type_name -> AccessEntry.UserAgent
-	45, // 54: AccessEntry.Response.time_to_write_header:type_name -> google.protobuf.Duration
-	4,  // 55: Proxy.Get:input_type -> ConfigRequest
-	7,  // 56: Proxy.Put:input_type -> Config
-	7,  // 57: Proxy.Post:input_type -> Config
-	5,  // 58: Proxy.Delete:input_type -> DeleteRequest
-	7,  // 59: Proxy.Get:output_type -> Config
-	6,  // 60: Proxy.Put:output_type -> Response
-	6,  // 61: Proxy.Post:output_type -> Response
-	6,  // 62: Proxy.Delete:output_type -> Response
-	59, // [59:63] is the sub-list for method output_type
-	55, // [55:59] is the sub-list for method input_type
-	55, // [55:55] is the sub-list for extension type_name
-	55, // [55:55] is the sub-list for extension extendee
-	0,  // [0:55] is the sub-list for field type_name
+	32, // 21: Context.downstream:type_name -> Context.Conn
+	32, // 22: Context.upstream:type_name -> Context.Conn
+	33, // 23: Context.info:type_name -> Context.Info
+	34, // 24: Rule.all:type_name -> Rule.List
+	34, // 25: Rule.any:type_name -> Rule.List
+	19, // 26: Rule.not:type_name -> Rule
+	35, // 27: Rule.tcp:type_name -> Rule.TCP
+	36, // 28: Rule.http:type_name -> Rule.HTTP
+	43, // 29: AccessEntry.request:type_name -> AccessEntry.Request
+	45, // 30: AccessEntry.response:type_name -> AccessEntry.Response
+	44, // 31: AccessEntry.reverse_proxy:type_name -> AccessEntry.ReverseProxy
+	46, // 32: AccessEntry.info:type_name -> AccessEntry.Info
+	47, // 33: AccessEntry.duration:type_name -> google.protobuf.Duration
+	4,  // 34: RaftLog.op:type_name -> RaftLog.OP
+	11, // 35: Middleware.List.list:type_name -> Middleware
+	27, // 36: Middleware.Wasm.config:type_name -> Middleware.Wasm.Config
+	2,  // 37: Middleware.Wasm.order:type_name -> Middleware.ExecutionOrder
+	28, // 38: Middleware.Wasm.Setting.environments:type_name -> Middleware.Wasm.Setting.Env
+	29, // 39: Middleware.Wasm.Setting.map_directories:type_name -> Middleware.Wasm.Setting.DirectoryMap
+	26, // 40: Middleware.Wasm.Config.instance:type_name -> Middleware.Wasm.Setting
+	49, // 41: Middleware.Wasm.Config.plugin:type_name -> google.protobuf.Struct
+	31, // 42: Context.Conn.stat:type_name -> Context.Stat
+	50, // 43: Context.Info.sni:type_name -> google.protobuf.StringValue
+	50, // 44: Context.Info.host:type_name -> google.protobuf.StringValue
+	50, // 45: Context.Info.path:type_name -> google.protobuf.StringValue
+	19, // 46: Rule.List.rules:type_name -> Rule
+	39, // 47: Rule.TCP.ports:type_name -> Rule.TCP.PortRange
+	40, // 48: Rule.HTTP.methods:type_name -> Rule.HTTP.Methods
+	38, // 49: Rule.HTTP.path:type_name -> Rule.StringMatch
+	41, // 50: Rule.HTTP.headers:type_name -> Rule.HTTP.Headers
+	38, // 51: Rule.Header.value:type_name -> Rule.StringMatch
+	1,  // 52: Rule.HTTP.Methods.methods:type_name -> Method
+	37, // 53: Rule.HTTP.Headers.headers:type_name -> Rule.Header
+	42, // 54: AccessEntry.Request.user_agent:type_name -> AccessEntry.UserAgent
+	47, // 55: AccessEntry.Response.time_to_write_header:type_name -> google.protobuf.Duration
+	5,  // 56: Proxy.Get:input_type -> ConfigRequest
+	8,  // 57: Proxy.Put:input_type -> Config
+	8,  // 58: Proxy.Post:input_type -> Config
+	6,  // 59: Proxy.Delete:input_type -> DeleteRequest
+	8,  // 60: Proxy.Get:output_type -> Config
+	7,  // 61: Proxy.Put:output_type -> Response
+	7,  // 62: Proxy.Post:output_type -> Response
+	7,  // 63: Proxy.Delete:output_type -> Response
+	60, // [60:64] is the sub-list for method output_type
+	56, // [56:60] is the sub-list for method input_type
+	56, // [56:56] is the sub-list for extension type_name
+	56, // [56:56] is the sub-list for extension extendee
+	0,  // [0:56] is the sub-list for field type_name
 }
 
 func init() { file_tcp_proto_init() }
@@ -3804,8 +3952,8 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Middleware_List); i {
+		file_tcp_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RaftLog); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3817,7 +3965,7 @@ func file_tcp_proto_init() {
 			}
 		}
 		file_tcp_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Middleware_Wasm); i {
+			switch v := v.(*Middleware_List); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3829,7 +3977,7 @@ func file_tcp_proto_init() {
 			}
 		}
 		file_tcp_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Middleware_StripPathPrefix); i {
+			switch v := v.(*Middleware_Wasm); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3841,7 +3989,7 @@ func file_tcp_proto_init() {
 			}
 		}
 		file_tcp_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Middleware_Wasm_Setting); i {
+			switch v := v.(*Middleware_StripPathPrefix); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3853,7 +4001,7 @@ func file_tcp_proto_init() {
 			}
 		}
 		file_tcp_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Middleware_Wasm_Config); i {
+			switch v := v.(*Middleware_Wasm_Setting); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3865,7 +4013,7 @@ func file_tcp_proto_init() {
 			}
 		}
 		file_tcp_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Middleware_Wasm_Setting_Env); i {
+			switch v := v.(*Middleware_Wasm_Config); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3877,6 +4025,18 @@ func file_tcp_proto_init() {
 			}
 		}
 		file_tcp_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Middleware_Wasm_Setting_Env); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_tcp_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Middleware_Wasm_Setting_DirectoryMap); i {
 			case 0:
 				return &v.state
@@ -3888,7 +4048,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Context_Stat); i {
 			case 0:
 				return &v.state
@@ -3900,7 +4060,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Context_Conn); i {
 			case 0:
 				return &v.state
@@ -3912,7 +4072,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Context_Info); i {
 			case 0:
 				return &v.state
@@ -3924,7 +4084,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_List); i {
 			case 0:
 				return &v.state
@@ -3936,7 +4096,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_TCP); i {
 			case 0:
 				return &v.state
@@ -3948,7 +4108,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_HTTP); i {
 			case 0:
 				return &v.state
@@ -3960,7 +4120,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_Header); i {
 			case 0:
 				return &v.state
@@ -3972,7 +4132,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_StringMatch); i {
 			case 0:
 				return &v.state
@@ -3984,7 +4144,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_TCP_PortRange); i {
 			case 0:
 				return &v.state
@@ -3996,7 +4156,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_HTTP_Methods); i {
 			case 0:
 				return &v.state
@@ -4008,7 +4168,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Rule_HTTP_Headers); i {
 			case 0:
 				return &v.state
@@ -4020,7 +4180,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccessEntry_UserAgent); i {
 			case 0:
 				return &v.state
@@ -4032,7 +4192,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccessEntry_Request); i {
 			case 0:
 				return &v.state
@@ -4044,7 +4204,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccessEntry_ReverseProxy); i {
 			case 0:
 				return &v.state
@@ -4056,7 +4216,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccessEntry_Response); i {
 			case 0:
 				return &v.state
@@ -4068,7 +4228,7 @@ func file_tcp_proto_init() {
 				return nil
 			}
 		}
-		file_tcp_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
+		file_tcp_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccessEntry_Info); i {
 			case 0:
 				return &v.state
@@ -4106,18 +4266,22 @@ func file_tcp_proto_init() {
 		(*Rule_Tcp)(nil),
 		(*Rule_Http)(nil),
 	}
-	file_tcp_proto_msgTypes[29].OneofWrappers = []interface{}{
+	file_tcp_proto_msgTypes[16].OneofWrappers = []interface{}{
+		(*RaftLog_Data)(nil),
+		(*RaftLog_Prefix)(nil),
+	}
+	file_tcp_proto_msgTypes[30].OneofWrappers = []interface{}{
 		(*Rule_TCP_Port)(nil),
 		(*Rule_TCP_Ports)(nil),
 		(*Rule_TCP_Sni)(nil),
 	}
-	file_tcp_proto_msgTypes[30].OneofWrappers = []interface{}{
+	file_tcp_proto_msgTypes[31].OneofWrappers = []interface{}{
 		(*Rule_HTTP_Methods_)(nil),
 		(*Rule_HTTP_Path)(nil),
 		(*Rule_HTTP_Host)(nil),
 		(*Rule_HTTP_Headers_)(nil),
 	}
-	file_tcp_proto_msgTypes[32].OneofWrappers = []interface{}{
+	file_tcp_proto_msgTypes[33].OneofWrappers = []interface{}{
 		(*Rule_StringMatch_Exact)(nil),
 		(*Rule_StringMatch_Prefix)(nil),
 		(*Rule_StringMatch_Regexp)(nil),
@@ -4127,8 +4291,8 @@ func file_tcp_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_tcp_proto_rawDesc,
-			NumEnums:      4,
-			NumMessages:   41,
+			NumEnums:      5,
+			NumMessages:   42,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

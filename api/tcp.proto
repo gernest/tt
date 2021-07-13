@@ -337,3 +337,16 @@ message AccessEntry {
 
   google.protobuf.Duration duration = 5;
 }
+
+message RaftLog {
+  enum OP {
+    SET = 0;
+    GET = 2;
+    RANGE = 3;
+  }
+  oneof context {
+    bytes data = 1;
+    bytes prefix = 2;
+  }
+  OP op = 3;
+}
