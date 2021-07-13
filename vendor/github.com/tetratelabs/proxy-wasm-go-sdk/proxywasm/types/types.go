@@ -1,4 +1,4 @@
-// Copyright 2020 Tetrate
+// Copyright 2020-2021 Tetrate
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,99 +14,67 @@
 
 package types
 
+import "errors"
+
+// Action represents the action which Wasm contexts expects hosts to take.
 type Action uint32
 
 const (
+	// ActionContinue means that the host continues the processing.
 	ActionContinue Action = 0
-	ActionPause    Action = 1
+	// ActionPause means that the host pauses the processing.
+	ActionPause Action = 1
 )
 
+// PeerType represents the type of a peer of a connection.
 type PeerType uint32
 
 const (
+	// PeerTypeUnknown means the type of a peer is unknwo
 	PeerTypeUnknown PeerType = 0
-	PeerTypeLocal   PeerType = 1
-	PeerTypeRemote  PeerType = 2
+	// PeerTypeLocal means the type of a peer is local (i.e. proxy)
+	PeerTypeLocal PeerType = 1
+	// PeerTypeRemote means the type of a peer is remote (i.e. remote client)
+	PeerTypeRemote PeerType = 2
 )
 
-type LogLevel uint32
+// OnVMStartStatus is the tyep of status returned by OnVMStart
+type OnVMStartStatus bool
 
 const (
-	LogLevelTrace    LogLevel = 0
-	LogLevelDebug    LogLevel = 1
-	LogLevelInfo     LogLevel = 2
-	LogLevelWarn     LogLevel = 3
-	LogLevelError    LogLevel = 4
-	LogLevelCritical LogLevel = 5
-	LogLevelMax      LogLevel = 6
+	// OnVMStartStatusOK indicates that VMContext.OnVMStartStatus succeeded.
+	OnVMStartStatusOK OnVMStartStatus = true
+	// OnVMStartStatusFailed indicates that VMContext.OnVMStartStatus failed.
+	// The further processing for this VM never happens, and hosts would
+	// delete this VM.
+	OnVMStartStatusFailed OnVMStartStatus = false
 )
 
-func (l LogLevel) String() string {
-	switch l {
-	case LogLevelTrace:
-		return "trace"
-	case LogLevelDebug:
-		return "debug"
-	case LogLevelInfo:
-		return "info"
-	case LogLevelWarn:
-		return "warn"
-	case LogLevelError:
-		return "error"
-	case LogLevelCritical:
-		return "critical"
-	default:
-		panic("invalid log level")
-	}
-}
-
-type Status uint32
+// OnPluginStartStatus is the tyep of status returned by OnPluginStart
+type OnPluginStartStatus bool
 
 const (
-	StatusOK              Status = 0
-	StatusNotFound        Status = 1
-	StatusBadArgument     Status = 2
-	StatusEmpty           Status = 7
-	StatusCasMismatch     Status = 8
-	StatusInternalFailure Status = 10
+	// OnPluginStartStatusOK indicates that PluginContext.OnPluginStart succeeded.
+	OnPluginStartStatusOK OnPluginStartStatus = true
+	// OnPluginStartStatusFailed indicates that PluginContext.OnPluginStart failed.
+	// The further processing for that plugin context never happens.
+	OnPluginStartStatusFailed OnPluginStartStatus = false
 )
 
-type MapType uint32
-
-const (
-	MapTypeHttpRequestHeaders       MapType = 0
-	MapTypeHttpRequestTrailers      MapType = 1
-	MapTypeHttpResponseHeaders      MapType = 2
-	MapTypeHttpResponseTrailers     MapType = 3
-	MapTypeHttpCallResponseHeaders  MapType = 6
-	MapTypeHttpCallResponseTrailers MapType = 7
-)
-
-type BufferType uint32
-
-const (
-	BufferTypeHttpRequestBody      BufferType = 0
-	BufferTypeHttpResponseBody     BufferType = 1
-	BufferTypeDownstreamData       BufferType = 2
-	BufferTypeUpstreamData         BufferType = 3
-	BufferTypeHttpCallResponseBody BufferType = 4
-	BufferTypeGrpcReceiveBuffer    BufferType = 5
-	BufferTypeVMConfiguration      BufferType = 6
-	BufferTypePluginConfiguration  BufferType = 7
-	BufferTypeCallData             BufferType = 8
-)
-
-type StreamType uint32
-
-const (
-	StreamTypeRequest  StreamType = 0
-	StreamTypeResponse StreamType = 1
-)
-
-type MetricType uint32
-
-const (
-	MetricTypeCounter   = 0
-	MetricTypeGauge     = 1
-	MetricTypeHistogram = 2
+var (
+	// ErrorStatusNotFound means not found for various hostcalls.
+	ErrorStatusNotFound = errors.New("error status returned by host: not found")
+	// ErrorStatusNotFound means the arguments for a hostcall are invalid.
+	ErrorStatusBadArgument = errors.New("error status returned by host: bad argument")
+	// ErrorStatusNotFound means the target queue of DequeueSharedQueue call is empty.
+	ErrorStatusEmpty = errors.New("error status returned by host: empty")
+	// ErrorStatusNotFound means a given CAS value for SetSharedData is mismatched
+	// with the current value. That indicates that other Wasm VMs has already succeeded
+	// to set a value on the same key and the current CAS for the key is incremented.
+	// Having retry logic in the face of this error is recommended.
+	ErrorStatusCasMismatch = errors.New("error status returned by host: cas mismatch")
+	// ErrorStatusNotFound indicates an internal falure in hosts.
+	// In the face of this error, there's nothing we could do in the Wasm VM.
+	// Recommend simply abort or panic then.
+	ErrorInternalFailure = errors.New("error status returned by host: internal failure")
 )

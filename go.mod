@@ -18,7 +18,8 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prometheus v1.8.2-0.20210705204638-62598878dd08
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
-	github.com/tetratelabs/proxy-wasm-go-sdk v0.12.0
+	github.com/stretchr/testify v1.7.0
+	github.com/tetratelabs/proxy-wasm-go-sdk v0.13.0
 	github.com/urfave/cli v1.22.5
 	github.com/wasmerio/wasmer-go v1.0.3
 	go.uber.org/atomic v1.8.0

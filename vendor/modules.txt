@@ -13,6 +13,8 @@ github.com/beorn7/perks/quantile
 github.com/cespare/xxhash/v2
 # github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
 github.com/cpuguy83/go-md2man/v2/md2man
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/dgraph-io/ristretto v0.1.0
 ## explicit
 github.com/dgraph-io/ristretto
@@ -90,6 +92,8 @@ github.com/pion/transport/replaydetector
 github.com/pion/udp
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.11.0
 ## explicit
 github.com/prometheus/client_golang/prometheus
@@ -130,10 +134,15 @@ github.com/shurcooL/sanitized_anchor_name
 # github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
 ## explicit
 github.com/smallnest/weighted
-# github.com/tetratelabs/proxy-wasm-go-sdk v0.12.0
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
+# github.com/tetratelabs/proxy-wasm-go-sdk v0.13.0
 ## explicit
 github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm
-github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/rawhostcall
+github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/internal
+github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/proxytest
 github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types
 # github.com/urfave/cli v1.22.5
 ## explicit
@@ -275,6 +284,8 @@ google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/structpb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+gopkg.in/yaml.v3
 # mosn.io/proxy-wasm-go-host v0.1.1-0.20210524020952-3fb13ba763a6
 ## explicit
 mosn.io/proxy-wasm-go-host/proxywasm/common
