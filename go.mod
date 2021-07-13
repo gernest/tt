@@ -25,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.13.0
 	github.com/urfave/cli v1.22.5
-	github.com/wasmerio/wasmer-go v1.0.3
+	github.com/wasmerio/wasmer-go v1.0.4-0.20210708124130-72b0251581c7
 	go.uber.org/atomic v1.8.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6
