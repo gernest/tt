@@ -19,3 +19,8 @@ func SetMetric(ctx context.Context, m *api.AccessEntry) context.Context {
 func GetMetics(ctx context.Context) *api.AccessEntry {
 	return ctx.Value(metricsKey{}).(*api.AccessEntry)
 }
+
+type Cleaner interface {
+	OnClean(fn func())
+	Clean()
+}
