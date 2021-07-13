@@ -13,6 +13,8 @@ import (
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/reverse"
+	"github.com/gernest/tt/pkg/xhttp/xwasm"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 )
@@ -36,7 +38,7 @@ func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 			}
 			h = rh
 		}
-		chain := alice.New(buildMiddlewares(route)...).Then(h)
+		chain := alice.New(p.buildMiddlewares(route)...).Then(h)
 		for _, r := range buildRouters(m, route, info) {
 			r.Handler(&H{
 				h:    chain,
@@ -238,18 +240,26 @@ func StripPathPrefix(mw *api.Middleware_StripPathPrefix) alice.Constructor {
 	}
 }
 
-func buildMiddlewares(r *api.Route) (mw []alice.Constructor) {
+func (p *Proxy) buildMiddlewares(r *api.Route) (mw []alice.Constructor) {
 	for _, w := range r.GetMiddlewares().GetList() {
-		if h := ware(w); h != nil {
+		if h := p.ware(w); h != nil {
 			mw = append(mw, h)
 		}
 	}
 	return
 }
 
-func ware(mw *api.Middleware) alice.Constructor {
+func (p *Proxy) ware(mw *api.Middleware) alice.Constructor {
 	if strip := mw.GetStripPathPrefix(); strip != nil {
 		return StripPathPrefix(strip)
+	}
+	if ws := mw.GetWasm(); ws != nil {
+		m, err := xwasm.Handler(p.ctx, p.opts.Wasm.Dir, ws)
+		if err != nil {
+			zlg.Error(err, "Failed building wasm middleware")
+			return nil
+		}
+		return m
 	}
 	return nil
 }

@@ -75,6 +75,7 @@ func Handler(
 		return nil, err
 	}
 	base := NewImports(ctx, vm, mw, instance)
+	base.L = mwLog
 	rootABI := &proxywasm.ABIContext{
 		Imports:  base,
 		Instance: instance,
