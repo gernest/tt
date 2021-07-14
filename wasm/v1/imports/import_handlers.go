@@ -11,15 +11,13 @@ type Imports interface {
 	Logger
 	Base
 	Plugin
-	Buffer
 	L4
 	HTTPRequest
 	HTTPResponse
 	HTTPCall
 	KeyValue
-	SHaredData
+	SharedData
 	Queue
-	Timer
 	Metrics
 	GRPC
 	FFI
@@ -44,11 +42,6 @@ type Base interface {
 type Plugin interface {
 	GetPluginConfig() common.IoBuffer
 	GetVmConfig() common.IoBuffer
-}
-
-type Buffer interface {
-	GetCustomBuffer(bufferType x.BufferType) common.IoBuffer
-	GetCustomMap(mapType x.MapType) common.HeaderMap
 }
 
 type KeyValue interface {
@@ -87,7 +80,7 @@ type HTTPCall interface {
 	SendHttpResp(respCode int32, respCodeDetail common.IoBuffer, respBody common.IoBuffer, additionalHeaderMap common.HeaderMap, grpcCode int32) x.WasmResult
 }
 
-type SHaredData interface {
+type SharedData interface {
 	GetSharedData(key string) (string, uint32, x.WasmResult)
 	SetSharedData(key string, value string, cas uint32) x.WasmResult
 }
@@ -98,11 +91,6 @@ type Queue interface {
 	ResolveSharedQueue(queueName string) (uint32, x.WasmResult)
 	EnqueueSharedQueue(queueID uint32, data string) x.WasmResult
 	DequeueSharedQueue(queueID uint32) (string, x.WasmResult)
-}
-
-type Timer interface {
-	CreateTimer(period int32, oneTime bool) (uint32, x.WasmResult)
-	DeleteTimer(timerID uint32) x.WasmResult
 }
 
 type Metrics interface {
