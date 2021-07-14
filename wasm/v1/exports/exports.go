@@ -1,7 +1,7 @@
 package exports
 
 import (
-	x "mosn.io/proxy-wasm-go-host/proxywasm/v2"
+	x "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 )
 
 var _ x.Exports = Exports(nil)
@@ -28,8 +28,8 @@ type Context interface {
 }
 
 type Configuration interface {
-	ProxyOnVmStart(vmID int32, vmConfigurationSize int32) (int32, error)
-	ProxyOnPluginStart(pluginID int32, pluginConfigurationSize int32) (int32, error)
+	ProxyOnVmStart(rootContextID int32, vmConfigurationSize int32) (int32, error)
+	ProxyOnConfigure(rootContextID int32, pluginConfigurationSize int32) (int32, error)
 }
 
 type L4 interface {
