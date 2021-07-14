@@ -11,7 +11,8 @@ type Exports interface {
 	Context
 	Configuration
 	L4
-	HTTP
+	HTTPRequest
+	HTTPResponse
 	GRPC
 	Timer
 	Queue
@@ -19,11 +20,14 @@ type Exports interface {
 }
 
 type Integration interface {
+	ProxyOnDone(contextID int32) (int32, error)
+	ProxyOnLog(contextID int32) error
+	ProxyOnDelete(contextID int32) error
 	ProxyOnMemoryAllocate(memorySize int32) (int32, error)
 }
 
 type Context interface {
-	ProxyOnContextCreate(contextID int32, parentContextID int32, contextType x.ContextType) (int32, error)
+	ProxyOnContextCreate(contextID int32, parentContextID int32) error
 	ProxyOnContextFinalize(contextID int32) (int32, error)
 }
 
@@ -33,40 +37,41 @@ type Configuration interface {
 }
 
 type L4 interface {
-	ProxyOnNewConnection(streamID int32) (x.Action, error)
-	ProxyOnDownstreamData(streamID int32, dataSize int32, endOfStream int32) (x.Action, error)
-	ProxyOnDownstreamClose(contextID int32, closeSource x.CloseSourceType) error
-	ProxyOnUpstreamData(streamID int32, dataSize int32, endOfStream int32) (x.Action, error)
-	ProxyOnUpstreamClose(streamID int32, closeSource x.CloseSourceType) error
+	ProxyOnNewConnection(contextID int32) (x.Action, error)
+	ProxyOnDownstreamData(contextID int32, dataLength int32, endOfStream int32) (x.Action, error)
+	ProxyOnDownstreamConnectionClose(contextID int32, closeType int32) error
+	ProxyOnUpstreamData(contextID int32, dataLength int32, endOfStream int32) (x.Action, error)
+	ProxyOnUpstreamConnectionClose(contextID int32, closeType int32) error
 }
 
-type HTTP interface {
-	ProxyOnHttpRequestHeaders(streamID int32, numHeaders int32, endOfStream int32) (x.Action, error)
-	ProxyOnHttpRequestBody(streamID int32, bodySize int32, endOfStream int32) (x.Action, error)
-	ProxyOnHttpRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (x.Action, error)
-	ProxyOnHttpRequestMetadata(streamID int32, numElements int32) (x.Action, error)
+type HTTPRequest interface {
+	ProxyOnRequestHeaders(contextID int32, headers int32, endOfStream int32) (x.Action, error)
+	ProxyOnRequestBody(contextID int32, bodyBufferLength int32, endOfStream int32) (x.Action, error)
+	ProxyOnRequestTrailers(contextID int32, trailers int32) (x.Action, error)
+	ProxyOnRequestMetadata(contextID int32, nElements int32) (x.Action, error)
+}
+type HTTPResponse interface {
+	ProxyOnResponseHeaders(contextID int32, headers int32, endOfStream int32) (x.Action, error)
+	ProxyOnResponseBody(contextID int32, bodyBufferLength int32, endOfStream int32) (x.Action, error)
+	ProxyOnResponseTrailers(contextID int32, trailers int32) (x.Action, error)
+	ProxyOnResponseMetadata(contextID int32, nElements int32) (x.Action, error)
 
-	ProxyOnHttpResponseHeaders(streamID int32, numHeaders int32, endOfStream int32) (x.Action, error)
-	ProxyOnHttpResponseBody(streamID int32, bodySize int32, endOfStream int32) (x.Action, error)
-	ProxyOnHttpResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (x.Action, error)
-	ProxyOnHttpResponseMetadata(streamID int32, numElements int32) (x.Action, error)
-
-	ProxyOnHttpCallResponse(calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error
+	ProxyOnHttpCallResponse(contextID int32, token int32, headers int32, bodySize int32, trailers int32) error
 }
 
 type Queue interface {
-	ProxyOnQueueReady(queueID int32) error
+	ProxyOnQueueReady(rootContextID int32, token int32) error
 }
 
 type Timer interface {
-	ProxyOnTimerReady(timerID int32) error
+	ProxyOnTick(rootContextID int32) error
 }
 
 type GRPC interface {
-	ProxyOnGrpcCallResponseHeaderMetadata(calloutID int32, numHeaders int32) error
-	ProxyOnGrpcCallResponseMessage(calloutID int32, messageSize int32) error
-	ProxyOnGrpcCallResponseTrailerMetadata(calloutID int32, numTrailers int32) error
-	ProxyOnGrpcCallClose(calloutID int32, statusCode int32) error
+	ProxyOnGrpcCallResponseHeaderMetadata(contextID int32, calloutID int32, nElements int32) error
+	ProxyOnGrpcCallResponseMessage(contextID int32, calloutID int32, msgSize int32) error
+	ProxyOnGrpcCallResponseTrailerMetadata(contextID int32, calloutID int32, nElements int32) error
+	ProxyOnGrpcCallClose(contextID int32, calloutID int32, statusCode int32) error
 }
 
 type FFI interface {
