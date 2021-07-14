@@ -16,7 +16,6 @@ type Exports interface {
 	GRPC
 	Timer
 	Queue
-	FFI
 }
 
 type Integration interface {
@@ -72,8 +71,4 @@ type GRPC interface {
 	ProxyOnGrpcCallResponseMessage(contextID int32, calloutID int32, msgSize int32) error
 	ProxyOnGrpcCallResponseTrailerMetadata(contextID int32, calloutID int32, nElements int32) error
 	ProxyOnGrpcCallClose(contextID int32, calloutID int32, statusCode int32) error
-}
-
-type FFI interface {
-	ProxyOnCustomCallback(customCallbackID int32, parametersSize int32) (int32, error)
 }
