@@ -12,18 +12,47 @@ var _ imports.Plugin = (*Plugin)(nil)
 var m jsonpb.Marshaler
 
 type Plugin struct {
-	MW        *api.Middleware_Wasm
+	Config    *api.Middleware_Wasm_Config
 	NewBuffer func() *buffers.IO
 }
 
+func safeBuffer() (create func() *buffers.IO, release func()) {
+	var ls []*buffers.IO
+	return func() *buffers.IO {
+			b := buffers.Get()
+			ls = append(ls, b)
+			return b
+		}, func() {
+			buffers.Put(ls...)
+		}
+}
+
 func (p *Plugin) GetPluginConfig() common.IoBuffer {
-	buf := p.NewBuffer()
-	m.Marshal(buf, p.MW.GetConfig().Plugin)
-	return buf
+	if p.Config == nil {
+		return nil
+	}
+	if p.NewBuffer == nil {
+		return nil
+	}
+	if x := p.Config.GetPlugin(); x != nil {
+		buf := p.NewBuffer()
+		m.Marshal(buf, x)
+		return buf
+	}
+	return nil
 }
 
 func (p *Plugin) GetVmConfig() common.IoBuffer {
-	buf := p.NewBuffer()
-	m.Marshal(buf, p.MW.GetConfig().Instance)
-	return buf
+	if p.Config == nil {
+		return nil
+	}
+	if p.NewBuffer == nil {
+		return nil
+	}
+	if i := p.Config.GetInstance(); i != nil {
+		buf := p.NewBuffer()
+		m.Marshal(buf, i)
+		return buf
+	}
+	return nil
 }

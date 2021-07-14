@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"path/filepath"
+	"runtime"
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/zlg"
@@ -76,6 +77,11 @@ func Handler(
 	}
 	base := NewImports(ctx, vm, mw, instance)
 	base.L = mwLog
+	bufFn, releaseBuf := safeBuffer()
+	base.NewBuffer = bufFn
+	runtime.SetFinalizer(base, func() {
+		releaseBuf()
+	})
 	rootABI := &proxywasm.ABIContext{
 		Imports:  base,
 		Instance: instance,
@@ -88,7 +94,6 @@ func Handler(
 		mwLog.Error("Failed creating root context", zap.Error(err))
 		return nil, err
 	}
-
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// create a http context
@@ -97,6 +102,12 @@ func Handler(
 			baseCtx.Request.Request = r
 			mwLog = mwLog.With(zap.Int32("httpContextID", httpContextID))
 			baseCtx.L = mwLog
+			ctxBuf, releaseCTxBuf := safeBuffer()
+			// make sure all buffers created in this context are properly released. after
+			// the request has been served.
+			defer releaseCTxBuf()
+			baseCtx.NewBuffer = ctxBuf
+
 			activeABI := &proxywasm.ABIContext{
 				Imports:  baseCtx,
 				Instance: instance,

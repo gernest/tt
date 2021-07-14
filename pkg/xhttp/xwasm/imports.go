@@ -10,6 +10,7 @@ var _ proxywasm.ImportsHandler = (*Wasm)(nil)
 type Wasm struct {
 	Zap
 	Request
+	Plugin
 }
 
 func (d *Wasm) Clone() *Wasm {
@@ -82,11 +83,14 @@ func (d *Wasm) GetUpstreamData() common.IoBuffer { return nil }
 
 func (d *Wasm) GetHttpCalloutResponseBody() common.IoBuffer { return nil }
 
-func (d *Wasm) GetPluginConfig() common.IoBuffer { return nil }
+func (d *Wasm) GetPluginConfig() common.IoBuffer { return d.Plugin.GetPluginConfig() }
 
-func (d *Wasm) GetVmConfig() common.IoBuffer { return nil }
+func (d *Wasm) GetVmConfig() common.IoBuffer { return d.Plugin.GetVmConfig() }
 
 func (d *Wasm) GetCustomBuffer(bufferType proxywasm.BufferType) common.IoBuffer {
+	if d.NewBuffer != nil {
+		return d.NewBuffer()
+	}
 	return nil
 }
 
