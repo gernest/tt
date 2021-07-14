@@ -11,6 +11,7 @@ import (
 	"github.com/gernest/tt/api"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v2"
 )
 
 var (
@@ -29,6 +30,7 @@ type Instance struct {
 	vm           *Wasm
 	importObject *wasmerGo.ImportObject
 	instance     *wasmerGo.Instance
+	module       *wasmerGo.Module
 	mw           *api.Middleware_Wasm
 
 	lock     sync.Mutex
@@ -46,16 +48,17 @@ type Instance struct {
 
 func NewWasmerInstance(vm *Wasm,
 	imp *wasmerGo.ImportObject,
-	instance *wasmerGo.Instance,
+	module *wasmerGo.Module,
 	mw *api.Middleware_Wasm,
 ) *Instance {
 	ins := &Instance{
 		vm:           vm,
 		importObject: imp,
-		instance:     instance,
+		module:       module,
 		mw:           mw,
 	}
 	ins.stopCond = sync.NewCond(&ins.lock)
+	proxywasm.RegisterImports(ins)
 	return ins
 }
 
@@ -109,6 +112,11 @@ func (w *Instance) GetModule() common.WasmModule {
 }
 
 func (w *Instance) Start() error {
+	inst, err := wasmerGo.NewInstance(w.module, w.importObject)
+	if err != nil {
+		return err
+	}
+	w.instance = inst
 	f, err := w.instance.Exports.GetFunction("_start")
 	if err != nil {
 		return err

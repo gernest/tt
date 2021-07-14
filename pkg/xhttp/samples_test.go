@@ -8,6 +8,7 @@ import (
 
 	"github.com/gernest/tt/api"
 	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestGenerateTestConfig(t *testing.T) {
@@ -41,6 +42,21 @@ var sample0 = &api.Route{
 				Match: &api.Middleware_StripPathPrefix_{
 					StripPathPrefix: &api.Middleware_StripPathPrefix{
 						Prefix: "/httpbin/",
+					},
+				},
+			},
+			{
+				Match: &api.Middleware_Wasm_{
+					Wasm: &api.Middleware_Wasm{
+						Name:   "log_http_headers",
+						Module: "http_headers.wasm",
+						Order:  api.Middleware_POST,
+						Config: &api.Middleware_Wasm_Config{
+							Instance: &api.Middleware_Wasm_Setting{
+								ProgramName: "log_http_headers",
+							},
+							Plugin: &structpb.Struct{},
+						},
 					},
 				},
 			},

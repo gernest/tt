@@ -46,20 +46,20 @@ func Handler(
 	ctx context.Context,
 	wasmModulesPath string,
 	mw *api.Middleware_Wasm) (func(http.Handler) http.Handler, error) {
-	vm := wasm.New()
 	file := filepath.Join(wasmModulesPath, mw.Module)
-	zlg.Info("Compiling wasm module",
+	mwLog := zlg.Logger.Named("PROXY_WASM").With(
 		zap.String("middleware", mw.Name),
 		zap.String("module", mw.Module),
 	)
-	zlg.Debug("Module path " + file)
+	mwLog.Info("Compiling wasm module")
+	mwLog.Debug("Module path " + file)
+	vm := wasm.New(mwLog)
 	if err := vm.CompileFile(file); err != nil {
 		return nil, err
 	}
 	var id atomic.Int32
 	rootContext := id.Inc()
-	mwLog := zlg.Logger.Named("PROXY_WASM").With(
-		zap.String("middleware", mw.Name),
+	mwLog = mwLog.With(
 		zap.Int32("rootContext", rootContext),
 	)
 	mwLog.Info("Creating new wasm instance")

@@ -8,6 +8,7 @@ import (
 var _ x.ImportsHandler = Imports(nil)
 
 type Imports interface {
+	Logger
 	Base
 	Plugin
 	Buffer
@@ -26,7 +27,6 @@ type Logger interface {
 }
 
 type Base interface {
-	Logger
 	// for golang host environment
 	// Wait until async call return, eg. sync http call in golang
 	Wait() x.Action

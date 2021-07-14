@@ -9,6 +9,7 @@ var _ proxywasm.ImportsHandler = (*Wasm)(nil)
 
 type Wasm struct {
 	Zap
+	Base
 	Request
 	Plugin
 }
@@ -24,11 +25,11 @@ func nyet() proxywasm.Result {
 }
 
 func (d *Wasm) SetEffectiveContext(contextID int32) proxywasm.Result {
-	return proxywasm.ResultUnimplemented
+	return d.Base.SetEffectiveContext(contextID)
 }
 
 func (d *Wasm) ContextFinalize() proxywasm.Result {
-	return proxywasm.ResultUnimplemented
+	return d.Base.ContextFinalize()
 }
 
 func (d *Wasm) ResumeDownStream() proxywasm.Result {

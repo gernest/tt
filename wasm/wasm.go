@@ -5,11 +5,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/gernest/tt/api"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+	"go.uber.org/zap"
 )
 
 var ErrModuleNotFound = errors.New("module: 404")
@@ -18,15 +18,17 @@ type Wasm struct {
 	engine  *wasmerGo.Engine
 	store   *wasmerGo.Store
 	mu      sync.RWMutex
+	log     *zap.Logger
 	modules map[string]*wasmerGo.Module
 }
 
-func New() *Wasm {
+func New(lg *zap.Logger) *Wasm {
 	e := wasmerGo.NewEngine()
 	s := wasmerGo.NewStore(e)
 	return &Wasm{
 		engine:  e,
 		store:   s,
+		log:     lg,
 		modules: make(map[string]*wasmerGo.Module),
 	}
 }
@@ -37,12 +39,13 @@ func (w *Wasm) Compile(name string, wasmBytes []byte) error {
 		return err
 	}
 	w.modules[name] = m
+	w.log.Info("Created wasm module", zap.String("name", name))
 	return nil
 }
 
 func (w *Wasm) NewInstance(mw *api.Middleware_Wasm) (*Instance, error) {
 	opts := mw.GetConfig().Instance
-	m, err := w.get(mw.GetName())
+	m, err := w.get(moduleName(mw))
 	if err != nil {
 		return nil, err
 	}
@@ -86,11 +89,11 @@ func (w *Wasm) NewInstance(mw *api.Middleware_Wasm) (*Instance, error) {
 	if err != nil {
 		return nil, err
 	}
-	inst, err := wasmerGo.NewInstance(m, o)
-	if err != nil {
-		return nil, err
-	}
-	return NewWasmerInstance(w, o, inst, mw), nil
+	return NewWasmerInstance(w, o, m, mw), nil
+}
+
+func moduleName(mw *api.Middleware_Wasm) string {
+	return name(mw.GetModule())
 }
 
 func (w *Wasm) get(name string) (*wasmerGo.Module, error) {
@@ -125,5 +128,5 @@ func (w *Wasm) CompileFile(path string) error {
 }
 
 func name(path string) string {
-	return strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	return filepath.Base(path)
 }

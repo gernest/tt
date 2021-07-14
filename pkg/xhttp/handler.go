@@ -14,7 +14,6 @@ import (
 	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/reverse"
 	"github.com/gernest/tt/pkg/xhttp/xwasm"
-	"github.com/gernest/tt/pkg/zlg"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 )
@@ -256,7 +255,6 @@ func (p *Proxy) ware(mw *api.Middleware) alice.Constructor {
 	if ws := mw.GetWasm(); ws != nil {
 		m, err := xwasm.Handler(p.ctx, p.opts.Wasm.Dir, ws)
 		if err != nil {
-			zlg.Error(err, "Failed building wasm middleware")
 			return nil
 		}
 		return m
