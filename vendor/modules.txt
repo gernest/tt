@@ -344,4 +344,5 @@ gopkg.in/yaml.v3
 # mosn.io/proxy-wasm-go-host v0.1.1-0.20210524020952-3fb13ba763a6
 ## explicit
 mosn.io/proxy-wasm-go-host/proxywasm/common
+mosn.io/proxy-wasm-go-host/proxywasm/v1
 mosn.io/proxy-wasm-go-host/proxywasm/v2
