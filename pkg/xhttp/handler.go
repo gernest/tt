@@ -13,7 +13,8 @@ import (
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/reverse"
-	"github.com/gernest/tt/wasm/handler"
+	handlerv1 "github.com/gernest/tt/wasm/v1/handler"
+	handlerv2 "github.com/gernest/tt/wasm/v2/handler"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 )
@@ -253,11 +254,20 @@ func (p *Proxy) ware(mw *api.Middleware) alice.Constructor {
 		return StripPathPrefix(strip)
 	}
 	if ws := mw.GetWasm(); ws != nil {
-		m, err := handler.New(p.ctx, p.opts.Wasm.Dir, ws)
-		if err != nil {
-			return nil
+		switch ws.Version {
+		case api.Middleware_V1:
+			m, err := handlerv1.New(p.ctx, p.opts.Wasm.Dir, ws)
+			if err != nil {
+				return nil
+			}
+			return m.Handle
+		case api.Middleware_V2:
+			m, err := handlerv2.New(p.ctx, p.opts.Wasm.Dir, ws)
+			if err != nil {
+				return nil
+			}
+			return m.Handle
 		}
-		return m.Handle
 	}
 	return nil
 }

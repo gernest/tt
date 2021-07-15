@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/wasm/buffers"
-	"github.com/gernest/tt/wasm/imports"
+	"github.com/gernest/tt/wasm/v2/imports"
 	"github.com/golang/protobuf/jsonpb"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )

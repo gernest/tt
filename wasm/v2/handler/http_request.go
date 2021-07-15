@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gernest/tt/wasm/imports"
+	"github.com/gernest/tt/wasm/v2/imports"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 

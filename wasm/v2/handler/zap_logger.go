@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/gernest/tt/wasm/imports"
+	"github.com/gernest/tt/wasm/v2/imports"
 	"go.uber.org/zap"
 	x "mosn.io/proxy-wasm-go-host/proxywasm/v2"
 )
