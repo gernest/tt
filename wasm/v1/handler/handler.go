@@ -100,6 +100,9 @@ func (h *H) Handle(next http.Handler) http.Handler {
 		baseCtx.NewBuffer = ctxBuf
 
 		abi := h.abi(baseCtx)
+		abi.Instance.Lock(abi)
+		defer abi.Instance.Unlock()
+
 		exports := abi.GetExports()
 		ctx := &ExecContext{
 			Log:         mwLog,
