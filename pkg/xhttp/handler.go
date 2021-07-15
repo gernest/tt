@@ -13,7 +13,7 @@ import (
 	"github.com/gernest/tt/pkg/hrf"
 	"github.com/gernest/tt/pkg/meta"
 	"github.com/gernest/tt/pkg/reverse"
-	"github.com/gernest/tt/pkg/xhttp/xwasm"
+	"github.com/gernest/tt/wasm/handler"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 )
@@ -253,11 +253,11 @@ func (p *Proxy) ware(mw *api.Middleware) alice.Constructor {
 		return StripPathPrefix(strip)
 	}
 	if ws := mw.GetWasm(); ws != nil {
-		m, err := xwasm.Handler(p.ctx, p.opts.Wasm.Dir, ws)
+		m, err := handler.New(p.ctx, p.opts.Wasm.Dir, ws)
 		if err != nil {
 			return nil
 		}
-		return m
+		return m.Handle
 	}
 	return nil
 }
