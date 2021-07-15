@@ -19,23 +19,3 @@ const (
 	Duration           = "req_duration"
 	Code               = "res_code"
 )
-
-var All = []string{
-	Route,
-	Service,
-	Target,
-	Code,
-	Host,
-	Path,
-	Method,
-
-	UserAgentName,
-	UserAgentVersion,
-	UserAgentOs,
-	UserAgentOsVersion,
-	UserAgentDevice,
-	UserAgentMobile,
-	UserAgentTablet,
-	UserAgentDesktop,
-	UserAgentBot,
-}

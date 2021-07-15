@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"path/filepath"
-	"runtime"
 
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/zlg"
@@ -61,10 +60,8 @@ func New(
 	base := &Wasm{}
 	base.L = mwLog
 	bufFn, releaseBuf := safeBuffer()
+	defer releaseBuf()
 	base.NewBuffer = bufFn
-	runtime.SetFinalizer(base, func() {
-		releaseBuf()
-	})
 	rootABI := &proxywasm.ABIContext{
 		Imports:  base,
 		Instance: instance,

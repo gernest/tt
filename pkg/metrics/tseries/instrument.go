@@ -17,8 +17,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gernest/tt/pkg/xhttp/xlabels"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -62,7 +60,7 @@ var timeToHeader = prometheus.NewHistogramVec(
 		Namespace: "tt",
 		Name:      "time_to_write_headers",
 	},
-	xlabels.All,
+	[]string{"code", "method"},
 )
 
 func Record(

@@ -11,7 +11,8 @@ import (
 	"github.com/gernest/tt/api"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
-	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v2"
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
+	v2 "mosn.io/proxy-wasm-go-host/proxywasm/v2"
 )
 
 var (
@@ -58,7 +59,12 @@ func NewWasmerInstance(vm *Wasm,
 		mw:           mw,
 	}
 	ins.stopCond = sync.NewCond(&ins.lock)
-	proxywasm.RegisterImports(ins)
+	switch mw.Version {
+	case api.Middleware_V1:
+		v1.RegisterImports(ins)
+	case api.Middleware_V2:
+		v2.RegisterImports(ins)
+	}
 	return ins
 }
 
