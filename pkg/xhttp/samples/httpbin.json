@@ -32,7 +32,7 @@
             "plugin": {
               }
           },
-          "order": "POST"
+          "version": "V2"
         }
       }
     ]
