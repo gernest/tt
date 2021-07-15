@@ -11,7 +11,7 @@ import (
 	"github.com/gernest/tt/wasm"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
-	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v2"
+	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 )
 
 type H struct {
@@ -72,7 +72,7 @@ func New(
 	export := rootABI.GetExports()
 	// create root plugin context
 	mwLog.Info("Creating root context")
-	_, err = export.ProxyOnContextCreate(rootContext, 0, proxywasm.ContextTypePluginContext)
+	err = export.ProxyOnContextCreate(rootContext, 0)
 	if err != nil {
 		mwLog.Error("Failed creating root context", zap.Error(err))
 		return nil, err
@@ -121,7 +121,7 @@ func (h *H) Handle(next http.Handler) http.Handler {
 				mwLog.Error("ProxyOnContextFinalize", zap.Error(err))
 			}
 		}()
-		action, err := exports.ProxyOnHttpRequestHeaders(httpContextID, int32(len(r.Header)), 0)
+		action, err := exports.ProxyOnRequestHeaders(httpContextID, int32(len(r.Header)), 0)
 		if err != nil {
 			mwLog.Error("ProxyOnHttpRequestHeaders", zap.Error(err))
 			return
@@ -152,10 +152,9 @@ type ExecContext struct {
 }
 
 func (e *ExecContext) Before() error {
-	_, err := e.Exports.ProxyOnContextCreate(
-		e.ContextID, e.RootContext, proxywasm.ContextTypeHttpContext,
+	return e.Exports.ProxyOnContextCreate(
+		e.ContextID, e.RootContext,
 	)
-	return err
 }
 
 func (e *ExecContext) Apply() (applyNext bool) {
@@ -181,21 +180,21 @@ func (e *ExecContext) apply(fns ...applyFn) (applyNext bool) {
 type applyFn func() (action proxywasm.Action, name string, err error)
 
 func (e *ExecContext) After() error {
-	_, err := e.Exports.ProxyOnContextFinalize(e.ContextID)
+	_, err := e.Exports.ProxyOnDone(e.ContextID)
 	return err
 }
 
 func (e *ExecContext) httpRequest() []applyFn {
 	return []applyFn{
 		func() (action proxywasm.Action, name string, err error) {
-			a, err := e.Exports.ProxyOnHttpRequestHeaders(
+			a, err := e.Exports.ProxyOnRequestHeaders(
 				e.ContextID, int32(len(e.Request.Header)), 0,
 			)
 			return a, "ProxyOnHttpRequestHeaders", err
 		},
 		func() (action proxywasm.Action, name string, err error) {
-			a, err := e.Exports.ProxyOnHttpRequestTrailers(
-				e.ContextID, int32(len(e.Request.Trailer)), 0,
+			a, err := e.Exports.ProxyOnRequestTrailers(
+				e.ContextID, int32(len(e.Request.Trailer)),
 			)
 			return a, "ProxyOnHttpRequestTrailers", err
 		},
