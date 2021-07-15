@@ -48,9 +48,9 @@ var sample0 = &api.Route{
 			{
 				Match: &api.Middleware_Wasm_{
 					Wasm: &api.Middleware_Wasm{
-						Name:   "log_http_headers",
-						Module: "http_headers.wasm",
-						Order:  api.Middleware_POST,
+						Name:    "log_http_headers",
+						Module:  "http_headers.wasm",
+						Version: api.Middleware_V1,
 						Config: &api.Middleware_Wasm_Config{
 							Instance: &api.Middleware_Wasm_Setting{
 								ProgramName: "log_http_headers",

@@ -44,11 +44,11 @@ message Address {
 message Middleware {
   message List { repeated Middleware list = 1; }
 
-  enum ExecutionOrder {
+  enum Version {
     // PRE signals applying the middleware before the final handler.
-    PRE = 0;
+    V1 = 0;
     // POST signals executing the middleware after the last handler.
-    POST = 1;
+    V2 = 1;
   }
 
   oneof match {
@@ -99,7 +99,7 @@ message Middleware {
 
     // Options for creating the wasm module instance.
     Config config = 3;
-    ExecutionOrder order = 4;
+    Version version = 4;
   }
 
   message StripPathPrefix { string prefix = 1; }
