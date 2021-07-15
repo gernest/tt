@@ -1,4 +1,4 @@
-package xwasm
+package handler
 
 import (
 	"github.com/gernest/tt/api"
