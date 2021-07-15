@@ -89,17 +89,20 @@ func (h *H) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// create a http context
 		httpContextID := h.id.Inc()
-		baseCtx := h.base.Clone()
-		baseCtx.Request.Request = r
 		mwLog := h.log.With(zap.Int32("httpContextID", httpContextID))
-		baseCtx.L = mwLog
-		ctxBuf, releaseCTxBuf := safeBuffer()
-		// make sure all buffers created in this context are properly released. after
-		// the request has been served.
-		defer releaseCTxBuf()
-		baseCtx.NewBuffer = ctxBuf
+		ctxBuf, releaseBuffers := safeBuffer()
+		defer releaseBuffers()
 
-		abi := h.abi(baseCtx)
+		abi := h.abi(
+			// set request
+			func(n *Wasm) {
+				n.Zap.L = mwLog
+				n.Request.Request = r
+				n.Response.Response = w
+				n.Plugin.Config = h.mw.GetConfig()
+				n.Plugin.NewBuffer = ctxBuf
+			},
+		)
 		abi.Instance.Lock(abi)
 		defer abi.Instance.Unlock()
 
@@ -109,6 +112,8 @@ func (h *H) Handle(next http.Handler) http.Handler {
 			ContextID:   httpContextID,
 			RootContext: h.rootContext,
 			Exports:     exports,
+			Request:     r,
+			Response:    w,
 		}
 		if err := ctx.Before(); err != nil {
 			mwLog.Error("ProxyOnContextCreate", zap.Error(err))
@@ -121,19 +126,18 @@ func (h *H) Handle(next http.Handler) http.Handler {
 				mwLog.Error("ProxyOnContextFinalize", zap.Error(err))
 			}
 		}()
-		action, err := exports.ProxyOnRequestHeaders(httpContextID, int32(len(r.Header)), 0)
-		if err != nil {
-			mwLog.Error("ProxyOnHttpRequestHeaders", zap.Error(err))
-			return
-		}
-		mwLog.Info("Responded with", zap.Int32("action", int32(action)))
+		ctx.Apply()
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (h *H) abi(b *Wasm) *proxywasm.ABIContext {
+func (h *H) abi(modify ...func(*Wasm)) *proxywasm.ABIContext {
+	w := &Wasm{}
+	for _, fn := range modify {
+		fn(w)
+	}
 	return &proxywasm.ABIContext{
-		Imports:  b,
+		Imports:  w,
 		Instance: h.instance,
 	}
 }

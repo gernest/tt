@@ -22,7 +22,3 @@ type Wasm struct {
 	CustomExtension
 	SharedData
 }
-
-func (d *Wasm) Clone() *Wasm {
-	return &Wasm{}
-}
