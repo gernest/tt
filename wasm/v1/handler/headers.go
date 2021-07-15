@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"net/http"
-	"net/textproto"
 	"sync"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
@@ -16,15 +15,7 @@ type Header struct {
 }
 
 func (h *Header) Get(key string) (string, bool) {
-	key = textproto.CanonicalMIMEHeaderKey(key)
-	v, ok := h.head[key]
-	if ok {
-		if len(v) == 0 {
-			return "", true
-		}
-		return v[0], true
-	}
-	return "", false
+	return h.head.Get(key), true
 }
 
 func (h *Header) Set(key, value string) {
