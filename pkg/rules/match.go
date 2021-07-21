@@ -58,8 +58,6 @@ func build(r *api.Rule) (match Matcher, err error) {
 		match = not(n)
 	case *api.Rule_Tcp:
 		return buildTCP(e)
-	case *api.Rule_Http:
-		return buildHTTP(e)
 	}
 	return
 }
@@ -76,18 +74,6 @@ func buildTCP(r *api.Rule_Tcp) (match Matcher, err error) {
 		match = MatchFunc(func(ctx context.Context, meta *api.Context) bool {
 			return e.Sni == meta.Info.Sni.GetValue()
 		})
-	}
-	return nil, nil
-}
-
-func buildHTTP(r *api.Rule_Http) (match Matcher, err error) {
-	switch e := r.Http.Match.(type) {
-	case *api.Rule_HTTP_Host:
-		match = MatchFunc(func(ctx context.Context, meta *api.Context) bool {
-			return e.Host == meta.Info.Host.GetValue()
-		})
-	default:
-		match = noop
 	}
 	return nil, nil
 }

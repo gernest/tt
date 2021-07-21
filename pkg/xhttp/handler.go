@@ -22,7 +22,6 @@ import (
 func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 	m := mux.NewRouter()
 	for _, route := range routes {
-
 		info := &meta.RouteInfo{
 			Route: route,
 		}
@@ -40,6 +39,9 @@ func (p *Proxy) Handler(routes []*api.Route) (*mux.Router, error) {
 		}
 		chain := alice.New(p.buildMiddlewares(route)...).Then(h)
 		for _, r := range buildRouters(m, route, info) {
+			for _, hn := range route.HostNames {
+				r = r.Host(hn)
+			}
 			r.Handler(&H{
 				h:    chain,
 				info: info,
@@ -84,29 +86,27 @@ func httpMatch(a *api.Rule_HTTP, route *mux.Route, info *meta.RouteInfo) (r *mux
 	r = route
 	if v := a.GetMethods(); v != nil {
 		var methods []string
-		for _, x := range v.Methods {
+		for _, x := range v.GetList() {
 			methods = append(methods, x.String())
 		}
 		r = r.Methods(methods...)
 	}
-	if v := a.GetHost(); v != "" {
-		r = r.Host(v)
-		info.VirtualHost = v
-	}
 	if v := a.GetPath(); v != nil {
-		if prefix := v.GetPrefix(); prefix != "" {
+		switch v.Type {
+		case api.Rule_HTTP_Path_Prefix:
+			prefix := v.Value
 			if !strings.HasPrefix(prefix, "/") {
 				prefix = "/" + prefix
 			}
 			r = r.PathPrefix(prefix)
-		}
-		if exact := v.GetExact(); exact != "" {
+		case api.Rule_HTTP_Path_Exact:
+			exact := v.Value
 			if !strings.HasPrefix(exact, "/") {
 				exact = "/" + exact
 			}
 			r = r.Path(exact)
-		}
-		if regex := v.GetRegexp(); regex != "" {
+		case api.Rule_HTTP_Path_RegularExpression:
+			regex := v.Value
 			if strings.HasPrefix(regex, "/") {
 				regex = strings.TrimPrefix(regex, "/")
 			}
@@ -115,12 +115,16 @@ func httpMatch(a *api.Rule_HTTP, route *mux.Route, info *meta.RouteInfo) (r *mux
 	}
 	if v := a.GetHeaders(); v != nil {
 		var plain, regex []string
-		for _, x := range v.Headers {
-			if exact := x.Value.GetExact(); exact != "" {
-				plain = append(plain, x.Key, exact)
-			}
-			if reg := x.Value.GetRegexp(); reg != "" {
-				regex = append(regex, reg)
+		for _, x := range v.GetList() {
+			switch x.Type {
+			case api.Rule_HTTP_KeyValue_Exact:
+				if x.Value != "" {
+					plain = append(plain, x.Name, x.Value)
+				}
+			case api.Rule_HTTP_KeyValue_RegularExpression:
+				if x.Value != "" {
+					regex = append(regex, x.Value)
+				}
 			}
 		}
 		if len(plain) > 0 {
@@ -205,11 +209,9 @@ func HealthEndpoint() *api.Route {
 		Rule: &api.Rule{
 			Match: &api.Rule_Http{
 				Http: &api.Rule_HTTP{
-					Match: &api.Rule_HTTP_Path{
-						Path: &api.Rule_StringMatch{
-							Match: &api.Rule_StringMatch_Exact{
-								Exact: "/healthz",
-							},
+					Match: &api.Rule_HTTP_Path_{
+						Path: &api.Rule_HTTP_Path{
+							Value: "/healthz",
 						},
 					},
 				},
@@ -229,7 +231,7 @@ func (h *H) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// chain. Target is updated by the reverse proxy handler.
 		m.Info.Route = h.info.Route.Name
 		m.Info.Service = h.info.Route.Service
-		m.Info.VirtualHost = h.info.VirtualHost
+		m.Info.VirtualHosts = h.info.Route.HostNames
 	}
 	h.h.ServeHTTP(w, r)
 }

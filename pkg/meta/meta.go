@@ -7,8 +7,7 @@ import (
 )
 
 type RouteInfo struct {
-	Route       *api.Route
-	VirtualHost string
+	Route *api.Route
 }
 type metricsKey struct{}
 

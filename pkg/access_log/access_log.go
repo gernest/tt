@@ -53,7 +53,7 @@ func (e *Entry) reset() {
 func (e *Entry) resetInfo() {
 	e.Info.Route = ""
 	e.Info.Service = ""
-	e.Info.VirtualHost = ""
+	e.Info.VirtualHosts = []string{}
 }
 
 func (e *Entry) resetRequest() {

@@ -20,7 +20,7 @@ func (e *Entry) fields() (ls []zap.Field) {
 		zap.Int32("status", e.Response.StatusCode),
 		zap.String("route", e.Info.Route),
 		zap.String("service", e.Info.Service),
-		zap.String("host", e.Info.VirtualHost),
+		zap.Strings("host", e.Info.VirtualHosts),
 	)
 	return
 }

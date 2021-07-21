@@ -101,7 +101,6 @@ message Middleware {
     Config config = 3;
     Version version = 4;
   }
-
   message StripPathPrefix { string prefix = 1; }
 }
 // Protocol exposes
@@ -142,9 +141,9 @@ message Route {
   int32 priority = 15;
   Middleware.List middlewares = 16;
   Protocol protocol = 17;
-  // Set this to true if the route is a registered heath endpoint
   bool is_health_endpoint = 18;
   string service = 19;
+  repeated string host_names = 20;
 }
 
 // Speed defines rate limiting of how fast data willl be copied. This is a
@@ -211,7 +210,7 @@ message Context {
   }
   message Info {
     google.protobuf.StringValue sni = 1;
-    google.protobuf.StringValue host = 2;
+    repeated string host_names = 2;
     google.protobuf.StringValue path = 3;
     string routeName = 4;
     int32 listenPort = 5;
@@ -221,19 +220,6 @@ message Context {
   Conn downstream = 3;
   Conn upstream = 4;
   Info info = 5;
-}
-
-enum Method {
-  GET = 0;
-  POST = 1;
-  PUT = 2;
-  DELETE = 3;
-  PATCH = 4;
-  OPTIONS = 5;
-  CONNECT = 6;
-  HEAD = 7;
-  TRACE = 8;
-  ALL = 9;
 }
 
 message Rule {
@@ -262,25 +248,43 @@ message Rule {
   }
 
   message HTTP {
-    oneof match {
-      Methods methods = 1;
-      StringMatch path = 2;
-      string host = 3;
-      Headers headers = 4;
+    enum Method {
+      GET = 0;
+      POST = 1;
+      PUT = 2;
+      DELETE = 3;
+      PATCH = 4;
+      OPTIONS = 5;
+      CONNECT = 6;
+      HEAD = 7;
+      TRACE = 8;
     }
-    message Methods { repeated Method methods = 1; }
-    message Headers { repeated Header headers = 1; }
-  }
-  message Header {
-    string key = 1;
-    StringMatch value = 2;
-  }
+    message MethodList { repeated Method list = 1; }
+    message KeyValue {
+      enum Type {
+        Exact = 0;
+        RegularExpression = 1;
+      }
+      Type type = 1;
+      string name = 2;
+      string value = 3;
+    }
+    message KeyValueList { repeated KeyValue list = 1; }
 
-  message StringMatch {
+    message Path {
+      enum Type {
+        Exact = 0;
+        Prefix = 1;
+        RegularExpression = 2;
+      }
+      Type type = 1;
+      string value = 2;
+    }
     oneof match {
-      string exact = 1;
-      string prefix = 2;
-      string regexp = 3;
+      MethodList methods = 1;
+      Path path = 2;
+      KeyValueList headers = 3;
+      KeyValueList query_param = 4;
     }
   }
 }
@@ -328,7 +332,7 @@ message AccessEntry {
     string route = 1;
     // The service ID. A service is a collection of routes.
     string service = 2;
-    string virtual_host = 4;
+    repeated string virtual_hosts = 4;
   }
   Request request = 1;
   Response response = 2;

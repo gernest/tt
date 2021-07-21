@@ -65,11 +65,10 @@ var sample0 = &api.Route{
 	Rule: &api.Rule{
 		Match: &api.Rule_Http{
 			Http: &api.Rule_HTTP{
-				Match: &api.Rule_HTTP_Path{
-					Path: &api.Rule_StringMatch{
-						Match: &api.Rule_StringMatch_Prefix{
-							Prefix: "/httpbin",
-						},
+				Match: &api.Rule_HTTP_Path_{
+					Path: &api.Rule_HTTP_Path{
+						Type:  api.Rule_HTTP_Path_Prefix,
+						Value: "/httpbin",
 					},
 				},
 			},

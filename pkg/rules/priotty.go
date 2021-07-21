@@ -42,20 +42,6 @@ func score(r *api.Rule) (total int) {
 		case *api.Rule_TCP_Sni:
 			total += int(sni)
 		}
-	case *api.Rule_Http:
-		switch m := e.Http.Match.(type) {
-		case *api.Rule_HTTP_Methods_:
-			total += int(method)
-		case *api.Rule_HTTP_Path:
-			switch m.Path.Match.(type) {
-			case *api.Rule_StringMatch_Exact:
-				total += int(exact)
-			case *api.Rule_StringMatch_Prefix:
-				total += int(prefix)
-			case *api.Rule_StringMatch_Regexp:
-				total += int(regex)
-			}
-		}
 	}
 	return
 }
