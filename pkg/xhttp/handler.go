@@ -134,6 +134,24 @@ func httpMatch(a *api.Rule_HTTP, route *mux.Route, info *meta.RouteInfo) (r *mux
 			r = r.HeadersRegexp(regex...)
 		}
 	}
+	if v := a.GetQueryParam(); v != nil {
+		var all []string
+		for _, x := range v.GetList() {
+			switch x.Type {
+			case api.Rule_HTTP_KeyValue_Exact:
+				if x.Value != "" {
+					all = append(all, x.Name, x.Value)
+				}
+			case api.Rule_HTTP_KeyValue_RegularExpression:
+				if x.Value != "" {
+					all = append(all, x.Value)
+				}
+			}
+		}
+		if len(all) > 0 {
+			r = r.Queries(all...)
+		}
+	}
 	return
 }
 
