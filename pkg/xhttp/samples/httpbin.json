@@ -10,7 +10,8 @@
   "rule": {
     "http": {
       "path": {
-        "prefix": "/httpbin"
+        "type": "Prefix",
+        "value": "/httpbin"
       }
     }
   },
@@ -31,8 +32,7 @@
             },
             "plugin": {
               }
-          },
-          "version": "V2"
+          }
         }
       }
     ]

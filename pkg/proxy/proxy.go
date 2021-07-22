@@ -20,6 +20,7 @@ import (
 
 type Options struct {
 	Listen                Listen            `json:",omitempty"`
+	WorkDir               string            `json:",omitempty"`
 	AllowedPorts          []int             `json:",omitempty"`
 	Labels                map[string]string `json:",omitempty"`
 	RoutesPath            string            `json:",omitempty"`
@@ -87,8 +88,13 @@ func (o *Options) Flags() []cli.Flag {
 func (o *Options) baseFlags() flagList {
 	return flagListFn(func() []cli.Flag {
 		return []cli.Flag{
+			cli.StringFlag{
+				Name:   "work-dir",
+				EnvVar: "TT_WORKDIR",
+				Value:  "./.tt",
+			},
 			cli.IntSliceFlag{
-				Name:   "allowed_ports",
+				Name:   "allowed-ports",
 				EnvVar: "TT_ALLOWED_PORTS",
 				Usage:  "Ports that tt is allowed to open",
 				Value:  &cli.IntSlice{5700, 5500},
@@ -155,9 +161,20 @@ func (o *Options) base() parser {
 				o.Labels[x[0]] = x[1]
 			}
 		}
-		o.AllowedPorts = ctx.GlobalIntSlice("allowed_ports")
-
+		o.AllowedPorts = ctx.GlobalIntSlice("allowed-ports")
 		o.RoutesPath = ctx.GlobalString("routes-path")
+		o.WorkDir = ctx.GlobalString("work-dir")
+		_, err := os.Stat(o.WorkDir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				err = os.MkdirAll(o.WorkDir, 0755)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
 		return nil
 	})
 }
