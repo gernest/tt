@@ -16,6 +16,7 @@ require (
 	github.com/hashicorp/raft v1.3.1
 	github.com/justinas/alice v1.2.0
 	github.com/mileusna/useragent v1.0.2
+	github.com/open-policy-agent/opa v0.30.2
 	github.com/pion/dtls/v2 v2.0.8
 	github.com/pion/udp v0.1.1
 	github.com/prometheus/client_golang v1.11.0
