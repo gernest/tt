@@ -31,3 +31,26 @@ func TestRate(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkRate(b *testing.B) {
+	limit := 15
+
+	r, err := New(
+		b.TempDir(),
+		time.Second,
+		uint32(limit),
+		100,
+		100,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	key := []byte("key")
+	b.RunParallel(func(p *testing.PB) {
+		for p.Next() {
+			r.Take(key)
+		}
+	})
+}
