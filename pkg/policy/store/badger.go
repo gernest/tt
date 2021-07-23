@@ -2,7 +2,7 @@
 // Use of this source code is governed by an Apache2
 // license that can be found in the LICENSE file.
 
-// Package inmem implements an in-memory version of the policy engine's storage
+// package store implements an in-memory version of the policy engine's storage
 // layer.
 //
 // The in-memory store is used as the default storage layer implementation. The
@@ -13,31 +13,34 @@
 // data. Once data is written to the in-memory store, it should not be modified
 // (outside of calling Store.Write). Furthermore, data read from the in-memory
 // store should be treated as read-only.
-package inmem
+package store
 
 import (
 	"context"
 	"fmt"
 	"io"
 	"sync"
-	"sync/atomic"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/open-policy-agent/opa/storage"
 	"github.com/open-policy-agent/opa/util"
 )
 
 // New returns an empty in-memory store.
-func New() storage.Store {
+func New(db *badger.DB, data *Data) storage.Store {
+	if data == nil {
+		data = &Data{}
+	}
 	return &store{
-		data:     map[string]interface{}{},
+		data:     data,
 		triggers: map[*handle]storage.TriggerConfig{},
-		policies: map[string][]byte{},
+		db:       db,
 	}
 }
 
 // NewFromObject returns a new in-memory store from the supplied data object.
-func NewFromObject(data map[string]interface{}) storage.Store {
-	db := New()
+func NewFromObject(bdb *badger.DB, data map[string]interface{}) storage.Store {
+	db := New(bdb, Parse(data))
 	ctx := context.Background()
 	txn, err := db.NewTransaction(ctx, storage.WriteParams)
 	if err != nil {
@@ -54,21 +57,20 @@ func NewFromObject(data map[string]interface{}) storage.Store {
 
 // NewFromReader returns a new in-memory store from a reader that produces a
 // JSON serialized object. This function is for test purposes.
-func NewFromReader(r io.Reader) storage.Store {
+func NewFromReader(db *badger.DB, r io.Reader) storage.Store {
 	d := util.NewJSONDecoder(r)
 	var data map[string]interface{}
 	if err := d.Decode(&data); err != nil {
 		panic(err)
 	}
-	return NewFromObject(data)
+	return NewFromObject(db, data)
 }
 
 type store struct {
-	rmu      sync.RWMutex                      // reader-writer lock
-	wmu      sync.Mutex                        // writer lock
-	xid      uint64                            // last generated transaction id
-	data     map[string]interface{}            // raw data
-	policies map[string][]byte                 // raw policies
+	rmu      sync.RWMutex // reader-writer lock
+	wmu      sync.Mutex   // writer lock
+	data     *Data        // raw data
+	db       *badger.DB
 	triggers map[*handle]storage.TriggerConfig // registered triggers
 }
 
@@ -83,13 +85,28 @@ func (db *store) NewTransaction(ctx context.Context, params ...storage.Transacti
 		write = params[0].Write
 		context = params[0].Context
 	}
-	xid := atomic.AddUint64(&db.xid, uint64(1))
+	xtn := db.db.NewTransaction(write)
+	xid := xtn.ReadTs()
 	if write {
 		db.wmu.Lock()
 	} else {
 		db.rmu.RLock()
 	}
-	return newTransaction(xid, write, context, db), nil
+	return newTransaction(xid, write, context, db, xtn), nil
+}
+
+func (db *store) closeTransaction(txn *transaction) error {
+	defer txn.Commit()
+	if txn.write {
+		b, err := Marshal(db.data)
+		if err != nil {
+			return err
+		}
+		if err := txn.txn.Set([]byte(data), b); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (db *store) Commit(ctx context.Context, txn storage.Transaction) error {
@@ -97,6 +114,8 @@ func (db *store) Commit(ctx context.Context, txn storage.Transaction) error {
 	if err != nil {
 		return err
 	}
+	defer db.closeTransaction(underlying)
+
 	if underlying.write {
 		db.rmu.Lock()
 		event := underlying.Commit()

@@ -2,15 +2,34 @@
 // Use of this source code is governed by an Apache2
 // license that can be found in the LICENSE file.
 
-package inmem
+package store
 
 import (
 	"container/list"
-	"encoding/json"
+	"errors"
 	"strconv"
+	"strings"
 
+	"github.com/dgraph-io/badger/v3"
+	"github.com/golang/protobuf/proto"
+	_struct "github.com/golang/protobuf/ptypes/struct"
 	"github.com/open-policy-agent/opa/storage"
 )
+
+type dbKey string
+
+const (
+	prefix dbKey = "/policies/"
+	data   dbKey = "/data/"
+)
+
+func (k dbKey) Key(x string) []byte {
+	return []byte(string(k) + x)
+}
+
+func (k dbKey) Strip(x string) string {
+	return strings.TrimPrefix(x, string(k))
+}
 
 // transaction implements the low-level read/write operations on the in-memory
 // store and contains the state required for pending transactions.
@@ -34,6 +53,7 @@ type transaction struct {
 	write    bool
 	stale    bool
 	db       *store
+	txn      *badger.Txn
 	updates  *list.List
 	policies map[string]policyUpdate
 	context  *storage.Context
@@ -44,11 +64,17 @@ type policyUpdate struct {
 	remove bool
 }
 
-func newTransaction(xid uint64, write bool, context *storage.Context, db *store) *transaction {
+func newTransaction(xid uint64,
+	write bool,
+	context *storage.Context,
+	db *store,
+	txn *badger.Txn,
+) *transaction {
 	return &transaction{
 		xid:      xid,
 		write:    write,
 		db:       db,
+		txn:      txn,
 		policies: map[string]policyUpdate{},
 		updates:  list.New(),
 		context:  context,
@@ -59,8 +85,8 @@ func (txn *transaction) ID() uint64 {
 	return txn.xid
 }
 
-func (txn *transaction) Write(op storage.PatchOp, path storage.Path, value interface{}) error {
-
+func (txn *transaction) Write(op storage.PatchOp, path storage.Path, in interface{}) error {
+	value := Parse(in)
 	if !txn.write {
 		return &storage.Error{
 			Code:    storage.InvalidTransactionErr,
@@ -125,11 +151,11 @@ func (txn *transaction) Write(op storage.PatchOp, path storage.Path, value inter
 	return nil
 }
 
-func (txn *transaction) updateRoot(op storage.PatchOp, value interface{}) error {
+func (txn *transaction) updateRoot(op storage.PatchOp, value *Data) error {
 	if op == storage.RemoveOp {
 		return invalidPatchError(rootCannotBeRemovedMsg)
 	}
-	if _, ok := value.(map[string]interface{}); !ok {
+	if s := value.GetStructValue(); s == nil {
 		return invalidPatchError(rootMustBeObjectMsg)
 	}
 	txn.updates.Init()
@@ -146,7 +172,7 @@ func (txn *transaction) Commit() (result storage.TriggerEvent) {
 	for curr := txn.updates.Front(); curr != nil; curr = curr.Next() {
 		action := curr.Value.(*update)
 		updated := action.Apply(txn.db.data)
-		txn.db.data = updated.(map[string]interface{})
+		txn.db.data = updated
 
 		result.Data = append(result.Data, storage.DataEvent{
 			Path:    action.path,
@@ -156,9 +182,9 @@ func (txn *transaction) Commit() (result storage.TriggerEvent) {
 	}
 	for id, update := range txn.policies {
 		if update.remove {
-			delete(txn.db.policies, id)
+			txn.txn.Delete(prefix.Key(id))
 		} else {
-			txn.db.policies[id] = update.value
+			txn.txn.Set(prefix.Key(id), update.value)
 		}
 
 		result.Policy = append(result.Policy, storage.PolicyEvent{
@@ -213,16 +239,18 @@ func (txn *transaction) Read(path storage.Path) (interface{}, error) {
 	return cpy, nil
 }
 
-func deepCopy(v interface{}) interface{} {
-	return v
+func deepCopy(v *Data) *Data {
+	return proto.Clone(v).(*Data)
 }
 
 func (txn *transaction) ListPolicies() []string {
 	var ids []string
-	for id := range txn.db.policies {
-		if _, ok := txn.policies[id]; !ok {
-			ids = append(ids, id)
-		}
+	o := badger.DefaultIteratorOptions
+	o.Prefix = []byte(prefix)
+	it := txn.txn.NewIterator(o)
+	for it.Rewind(); it.ValidForPrefix(o.Prefix); it.Next() {
+		k := it.Item().Key()
+		ids = append(ids, prefix.Strip(string(k)))
 	}
 	for id, update := range txn.policies {
 		if !update.remove {
@@ -239,10 +267,14 @@ func (txn *transaction) GetPolicy(id string) ([]byte, error) {
 		}
 		return nil, notFoundErrorf("policy id %q", id)
 	}
-	if exist, ok := txn.db.policies[id]; ok {
-		return exist, nil
+	v, err := txn.txn.Get(prefix.Key(id))
+	if err != nil {
+		if errors.Is(err, badger.ErrKeyNotFound) {
+			return nil, notFoundErrorf("policy id %q", id)
+		}
+		return nil, err
 	}
-	return nil, notFoundErrorf("policy id %q", id)
+	return v.ValueCopy(nil)
 }
 
 func (txn *transaction) UpsertPolicy(id string, bs []byte) error {
@@ -272,19 +304,22 @@ func (txn *transaction) DeletePolicy(id string) error {
 type update struct {
 	path   storage.Path // data path modified by update
 	remove bool         // indicates whether update removes the value at path
-	value  interface{}  // value to add/replace at path (ignored if remove is true)
+	value  *Data        // value to add/replace at path (ignored if remove is true)
 }
 
-func newUpdate(data interface{}, op storage.PatchOp, path storage.Path, idx int, value interface{}) (*update, error) {
+func newUpdate(data *Data, op storage.PatchOp, path storage.Path, idx int, value *Data) (*update, error) {
 
-	switch data := data.(type) {
-	case map[string]interface{}:
-		return newUpdateObject(data, op, path, idx, value)
+	switch data := data.Kind.(type) {
+	case *_struct.Value_StructValue:
+		return newUpdateObject(data.StructValue, op, path, idx, value)
 
-	case []interface{}:
-		return newUpdateArray(data, op, path, idx, value)
+	case *_struct.Value_ListValue:
+		return newUpdateArray(data.ListValue.GetValues(), op, path, idx, value)
 
-	case nil, bool, json.Number, string:
+	case nil,
+		*_struct.Value_BoolValue,
+		*_struct.Value_NumberValue,
+		*_struct.Value_StringValue:
 		return nil, notFoundError(path)
 	}
 
@@ -294,17 +329,26 @@ func newUpdate(data interface{}, op storage.PatchOp, path storage.Path, idx int,
 	}
 }
 
-func newUpdateArray(data []interface{}, op storage.PatchOp, path storage.Path, idx int, value interface{}) (*update, error) {
+func listValue(data []*_struct.Value) *_struct.Value {
+	return &_struct.Value{
+		Kind: &_struct.Value_ListValue{
+			ListValue: &_struct.ListValue{
+				Values: data,
+			},
+		},
+	}
+}
 
+func newUpdateArray(data []*_struct.Value, op storage.PatchOp, path storage.Path, idx int, value *Data) (*update, error) {
 	if idx == len(path)-1 {
 		if path[idx] == "-" {
 			if op != storage.AddOp {
 				return nil, invalidPatchError("%v: invalid patch path", path)
 			}
-			cpy := make([]interface{}, len(data)+1)
+			cpy := make([]*_struct.Value, len(data)+1)
 			copy(cpy, data)
 			cpy[len(data)] = value
-			return &update{path[:len(path)-1], false, cpy}, nil
+			return &update{path[:len(path)-1], false, listValue(cpy)}, nil
 		}
 
 		pos, err := validateArrayIndex(data, path[idx], path)
@@ -313,23 +357,23 @@ func newUpdateArray(data []interface{}, op storage.PatchOp, path storage.Path, i
 		}
 
 		if op == storage.AddOp {
-			cpy := make([]interface{}, len(data)+1)
+			cpy := make([]*_struct.Value, len(data)+1)
 			copy(cpy[:pos], data[:pos])
 			copy(cpy[pos+1:], data[pos:])
 			cpy[pos] = value
-			return &update{path[:len(path)-1], false, cpy}, nil
+			return &update{path[:len(path)-1], false, listValue(cpy)}, nil
 
 		} else if op == storage.RemoveOp {
-			cpy := make([]interface{}, len(data)-1)
+			cpy := make([]*_struct.Value, len(data)-1)
 			copy(cpy[:pos], data[:pos])
 			copy(cpy[pos:], data[pos+1:])
-			return &update{path[:len(path)-1], false, cpy}, nil
+			return &update{path[:len(path)-1], false, listValue(cpy)}, nil
 
 		} else {
-			cpy := make([]interface{}, len(data))
+			cpy := make([]*_struct.Value, len(data))
 			copy(cpy, data)
 			cpy[pos] = value
-			return &update{path[:len(path)-1], false, cpy}, nil
+			return &update{path[:len(path)-1], false, listValue(cpy)}, nil
 		}
 	}
 
@@ -341,25 +385,25 @@ func newUpdateArray(data []interface{}, op storage.PatchOp, path storage.Path, i
 	return newUpdate(data[pos], op, path, idx+1, value)
 }
 
-func newUpdateObject(data map[string]interface{}, op storage.PatchOp, path storage.Path, idx int, value interface{}) (*update, error) {
-
+func newUpdateObject(data *_struct.Struct, op storage.PatchOp, path storage.Path, idx int, value *Data) (*update, error) {
 	if idx == len(path)-1 {
 		switch op {
 		case storage.ReplaceOp, storage.RemoveOp:
-			if _, ok := data[path[idx]]; !ok {
+			if _, ok := data.GetFields()[path[idx]]; !ok {
 				return nil, notFoundError(path)
 			}
 		}
 		return &update{path, op == storage.RemoveOp, value}, nil
 	}
 
-	if data, ok := data[path[idx]]; ok {
+	if data, ok := data.GetFields()[path[idx]]; ok {
 		return newUpdate(data, op, path, idx+1, value)
 	}
 
 	return nil, notFoundError(path)
 }
-func (u *update) Apply(data interface{}) interface{} {
+
+func (u *update) Apply(data *Data) *Data {
 	if len(u.path) == 0 {
 		return u.value
 	}
@@ -369,19 +413,18 @@ func (u *update) Apply(data interface{}) interface{} {
 	}
 	key := u.path[len(u.path)-1]
 	if u.remove {
-		obj := parent.(map[string]interface{})
-		delete(obj, key)
+		deleteData(parent, key)
 		return data
 	}
-	switch parent := parent.(type) {
-	case map[string]interface{}:
-		parent[key] = u.value
-	case []interface{}:
+	if s := parent.GetStructValue(); s != nil {
+		s.GetFields()[key] = u.value
+	}
+	if ls := parent.GetListValue(); ls != nil {
 		idx, err := strconv.Atoi(key)
 		if err != nil {
 			panic(err)
 		}
-		parent[idx] = u.value
+		ls.Values[idx] = u.value
 	}
 	return data
 }
@@ -390,39 +433,4 @@ func (u *update) Relative(path storage.Path) *update {
 	cpy := *u
 	cpy.path = cpy.path[len(path):]
 	return &cpy
-}
-
-func ptr(data interface{}, path storage.Path) (interface{}, error) {
-	node := data
-	for i := range path {
-		key := path[i]
-		switch curr := node.(type) {
-		case map[string]interface{}:
-			var ok bool
-			if node, ok = curr[key]; !ok {
-				return nil, notFoundError(path)
-			}
-		case []interface{}:
-			pos, err := validateArrayIndex(curr, key, path)
-			if err != nil {
-				return nil, err
-			}
-			node = curr[pos]
-		default:
-			return nil, notFoundError(path)
-		}
-	}
-
-	return node, nil
-}
-
-func validateArrayIndex(arr []interface{}, s string, path storage.Path) (int, error) {
-	idx, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, notFoundErrorHint(path, arrayIndexTypeMsg)
-	}
-	if idx < 0 || idx >= len(arr) {
-		return 0, notFoundErrorHint(path, outOfRangeMsg)
-	}
-	return idx, nil
 }
