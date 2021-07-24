@@ -6,7 +6,6 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gernest/tt/api"
-	"github.com/gernest/tt/pkg/zlg"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/raft"
 )
@@ -18,7 +17,8 @@ type FSM struct {
 
 func NewFSM(dataPath, nodeID string) (*FSM, error) {
 	opts := badger.DefaultOptions(filepath.Join(dataPath, nodeID, "fsm"))
-	opts.Logger = &Badger{zlg.Logger.Named("raft-fsm").Sugar()}
+	// opts.Logger = &Badger{zlg.Logger.Named("raft-fsm").Sugar()}
+	opts.Logger = nil
 	db, err := badger.Open(opts)
 	if err != nil {
 		return nil, err

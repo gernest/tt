@@ -1,17 +1,6 @@
 # github.com/BBVA/raft-badger v1.1.0
 ## explicit
 github.com/BBVA/raft-badger
-# github.com/Jille/raft-grpc-leader-rpc v1.1.0
-## explicit
-github.com/Jille/raft-grpc-leader-rpc/leaderhealth
-# github.com/Jille/raft-grpc-transport v1.1.1
-## explicit
-github.com/Jille/raft-grpc-transport
-github.com/Jille/raft-grpc-transport/proto
-# github.com/Jille/raftadmin v1.2.0
-## explicit
-github.com/Jille/raftadmin
-github.com/Jille/raftadmin/proto
 # github.com/OneOfOne/xxhash v1.2.8
 ## explicit
 # github.com/ahmetb/go-httpbin v0.0.0-20200921172446-862fbad56b77
@@ -74,7 +63,6 @@ github.com/golang/groupcache/lru
 ## explicit
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
-github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
@@ -283,8 +271,6 @@ google.golang.org/grpc/credentials
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
-google.golang.org/grpc/health
-google.golang.org/grpc/health/grpc_health_v1
 google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancerload
@@ -310,8 +296,6 @@ google.golang.org/grpc/internal/transport/networktype
 google.golang.org/grpc/keepalive
 google.golang.org/grpc/metadata
 google.golang.org/grpc/peer
-google.golang.org/grpc/reflection
-google.golang.org/grpc/reflection/grpc_reflection_v1alpha
 google.golang.org/grpc/resolver
 google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
