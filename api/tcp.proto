@@ -11,11 +11,30 @@ message ConfigRequest {}
 
 message DeleteRequest { repeated string routes = 1; }
 
+// Proxy defines admin service for configuraing and managing the server. This
+// servic  runs in a distributed mode.
 service Proxy {
   rpc Get(ConfigRequest) returns (Config);
   rpc Put(Config) returns (Response);
   rpc Post(Config) returns (Response);
   rpc Delete(DeleteRequest) returns (Response);
+}
+
+message Raft {
+  enum Action {
+    GET = 0;
+    SET = 1;
+    PUT = 2;
+    POST = 3;
+    DELETE = 4;
+  }
+  message Data {
+    oneof item { Config config = 1; }
+  }
+  message Log {
+    Action action = 1;
+    Data data = 2;
+  }
 }
 
 message Response {
