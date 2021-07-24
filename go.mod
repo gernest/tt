@@ -4,7 +4,9 @@ go 1.16
 
 require (
 	github.com/BBVA/raft-badger v1.1.0
+	github.com/Jille/raft-grpc-leader-rpc v1.1.0
 	github.com/Jille/raft-grpc-transport v1.1.1
+	github.com/Jille/raftadmin v1.2.0
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/ahmetb/go-httpbin v0.0.0-20200921172446-862fbad56b77
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15

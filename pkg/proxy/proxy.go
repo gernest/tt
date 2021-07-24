@@ -22,6 +22,7 @@ import (
 type Options struct {
 	Listen                Listen            `json:",omitempty"`
 	WorkDir               string            `json:",omitempty"`
+	Bootsrap              bool              `json:",omitempty"`
 	AllowedPorts          []int             `json:",omitempty"`
 	Labels                map[string]string `json:",omitempty"`
 	RoutesPath            string            `json:",omitempty"`
@@ -125,6 +126,10 @@ func (o *Options) baseFlags() flagList {
 				Usage:  "Ports that tt is allowed to open",
 				Value:  &cli.IntSlice{5500, 5600, 5700, 5800},
 			},
+			cli.BoolFlag{
+				Name:  "bootstrap",
+				Usage: "Bootsrap this node as the leader",
+			},
 			cli.StringSliceFlag{
 				Name:   "labels",
 				Usage:  "labels attacked to logs and metrics in the form of key:value",
@@ -189,6 +194,7 @@ func (o *Options) base() parser {
 			}
 		}
 		o.AllowedPorts = ctx.GlobalIntSlice("allowed-ports")
+		o.Bootsrap = ctx.GlobalBool("bootstrap")
 		o.RoutesPath = ctx.GlobalString("routes-path")
 		o.WorkDir = ctx.GlobalString("work-dir")
 		_, err := os.Stat(o.WorkDir)

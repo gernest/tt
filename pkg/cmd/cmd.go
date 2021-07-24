@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/Jille/raft-grpc-leader-rpc/leaderhealth"
+	"github.com/Jille/raftadmin"
 	"github.com/gernest/tt/api"
+	"github.com/gernest/tt/pkg/control/cluster"
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
 	"github.com/gernest/tt/pkg/tcp/proxy"
 	"github.com/gernest/tt/pkg/xhttp"
@@ -13,6 +16,7 @@ import (
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func App(version, commit, date, builtBy string) *cli.App {
@@ -61,7 +65,31 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 	defer ls.Close()
 	svr := grpc.NewServer()
 	rctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	api.RegisterProxyServer(svr, mgr)
+
+	zlg.Info("Setting up raft", zap.String("node-id", o.Info.ID))
+	fsm, err := cluster.NewFSM(o.WorkDir, o.Info.ID)
+	if err != nil {
+		zlg.Logger.Error("Failed to create fms")
+		return err
+	}
+	defer fsm.Close()
+	r, tm, err := cluster.NewRaft(
+		ctx, o.Bootsrap,
+		o.Info.ID,
+		o.Listen.Raft.HostPort,
+		fsm, o.WorkDir,
+	)
+	if err != nil {
+		zlg.Logger.Error("Failed to create raft cluster")
+		return err
+	}
+
+	tm.Register(svr)
+	leaderhealth.Setup(r, svr, []string{"Raft"})
+	raftadmin.Register(svr, r)
+	reflection.Register(svr)
 	go func() {
 		defer cancel()
 		zlg.Info("Starting admin rpc sever", zap.String("addr", ls.Addr().String()))
@@ -70,9 +98,6 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 			zlg.Error(err, "Exit admin rpc server")
 		}
 	}()
-	{
-		// start and monitor the storage raft backend
-	}
 	if err := mgr.Boot(ctx, o); err != nil {
 		zlg.Error(err, "Failed to start  proxy server")
 	}

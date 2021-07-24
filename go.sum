@@ -89,8 +89,12 @@ github.com/DataDog/datadog-go v2.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
 github.com/HdrHistogram/hdrhistogram-go v1.0.1/go.mod h1:BWJ+nMSHY3L41Zj7CA3uXnloDp7xxV0YvstAE7nKTaM=
+github.com/Jille/raft-grpc-leader-rpc v1.1.0 h1:u36rmA4tjp+4FSdZ17jg/1sfSCYNQIe5bzzwvW0iVTM=
+github.com/Jille/raft-grpc-leader-rpc v1.1.0/go.mod h1:l+pK+uPuqpFDFcPmyUPSng4257UXrST0Vc3Lo4XwVB0=
 github.com/Jille/raft-grpc-transport v1.1.1 h1:VvFzYU3GuuEtehtBbgfubJnoPNBDHix0DVljV4PkGCc=
 github.com/Jille/raft-grpc-transport v1.1.1/go.mod h1:NG6sOvCFk8j7t93TTfJ40w5it4cbmB1kw0MjoEWzs6o=
+github.com/Jille/raftadmin v1.2.0 h1:hMLFUK7iKpeXP+CoIhNMWj+F53XOLSjMDSia0C60cps=
+github.com/Jille/raftadmin v1.2.0/go.mod h1:vtVEpToPGTUPVwwunypWDpi69JpdnHMhWRUlc/65U+Y=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/sprig v2.16.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=

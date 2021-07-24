@@ -13,8 +13,8 @@ var _ api.StorageServer = (*DB)(nil)
 
 type DB struct {
 	api.UnimplementedStorageServer
-	raft    *raft.Raft
-	timeout time.Duration
+	Raft    *raft.Raft
+	Timeout time.Duration
 }
 
 func (db *DB) Set(ctx context.Context, in *api.Store_SetRequest) (*api.Store_SetRequest, error) {
@@ -41,7 +41,7 @@ func (db *DB) send(entry *api.Raft_Log) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	a := db.raft.Apply(m, db.timeout)
+	a := db.Raft.Apply(m, db.Timeout)
 	if a.Error() != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"io"
+	"path/filepath"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gernest/tt/api"
@@ -15,8 +16,8 @@ type FSM struct {
 	db *badger.DB
 }
 
-func NewFSM(path string) (*FSM, error) {
-	opts := badger.DefaultOptions(path)
+func NewFSM(dataPath, nodeID string) (*FSM, error) {
+	opts := badger.DefaultOptions(filepath.Join(dataPath, nodeID, "fsm"))
 	opts.Logger = &Badger{zlg.Logger.Named("raft-fsm").Sugar()}
 	db, err := badger.Open(opts)
 	if err != nil {
