@@ -8,11 +8,16 @@
     },
     "Control": {
       "HostPort": ":5600"
+    },
+    "Raft": {
+      "HostPort": ":5800"
     }
   },
   "AllowedPorts": [
+    5500,
+    5600,
     5700,
-    5500
+    5800
   ],
   "RoutesPath": "tools/apis",
   "Cache": {

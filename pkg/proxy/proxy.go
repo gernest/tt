@@ -97,7 +97,7 @@ func (o *Options) baseFlags() flagList {
 				Name:   "allowed-ports",
 				EnvVar: "TT_ALLOWED_PORTS",
 				Usage:  "Ports that tt is allowed to open",
-				Value:  &cli.IntSlice{5700, 5500},
+				Value:  &cli.IntSlice{5500, 5600, 5700, 5800},
 			},
 			cli.StringSliceFlag{
 				Name:   "labels",
@@ -221,35 +221,43 @@ type Listen struct {
 	TCP     ListenPort
 	HTTP    ListenPort
 	Control ListenPort
+	Raft    ListenPort
 }
 
 func (l *Listen) Parse(ctx *cli.Context) error {
 	//TODO: validate values
-	l.TCP.HostPort = ctx.GlobalString("tcp_host_port")
-	l.HTTP.HostPort = ctx.GlobalString("http_host_port")
-	l.Control.HostPort = ctx.GlobalString("control_host_port")
+	l.TCP.HostPort = ctx.GlobalString("tcp-host-port")
+	l.HTTP.HostPort = ctx.GlobalString("http-host-port")
+	l.Control.HostPort = ctx.GlobalString("control-host-port")
+	l.Raft.HostPort = ctx.GlobalString("raft-host-port")
 	return nil
 }
 
 func (l Listen) Flags() []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:   "tcp_host_port",
+			Name:   "tcp-host-port",
 			EnvVar: "TT_TCP_HOSTPORT",
 			Usage:  "The host:port for serving tcp traffic",
 			Value:  ":5700",
 		},
 		cli.StringFlag{
-			Name:   "http_host_port",
+			Name:   "http-host-port",
 			EnvVar: "TT_HTTP_HOSTPORT",
 			Usage:  "The host:port for serving http traffic",
 			Value:  ":5500",
 		},
 		cli.StringFlag{
-			Name:   "control_host_port",
+			Name:   "control-host-port",
 			EnvVar: "TT_CONTROL_HOSTPORT",
 			Usage:  "The host:port for serving gRPC and HTTP control plane",
 			Value:  ":5600",
+		},
+		cli.StringFlag{
+			Name:   "raft-host-port",
+			EnvVar: "TT_CONTROL_HOSTPORT",
+			Usage:  "The host:port for serving gRPC for  raft storage",
+			Value:  ":5800",
 		},
 	}
 }
