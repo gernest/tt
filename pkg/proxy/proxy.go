@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -74,10 +75,35 @@ type Info struct {
 	ID        string `json:",omitempty"`
 }
 
+func (o *Info) Parse(ctx *cli.Context) error {
+	o.ID = ctx.GlobalString("node-id")
+	return nil
+}
+
+func (Info) Flags() []cli.Flag {
+	return []cli.Flag{
+		cli.StringFlag{
+			Name:   "node-id",
+			EnvVar: "TT_NODE_ID",
+			Value:  id(),
+		},
+	}
+}
+
+func id() string {
+	m := make([]byte, 4)
+	_, err := rand.Read(m)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("node-%x", m)
+}
+
 func (o *Options) Flags() []cli.Flag {
 	return fls(
 		o.baseFlags(),
 		o.Listen,
+		o.Info,
 		o.Cache,
 		&o.Metrics,
 		o.Wasm,
@@ -128,6 +154,7 @@ func (o *Options) parse(ctx *cli.Context) error {
 	return ls(
 		o.base(),
 		&o.Listen,
+		&o.Info,
 		&o.Cache,
 		&o.Metrics,
 		&o.Wasm,

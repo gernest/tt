@@ -70,6 +70,9 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 			zlg.Error(err, "Exit admin rpc server")
 		}
 	}()
+	{
+		// start and monitor the storage raft backend
+	}
 	if err := mgr.Boot(ctx, o); err != nil {
 		zlg.Error(err, "Failed to start  proxy server")
 	}
