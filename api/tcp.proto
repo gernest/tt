@@ -21,20 +21,46 @@ service Proxy {
 }
 
 message Raft {
-  enum Action {
-    GET = 0;
-    SET = 1;
-    PUT = 2;
-    POST = 3;
-    DELETE = 4;
-  }
-  message Data {
-    oneof item { Config config = 1; }
-  }
-  message Log {
+  message KeyValue {
+    enum Action {
+      GET = 0;
+      SET = 1;
+      PUT = 2;
+      POST = 3;
+      DELETE = 4;
+    }
+    message Context {
+      bytes key = 1;
+      bytes value = 2;
+      uint64 expires_at = 3;
+    }
     Action action = 1;
-    Data data = 2;
+    Context context = 2;
   }
+
+  message Log {
+    oneof entry { KeyValue key_value = 1; }
+  }
+}
+
+message Store {
+  message SetRequest {
+    bytes key = 1;
+    bytes value = 2;
+    uint64 expires_at = 3;
+  }
+  message SetResponse {}
+
+  message GetRequest { bytes key = 1; }
+  message GetResponse {
+    bytes value = 1;
+    uint64 expires_at = 2;
+  }
+}
+
+service Storage {
+  rpc Set(Store.SetRequest) returns (Store.SetRequest);
+  rpc Get(Store.GetRequest) returns (Store.GetResponse);
 }
 
 message Response {
@@ -359,17 +385,4 @@ message AccessEntry {
   Info info = 4;
 
   google.protobuf.Duration duration = 5;
-}
-
-message RaftLog {
-  enum OP {
-    SET = 0;
-    GET = 2;
-    RANGE = 3;
-  }
-  oneof context {
-    bytes data = 1;
-    bytes prefix = 2;
-  }
-  OP op = 3;
 }
