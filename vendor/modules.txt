@@ -78,6 +78,7 @@ github.com/google/flatbuffers/go
 ## explicit
 github.com/gorilla/mux
 # github.com/hashicorp/go-hclog v0.12.2
+## explicit
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-immutable-radix v1.2.0
 github.com/hashicorp/go-immutable-radix

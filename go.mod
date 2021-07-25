@@ -14,6 +14,7 @@ require (
 	github.com/go-kit/kit v0.11.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
+	github.com/hashicorp/go-hclog v0.12.2
 	github.com/hashicorp/raft v1.3.1
 	github.com/justinas/alice v1.2.0
 	github.com/mileusna/useragent v1.0.2

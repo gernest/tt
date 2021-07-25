@@ -8,6 +8,8 @@ import (
 	"time"
 
 	raftbadger "github.com/BBVA/raft-badger"
+	"github.com/dgraph-io/badger/v3"
+	"github.com/gernest/tt/pkg/zlg"
 	"github.com/hashicorp/raft"
 )
 
@@ -20,13 +22,21 @@ func NewRaft(
 ) (*raft.Raft, error) {
 	c := raft.DefaultConfig()
 	c.LocalID = raft.ServerID(nodeID)
+	raftLog := zlg.Logger.Named("raft")
+	c.Logger = NewHCLogAdapter(raftLog)
 	basePath := filepath.Join(dataPath, nodeID)
-	store, err := raftbadger.NewBadgerStore(filepath.Join(basePath, "db"))
+	storeOpts := badger.DefaultOptions(filepath.Join(basePath, "db"))
+	storeOpts.Logger = &Badger{raftLog.Named("store").Sugar()}
+	store, err := raftbadger.New(raftbadger.Options{
+		Path:          filepath.Join(basePath, "db"),
+		BadgerOptions: &storeOpts,
+	})
 	if err != nil {
 		return nil, err
 	}
-	fss, err := raft.NewFileSnapshotStore(
-		filepath.Join(basePath, "snapshots"), 3, os.Stderr,
+	fss, err := raft.NewFileSnapshotStoreWithLogger(
+		filepath.Join(basePath, "snapshots"), 3,
+		NewHCLogAdapter(raftLog.Named("file-snapshot")),
 	)
 	if err != nil {
 		return nil, err
