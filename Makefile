@@ -29,3 +29,10 @@ modules:
 	tinygo build -o $(MODULE)/shared_queue_sender.wasm -scheduler=none -target=wasi $(WASM)/shared_queue/sender/main.go
 	tinygo build -o $(MODULE)/shared_queue_receiver.wasm -scheduler=none -target=wasi $(WASM)/shared_queue/receiver/main.go
 	tinygo build -o $(MODULE)/vm_plugin_configuration.wasm -scheduler=none -target=wasi $(WASM)/vm_plugin_configuration/main.go
+
+clean:
+	rm -r ./.tt/
+
+dev: clean
+	go build
+	./tt -c tools/config.json
