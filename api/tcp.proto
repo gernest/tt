@@ -11,6 +11,18 @@ message ConfigRequest {}
 
 message DeleteRequest { repeated string routes = 1; }
 
+message JoinRequest {
+  enum Suffrage {
+    VOTER = 0;
+    NOT_VOTER = 1;
+  }
+  string node_id = 1;
+  string address = 2;
+  Suffrage suffrage = 3;
+}
+
+message JoinResponse {}
+
 // Proxy defines admin service for configuraing and managing the server. This
 // servic  runs in a distributed mode.
 service Proxy {
@@ -18,6 +30,9 @@ service Proxy {
   rpc Put(Config) returns (Response);
   rpc Post(Config) returns (Response);
   rpc Delete(DeleteRequest) returns (Response);
+
+  // raft
+  rpc Join(JoinRequest) returns (JoinResponse);
 }
 
 message Raft {

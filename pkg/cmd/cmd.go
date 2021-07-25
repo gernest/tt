@@ -8,7 +8,8 @@ import (
 	"github.com/gernest/tt/api"
 	"github.com/gernest/tt/pkg/control/cluster"
 	proxyPkg "github.com/gernest/tt/pkg/proxy"
-	"github.com/gernest/tt/pkg/tcp/proxy"
+	tcpProxy "github.com/gernest/tt/pkg/tcp/proxy"
+
 	"github.com/gernest/tt/pkg/xhttp"
 	"github.com/gernest/tt/pkg/zlg"
 	"github.com/urfave/cli"
@@ -44,27 +45,13 @@ func start(ctx *cli.Context, version, commit, date, builtBy string) error {
 
 // StartWithContext starts the proxy and uses port to start the admin RPC
 func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
-	mgr := New(
-		&proxy.Proxy{},
-		&xhttp.Proxy{},
-	)
-	defer mgr.Close()
 
 	// add health endpoint
 	if !o.DisableHealthEndpoint {
 		o.Routes.Routes = append(o.Routes.Routes, xhttp.HealthEndpoint())
 	}
-	ls, err := net.Listen("tcp", o.Listen.Control.HostPort)
-	if err != nil {
-		return err
-	}
-	defer ls.Close()
-	svr := grpc.NewServer()
-	rctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	api.RegisterProxyServer(svr, mgr)
 
-	zlg.Info("Setting u fsm for raft", zap.String("node-id", o.Info.ID))
+	zlg.Info("Setting up fsm for raft", zap.String("node-id", o.Info.ID))
 	fsm, err := cluster.NewFSM(o.WorkDir, o.Info.ID)
 	if err != nil {
 		zlg.Logger.Error("Failed to create fms")
@@ -83,6 +70,28 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 		return err
 	}
 	zlg.Info("Successful started raft", zap.String("leader", string(r.Leader())))
+
+	zlg.Info("setting up admin")
+
+	mgr := &ProxyManager{
+		Raft: r,
+		Log:  zlg.Logger.Named("admin"),
+		Proxies: []proxyPkg.Proxy{
+			&tcpProxy.Proxy{},
+			&xhttp.Proxy{},
+		},
+	}
+	defer mgr.Close()
+	ls, err := net.Listen("tcp", o.Listen.Control.HostPort)
+	if err != nil {
+		return err
+	}
+	defer ls.Close()
+	svr := grpc.NewServer()
+	rctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	api.RegisterProxyServer(svr, mgr)
+
 	go func() {
 		defer cancel()
 		zlg.Info("Starting admin rpc sever", zap.String("addr", ls.Addr().String()))
@@ -94,6 +103,27 @@ func StartWithContext(ctx context.Context, o *proxyPkg.Options) error {
 	if err := mgr.Boot(ctx, o); err != nil {
 		zlg.Error(err, "Failed to start  proxy server")
 	}
+	if err := Join(ctx, o); err != nil {
+		cancel()
+		return err
+	}
 	<-rctx.Done()
 	return nil
+}
+
+func Join(ctx context.Context, o *proxyPkg.Options) error {
+	if o.Join == "" {
+		return nil
+	}
+	zlg.Info("Joining cluster", zap.String("join_addr", o.Join))
+	conn, err := grpc.Dial(o.Join, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	x := api.NewProxyClient(conn)
+	_, err = x.Join(ctx, &api.JoinRequest{
+		NodeId:  o.Info.ID,
+		Address: o.Listen.Raft.HostPort,
+	})
+	return err
 }
