@@ -127,7 +127,7 @@ func (o *Options) baseFlags() flagList {
 				Usage:  "Ports that tt is allowed to open",
 				Value:  &cli.IntSlice{5500, 5600, 5700, 5800},
 			},
-			cli.BoolFlag{
+			cli.BoolTFlag{
 				Name:   "bootstrap",
 				EnvVar: "TT_BOOTSTRAP",
 				Usage:  "Bootsrap this node as the leader",
@@ -201,7 +201,7 @@ func (o *Options) base() parser {
 			}
 		}
 		o.AllowedPorts = ctx.GlobalIntSlice("allowed-ports")
-		o.Bootsrap = ctx.GlobalBool("bootstrap")
+		o.Bootsrap = ctx.GlobalBoolT("bootstrap")
 		o.Join = ctx.GlobalString("join")
 		o.RoutesPath = ctx.GlobalString("routes-path")
 		o.WorkDir = ctx.GlobalString("work-dir")
