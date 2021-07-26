@@ -29,6 +29,7 @@ modules:
 	tinygo build -o $(MODULE)/shared_queue_sender.wasm -scheduler=none -target=wasi $(WASM)/shared_queue/sender/main.go
 	tinygo build -o $(MODULE)/shared_queue_receiver.wasm -scheduler=none -target=wasi $(WASM)/shared_queue/receiver/main.go
 	tinygo build -o $(MODULE)/vm_plugin_configuration.wasm -scheduler=none -target=wasi $(WASM)/vm_plugin_configuration/main.go
+	tinygo build -o $(MODULE)/short_circuit.wasm -scheduler=none -target=wasi $(WASM)/short_circuit/main.go
 
 clean:
 	rm -r ./.tt/
